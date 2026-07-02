@@ -1,0 +1,11 @@
+{
+	"id": "icon-palette",
+	"name": "Icon Palette",
+	"version": "0.1.0",
+	"minAppVersion": "1.11.0",
+	"description": "Set custom icons and colors on files, folders, tabs, tags, properties, and bookmarks, with a rulebook to apply them automatically.",
+	"author": "Charles Kelsoe (ckelsoe)",
+	"authorUrl": "https://github.com/ckelsoe",
+	"fundingUrl": "https://buymeacoffee.com/ckelsoe",
+	"isDesktopOnly": false
+}
