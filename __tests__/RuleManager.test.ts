@@ -104,6 +104,36 @@ describe('RuleManager.evaluateOperator array operators', () => {
 	});
 });
 
+describe('RuleManager.evaluateOperator none* operators are case-insensitive', () => {
+	const tags = ['draft'];
+
+	it('noneContain treats an uppercase value like lowercase', () => {
+		// 'draft' is present, so "none contain draft" is false either case.
+		expect(evaluateOperator('noneContain', tags, 'Draft', NOW)).toBe(false);
+		expect(evaluateOperator('noneContain', tags, 'draft', NOW)).toBe(false);
+	});
+
+	it('noneStartWith treats an uppercase value like lowercase', () => {
+		expect(evaluateOperator('noneStartWith', tags, 'DRA', NOW)).toBe(false);
+		expect(evaluateOperator('noneStartWith', tags, 'dra', NOW)).toBe(false);
+	});
+
+	it('noneEndWith treats an uppercase value like lowercase', () => {
+		expect(evaluateOperator('noneEndWith', tags, 'AFT', NOW)).toBe(false);
+		expect(evaluateOperator('noneEndWith', tags, 'aft', NOW)).toBe(false);
+	});
+
+	it('noneContain stays true when the value is genuinely absent', () => {
+		expect(evaluateOperator('noneContain', tags, 'FINAL', NOW)).toBe(true);
+	});
+
+	it('noneMatch keeps raw-case regex semantics (unchanged by the fix)', () => {
+		// Regex is case-sensitive by default; 'Draft' must not match 'draft'.
+		expect(evaluateOperator('noneMatch', tags, 'Draft', NOW)).toBe(true);
+		expect(evaluateOperator('noneMatch', tags, 'draft', NOW)).toBe(false);
+	});
+});
+
 describe('RuleManager.evaluateOperator unknown operator', () => {
 	it('returns false when no branch matches the operator', () => {
 		expect(evaluateOperator('notARealOperator', 'Hello', 'Hello', NOW)).toBe(false);

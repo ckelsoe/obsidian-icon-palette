@@ -783,9 +783,9 @@ export default class RuleManager {
 			case 'anyStartWith': isConditionMatched = RuleManager.any(sourceLowers, 'startWith', valueLower); break;
 			case 'anyEndWith': isConditionMatched = RuleManager.any(sourceLowers, 'endWith', valueLower); break;
 			case 'anyMatch': isConditionMatched = RuleManager.any(source, 'match', value); break;
-			case 'noneContain': isConditionMatched = RuleManager.none(sourceLowers, 'contain', value); break;
-			case 'noneStartWith': isConditionMatched = RuleManager.none(sourceLowers, 'startWith', value); break;
-			case 'noneEndWith': isConditionMatched = RuleManager.none(sourceLowers, 'endWith', value); break;
+			case 'noneContain': isConditionMatched = RuleManager.none(sourceLowers, 'contain', valueLower); break;
+			case 'noneStartWith': isConditionMatched = RuleManager.none(sourceLowers, 'startWith', valueLower); break;
+			case 'noneEndWith': isConditionMatched = RuleManager.none(sourceLowers, 'endWith', valueLower); break;
 			case 'noneMatch': isConditionMatched = RuleManager.none(source, 'match', value); break;
 			case 'countIs': isConditionMatched = value !== '' && source.length === Number(value); break;
 			case 'countIsLess': isConditionMatched = value !== '' && source.length < Number(value); break;
