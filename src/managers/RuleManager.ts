@@ -1,5 +1,6 @@
 import { TFile } from 'obsidian';
-import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { CachedMetadata, TAbstractFile } from 'obsidian';
+import type IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { Category, ConditionBase, Item, FileItem, RuleBase } from 'src/types.js';
 import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 
@@ -584,180 +585,10 @@ export default class RuleManager {
 			: null;
 
 		for (const condition of rule.conditions) {
-			let isConditionMatched = false;
-			let source: ConditionSource = undefined;
 			const isNegated = condition.operator.startsWith('!');
 			const operator = condition.operator.replace('!', '');
-			const value = condition.value;
-
-			// Resolve the source
-			if (condition.source.startsWith('property:')) {
-				const propId = condition.source.replace('property:', '');
-				if (metadata?.frontmatter) {
-					const frontmatter = metadata.frontmatter as Record<string, unknown>;
-					const fmProps = Object.entries(frontmatter);
-					const fmProp = fmProps.find(([fmPropId]) => fmPropId.toLowerCase() === propId.toLowerCase());
-					if (Array.isArray(fmProp)) source = RuleManager.normalizeConditionSource(fmProp[1]);
-				}
-			} else switch (condition.source) {
-				case 'icon': {
-					if (!file.icon || operator === 'iconIs' || operator === 'hasValue') {
-						source = file.icon;
-					} else if (ICONS.has(file.icon)) {
-						source = ICONS.get(file.icon) ?? null;
-					} else if (EMOJIS.get(file.icon)) {
-						source = EMOJIS.get(file.icon) ?? null;
-					}
-					break;
-				}
-				case 'color': source = file.color; break;
-				case 'name': source = basename; break;
-				case 'filename': source = filename; break;
-				case 'extension': source = extension; break;
-				case 'tree': source = tree; break;
-				case 'path': source = path; break;
-				case 'headings': source = metadata?.headings?.map(heading => heading.heading) ?? []; break;
-				case 'links': source = metadata?.links?.map(link => link.link) ?? []; break;
-				case 'embeds': source = metadata?.embeds?.map(embed => embed.link) ?? []; break;
-				case 'tags': {
-					source = [];
-					const frontmatterTags: unknown = metadata?.frontmatter?.tags;
-					const propTags = RuleManager.toStringArray(frontmatterTags);
-					const inlineTags = metadata?.tags?.map(tag => tag.tag.replace('#', '')) ?? [];
-					for (const tag of [...propTags, ...inlineTags]) {
-						if (!source.includes(tag)) source.push(tag);
-					}
-					break;
-				}
-				case 'created': if (tAbstractFile instanceof TFile) source = tAbstractFile.stat.ctime; break;
-				case 'modified': if (tAbstractFile instanceof TFile) source = tAbstractFile.stat.mtime; break;
-				case 'clock': source = now.getTime(); break;
-			}
-
-			// Prepare case-insensitive strings
-			const sourceLower = String.isString(source) ? source.toLowerCase() : '';
-			const sourceLowers = Array.isArray(source) ? source.map(item => String(item).toLowerCase()) : [];
-			const valueLower = String.isString(value) ? value.toLowerCase() : '';
-
-			// Check if condition is true
-			if (operator === 'hasValue') {
-				isConditionMatched = source !== null && source !== undefined;
-			} else if (operator === 'hasProperty') {
-				isConditionMatched = source !== undefined;
-			} else if (isBoolean(source)) switch (operator) {
-				case 'isTrue': isConditionMatched = source === true; break;
-				case 'isFalse': isConditionMatched = source === false; break;
-			} else if (String.isString(source)) switch (operator) {
-				case 'is': isConditionMatched = sourceLower === valueLower; break;
-				case 'contains': isConditionMatched = valueLower !== '' && sourceLower.includes(valueLower); break;
-				case 'startsWith': isConditionMatched = valueLower !== '' && sourceLower.startsWith(valueLower); break;
-				case 'endsWith': isConditionMatched = valueLower !== '' && sourceLower.endsWith(valueLower); break;
-				case 'matches': {
-					try {
-						isConditionMatched = value !== '' && RuleManager.unwrapRegex(value).test(source);
-					} catch { /* Catch invalid regex */ };
-					break;
-				}
-				case 'datetimeIs': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-				case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-				case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-				case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
-				case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', value); break;
-				case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', value); break;
-				case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-				case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-				case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-				case 'timeIsNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIs', now); break;
-				case 'timeIsBeforeNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIsBefore', now); break;
-				case 'timeIsAfterNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIsAfter', now); break;
-				case 'dateIs': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-				case 'dateIsBefore': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-				case 'dateIsAfter': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-				case 'isToday': isConditionMatched = RuleManager.compareDates(source, 'dateIs', now); break;
-				case 'isBeforeToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsBefore', now); break;
-				case 'isAfterToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsAfter', now); break;
-				case 'isLessDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-				case 'isLessDaysAway': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-				case 'isMoreDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-				case 'isMoreDaysAway': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-				case 'weekdayIs': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-				case 'weekdayIsBefore': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-				case 'weekdayIsAfter': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-				case 'monthdayIs': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-				case 'monthdayIsBefore': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-				case 'monthdayIsAfter': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-				case 'monthIs': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-				case 'monthIsBefore': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-				case 'monthIsAfter': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-				case 'yearIs': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-				case 'yearIsBefore': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-				case 'yearIsAfter': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-				case 'iconIs': isConditionMatched = sourceLower === valueLower; break;
-				case 'nameIs': isConditionMatched = sourceLower === valueLower; break;
-				case 'nameContains': isConditionMatched = valueLower !== '' && sourceLower.includes(valueLower); break;
-				case 'nameStartsWith': isConditionMatched = valueLower !== '' && sourceLower.startsWith(valueLower); break;
-				case 'nameEndsWith': isConditionMatched = valueLower !== '' && sourceLower.endsWith(valueLower); break;
-				case 'nameMatches': {
-					try {
-						isConditionMatched = value !== '' && RuleManager.unwrapRegex(value).test(source);
-					} catch { /* Catch invalid regex */ };
-					break;
-				}
-				case 'colorIs': isConditionMatched = sourceLower === valueLower; break;
-				case 'hexIs': isConditionMatched = sourceLower === valueLower; break;
-			} else if (Number.isNumber(source)) switch (operator) {
-				case 'equals': isConditionMatched = source === Number(value); break;
-				case 'isLess': isConditionMatched = source < Number(value); break;
-				case 'isMore': isConditionMatched = source > Number(value); break;
-				case 'isDivisible': isConditionMatched = source / Number(value) % 1 === 0; break;
-				case 'datetimeIs': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-				case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-				case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-				case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
-				case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', value); break;
-				case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', value); break;
-				case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-				case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-				case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-				case 'dateIs': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-				case 'dateIsBefore': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-				case 'dateIsAfter': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-				case 'isToday': isConditionMatched = RuleManager.compareDates(source, 'dateIs', now); break;
-				case 'isBeforeToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsBefore', now); break;
-				case 'isAfterToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsAfter', now); break;
-				case 'isLessDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-				case 'isMoreDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-				case 'weekdayIs': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-				case 'weekdayIsBefore': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-				case 'weekdayIsAfter': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-				case 'monthdayIs': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-				case 'monthdayIsBefore': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-				case 'monthdayIsAfter': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-				case 'monthIs': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-				case 'monthIsBefore': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-				case 'monthIsAfter': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-				case 'yearIs': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-				case 'yearIsBefore': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-				case 'yearIsAfter': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-			} else if (Array.isArray(source)) switch (operator) {
-				case 'includes': isConditionMatched = sourceLowers.includes(valueLower); break;
-				case 'allAre': isConditionMatched = RuleManager.all(sourceLowers, 'are', valueLower); break;
-				case 'allContain': isConditionMatched = RuleManager.all(sourceLowers, 'contain', valueLower); break;
-				case 'allStartWith': isConditionMatched = RuleManager.all(sourceLowers, 'startWith', valueLower); break;
-				case 'allEndWith': isConditionMatched = RuleManager.all(sourceLowers, 'endWith', valueLower); break;
-				case 'allMatch': isConditionMatched = RuleManager.all(source, 'match', value); break;
-				case 'anyContain': isConditionMatched = RuleManager.any(sourceLowers, 'contain', valueLower); break;
-				case 'anyStartWith': isConditionMatched = RuleManager.any(sourceLowers, 'startWith', valueLower); break;
-				case 'anyEndWith': isConditionMatched = RuleManager.any(sourceLowers, 'endWith', valueLower); break;
-				case 'anyMatch': isConditionMatched = RuleManager.any(source, 'match', value); break;
-				case 'noneContain': isConditionMatched = RuleManager.none(sourceLowers, 'contain', value); break;
-				case 'noneStartWith': isConditionMatched = RuleManager.none(sourceLowers, 'startWith', value); break;
-				case 'noneEndWith': isConditionMatched = RuleManager.none(sourceLowers, 'endWith', value); break;
-				case 'noneMatch': isConditionMatched = RuleManager.none(source, 'match', value); break;
-				case 'countIs': isConditionMatched = value !== '' && source.length === Number(value); break;
-				case 'countIsLess': isConditionMatched = value !== '' && source.length < Number(value); break;
-				case 'countIsMore': isConditionMatched = value !== '' && source.length > Number(value); break;
-			}
+			const source = RuleManager.resolveConditionSource(condition, operator, file, metadata, tAbstractFile, { basename, filename, extension, path, tree }, now);
+			let isConditionMatched = RuleManager.evaluateOperator(operator, source, condition.value, now);
 
 			// Flip negated operators
 			isConditionMatched = isConditionMatched !== isNegated;
@@ -774,6 +605,193 @@ export default class RuleManager {
 
 		// If no condition returned early, check the match mode
 		return rule.match !== 'any';
+	}
+
+	/**
+	 * Resolve the value a condition compares against, from the file, its metadata,
+	 * or the current time. Reaches Obsidian internals via the augmentation types.
+	 */
+	private static resolveConditionSource(condition: ConditionItem, operator: string, file: FileItem, metadata: CachedMetadata | null, tAbstractFile: TAbstractFile, pathParts: { basename: string; filename: string; extension: string; path: string; tree: string }, now: Date): ConditionSource {
+		const { basename, filename, extension, path, tree } = pathParts;
+		let source: ConditionSource = undefined;
+		// Resolve the source
+		if (condition.source.startsWith('property:')) {
+			const propId = condition.source.replace('property:', '');
+			if (metadata?.frontmatter) {
+				const frontmatter = metadata.frontmatter as Record<string, unknown>;
+				const fmProps = Object.entries(frontmatter);
+				const fmProp = fmProps.find(([fmPropId]) => fmPropId.toLowerCase() === propId.toLowerCase());
+				if (Array.isArray(fmProp)) source = RuleManager.normalizeConditionSource(fmProp[1]);
+			}
+		} else switch (condition.source) {
+			case 'icon': {
+				if (!file.icon || operator === 'iconIs' || operator === 'hasValue') {
+					source = file.icon;
+				} else if (ICONS.has(file.icon)) {
+					source = ICONS.get(file.icon) ?? null;
+				} else if (EMOJIS.get(file.icon)) {
+					source = EMOJIS.get(file.icon) ?? null;
+				}
+				break;
+			}
+			case 'color': source = file.color; break;
+			case 'name': source = basename; break;
+			case 'filename': source = filename; break;
+			case 'extension': source = extension; break;
+			case 'tree': source = tree; break;
+			case 'path': source = path; break;
+			case 'headings': source = metadata?.headings?.map(heading => heading.heading) ?? []; break;
+			case 'links': source = metadata?.links?.map(link => link.link) ?? []; break;
+			case 'embeds': source = metadata?.embeds?.map(embed => embed.link) ?? []; break;
+			case 'tags': {
+				source = [];
+				const frontmatterTags: unknown = metadata?.frontmatter?.tags;
+				const propTags = RuleManager.toStringArray(frontmatterTags);
+				const inlineTags = metadata?.tags?.map(tag => tag.tag.replace('#', '')) ?? [];
+				for (const tag of [...propTags, ...inlineTags]) {
+					if (!source.includes(tag)) source.push(tag);
+				}
+				break;
+			}
+			case 'created': if (tAbstractFile instanceof TFile) source = tAbstractFile.stat.ctime; break;
+			case 'modified': if (tAbstractFile instanceof TFile) source = tAbstractFile.stat.mtime; break;
+			case 'clock': source = now.getTime(); break;
+		}
+		return source;
+	}
+
+	/**
+	 * Evaluate a single operator against a resolved source value. Pure: the result
+	 * depends only on the operator, the source, the comparison value, and `now`,
+	 * which makes each operator unit-testable in isolation.
+	 */
+	private static evaluateOperator(operator: string, source: ConditionSource, value: string, now: Date): boolean {
+		// Prepare case-insensitive strings
+		const sourceLower = String.isString(source) ? source.toLowerCase() : '';
+		const sourceLowers = Array.isArray(source) ? source.map(item => String(item).toLowerCase()) : [];
+		const valueLower = String.isString(value) ? value.toLowerCase() : '';
+
+		let isConditionMatched = false;
+		// Check if condition is true
+		if (operator === 'hasValue') {
+			isConditionMatched = source !== null && source !== undefined;
+		} else if (operator === 'hasProperty') {
+			isConditionMatched = source !== undefined;
+		} else if (isBoolean(source)) switch (operator) {
+			case 'isTrue': isConditionMatched = source === true; break;
+			case 'isFalse': isConditionMatched = source === false; break;
+		} else if (String.isString(source)) switch (operator) {
+			case 'is': isConditionMatched = sourceLower === valueLower; break;
+			case 'contains': isConditionMatched = valueLower !== '' && sourceLower.includes(valueLower); break;
+			case 'startsWith': isConditionMatched = valueLower !== '' && sourceLower.startsWith(valueLower); break;
+			case 'endsWith': isConditionMatched = valueLower !== '' && sourceLower.endsWith(valueLower); break;
+			case 'matches': {
+				try {
+					isConditionMatched = value !== '' && RuleManager.unwrapRegex(value).test(source);
+				} catch { /* Catch invalid regex */ };
+				break;
+			}
+			case 'datetimeIs': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
+			case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
+			case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
+			case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
+			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', value); break;
+			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', value); break;
+			case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
+			case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
+			case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
+			case 'timeIsNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIs', now); break;
+			case 'timeIsBeforeNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIsBefore', now); break;
+			case 'timeIsAfterNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIsAfter', now); break;
+			case 'dateIs': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
+			case 'dateIsBefore': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
+			case 'dateIsAfter': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
+			case 'isToday': isConditionMatched = RuleManager.compareDates(source, 'dateIs', now); break;
+			case 'isBeforeToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsBefore', now); break;
+			case 'isAfterToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsAfter', now); break;
+			case 'isLessDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
+			case 'isLessDaysAway': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
+			case 'isMoreDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
+			case 'isMoreDaysAway': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
+			case 'weekdayIs': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
+			case 'weekdayIsBefore': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
+			case 'weekdayIsAfter': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
+			case 'monthdayIs': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
+			case 'monthdayIsBefore': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
+			case 'monthdayIsAfter': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
+			case 'monthIs': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
+			case 'monthIsBefore': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
+			case 'monthIsAfter': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
+			case 'yearIs': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
+			case 'yearIsBefore': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
+			case 'yearIsAfter': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
+			case 'iconIs': isConditionMatched = sourceLower === valueLower; break;
+			case 'nameIs': isConditionMatched = sourceLower === valueLower; break;
+			case 'nameContains': isConditionMatched = valueLower !== '' && sourceLower.includes(valueLower); break;
+			case 'nameStartsWith': isConditionMatched = valueLower !== '' && sourceLower.startsWith(valueLower); break;
+			case 'nameEndsWith': isConditionMatched = valueLower !== '' && sourceLower.endsWith(valueLower); break;
+			case 'nameMatches': {
+				try {
+					isConditionMatched = value !== '' && RuleManager.unwrapRegex(value).test(source);
+				} catch { /* Catch invalid regex */ };
+				break;
+			}
+			case 'colorIs': isConditionMatched = sourceLower === valueLower; break;
+			case 'hexIs': isConditionMatched = sourceLower === valueLower; break;
+		} else if (Number.isNumber(source)) switch (operator) {
+			case 'equals': isConditionMatched = source === Number(value); break;
+			case 'isLess': isConditionMatched = source < Number(value); break;
+			case 'isMore': isConditionMatched = source > Number(value); break;
+			case 'isDivisible': isConditionMatched = source / Number(value) % 1 === 0; break;
+			case 'datetimeIs': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
+			case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
+			case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
+			case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
+			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', value); break;
+			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', value); break;
+			case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
+			case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
+			case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
+			case 'dateIs': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
+			case 'dateIsBefore': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
+			case 'dateIsAfter': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
+			case 'isToday': isConditionMatched = RuleManager.compareDates(source, 'dateIs', now); break;
+			case 'isBeforeToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsBefore', now); break;
+			case 'isAfterToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsAfter', now); break;
+			case 'isLessDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
+			case 'isMoreDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
+			case 'weekdayIs': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
+			case 'weekdayIsBefore': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
+			case 'weekdayIsAfter': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
+			case 'monthdayIs': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
+			case 'monthdayIsBefore': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
+			case 'monthdayIsAfter': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
+			case 'monthIs': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
+			case 'monthIsBefore': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
+			case 'monthIsAfter': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
+			case 'yearIs': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
+			case 'yearIsBefore': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
+			case 'yearIsAfter': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
+		} else if (Array.isArray(source)) switch (operator) {
+			case 'includes': isConditionMatched = sourceLowers.includes(valueLower); break;
+			case 'allAre': isConditionMatched = RuleManager.all(sourceLowers, 'are', valueLower); break;
+			case 'allContain': isConditionMatched = RuleManager.all(sourceLowers, 'contain', valueLower); break;
+			case 'allStartWith': isConditionMatched = RuleManager.all(sourceLowers, 'startWith', valueLower); break;
+			case 'allEndWith': isConditionMatched = RuleManager.all(sourceLowers, 'endWith', valueLower); break;
+			case 'allMatch': isConditionMatched = RuleManager.all(source, 'match', value); break;
+			case 'anyContain': isConditionMatched = RuleManager.any(sourceLowers, 'contain', valueLower); break;
+			case 'anyStartWith': isConditionMatched = RuleManager.any(sourceLowers, 'startWith', valueLower); break;
+			case 'anyEndWith': isConditionMatched = RuleManager.any(sourceLowers, 'endWith', valueLower); break;
+			case 'anyMatch': isConditionMatched = RuleManager.any(source, 'match', value); break;
+			case 'noneContain': isConditionMatched = RuleManager.none(sourceLowers, 'contain', value); break;
+			case 'noneStartWith': isConditionMatched = RuleManager.none(sourceLowers, 'startWith', value); break;
+			case 'noneEndWith': isConditionMatched = RuleManager.none(sourceLowers, 'endWith', value); break;
+			case 'noneMatch': isConditionMatched = RuleManager.none(source, 'match', value); break;
+			case 'countIs': isConditionMatched = value !== '' && source.length === Number(value); break;
+			case 'countIsLess': isConditionMatched = value !== '' && source.length < Number(value); break;
+			case 'countIsMore': isConditionMatched = value !== '' && source.length > Number(value); break;
+		}
+		return isConditionMatched;
 	}
 
 	/**

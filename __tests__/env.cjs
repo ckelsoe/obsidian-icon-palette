@@ -13,6 +13,11 @@ class IconPaletteEnvironment extends NodeEnvironment {
 		await super.setup();
 		this.global.createDiv = () => ({ setCssStyles: () => {}, style: { color: '' } });
 		this.global.CSS = { supports: () => false };
+		// Obsidian type-guard globals used by the rule engine (isBoolean is a
+		// global; isString/isNumber are statics Obsidian adds to String/Number).
+		this.global.isBoolean = (obj) => typeof obj === 'boolean';
+		this.global.String.isString = (obj) => typeof obj === 'string';
+		this.global.Number.isNumber = (obj) => typeof obj === 'number';
 	}
 }
 
