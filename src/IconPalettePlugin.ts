@@ -3,6 +3,7 @@ import IconPaletteSettingTab from 'src/IconPaletteSettingTab.js';
 import { registerIconLibraries, populateLibraryIcons, isLibraryIcon } from 'src/IconLibraries.js';
 import MenuManager from 'src/managers/MenuManager.js';
 import RuleManager, { RuleTrigger } from 'src/managers/RuleManager.js';
+import IconPathMap from 'src/IconPathMap.js';
 import IconManager from 'src/managers/IconManager.js';
 import AppIconManager from 'src/managers/AppIconManager.js';
 import TabIconManager from 'src/managers/TabIconManager.js';
@@ -314,10 +315,9 @@ export default class IconPalettePlugin extends Plugin {
 
 		this.registerEvent(this.app.vault.on('rename', (tAbstractFile, oldPath) => {
 			const { path } = tAbstractFile;
-			const fileIcon = this.settings.fileIcons[oldPath];
-			if (fileIcon) {
-				this.settings.fileIcons[path] = fileIcon;
-				delete this.settings.fileIcons[oldPath];
+			// A folder rename fires one event for the folder itself; re-key its
+			// own entry and every descendant so child icons follow the move.
+			if (IconPathMap.rekeyDescendants(this.settings.fileIcons, oldPath, path)) {
 				void this.saveSettings();
 			}
 			const { filename, tree } = this.splitFilePath(path);
@@ -341,8 +341,11 @@ export default class IconPalettePlugin extends Plugin {
 
 		this.registerEvent(this.app.vault.on('delete', (tAbstractFile) => {
 			const { path } = tAbstractFile;
-			delete this.settings.fileIcons[path];
-			void this.saveSettings();
+			// A folder delete fires one event for the folder itself; prune its own
+			// entry and every descendant so child icons do not leak into settings.
+			if (IconPathMap.pruneDescendants(this.settings.fileIcons, path)) {
+				void this.saveSettings();
+			}
 			// If a deleted file/folder was associated with a ruling, update rulings
 			const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
 			if (this.ruleManager?.checkRuling(page, path)) {
