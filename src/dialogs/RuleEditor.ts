@@ -1,5 +1,7 @@
 import { ButtonComponent, Modal, Platform, Setting, TextComponent } from 'obsidian';
-import IconPalettePlugin, { Category, Icon, Item, FileItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Category, Icon, Item, FileItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
 import { RuleItem, ConditionItem } from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleChecker from 'src/dialogs/RuleChecker.js';

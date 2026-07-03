@@ -1,28 +1,11 @@
 import { Menu, Platform } from 'obsidian';
-import IconPalettePlugin, { RibbonItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { RibbonItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
+import type { WorkspaceRibbonLike, AppWithMobileNavbar, VaultWithConfig, MenuItemWithIconElement } from 'src/obsidian-internals.js';
 import MenuManager from 'src/managers/MenuManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
-
-interface WorkspaceRibbonLike {
-	leftRibbon?: {
-		ribbonItemsEl?: HTMLElement;
-	};
-}
-
-interface AppWithMobileNavbar {
-	mobileNavbar?: {
-		ribbonMenuItemEl?: HTMLElement;
-	};
-}
-
-interface VaultWithConfig {
-	getConfig?: (key: string) => string | null;
-}
-
-interface MenuItemWithIconElement {
-	iconEl?: HTMLElement;
-}
 
 /**
  * Handles icons in the app ribbon.

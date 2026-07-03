@@ -1,14 +1,10 @@
 import { ExtraButtonComponent, Platform, PluginSettingTab, SettingGroup } from 'obsidian';
-import IconPalettePlugin, { FileItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { FileItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
+import type { AppWithSettingsUI } from 'src/obsidian-internals.js';
 import RulePicker from 'src/dialogs/RulePicker.js';
 import UsageChecker from 'src/dialogs/UsageChecker.js';
-
-interface AppWithSettingsUI {
-	setting?: {
-		close: () => void;
-	};
-	openWithDefaultApp?: (path: string) => void | Promise<void>;
-}
 
 /**
  * Exposes UI settings for the plugin.

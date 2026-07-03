@@ -1,5 +1,7 @@
 import { Modal, Setting } from 'obsidian';
-import IconPalettePlugin, { Icon, Item, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Icon, Item } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
 import { RuleItem } from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';

@@ -1,5 +1,7 @@
 import { WorkspaceLeaf } from 'obsidian';
-import IconPalettePlugin, { FileItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { FileItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
 import IconPicker from 'src/dialogs/IconPicker.js';

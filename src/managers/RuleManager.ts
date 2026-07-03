@@ -1,5 +1,7 @@
 import { TFile } from 'obsidian';
-import IconPalettePlugin, { Category, ConditionBase, Item, FileItem, ICONS, EMOJIS, STRINGS, RuleBase } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Category, ConditionBase, Item, FileItem, RuleBase } from 'src/types.js';
+import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 
 const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 

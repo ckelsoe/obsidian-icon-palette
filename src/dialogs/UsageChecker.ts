@@ -1,5 +1,7 @@
 import { ButtonComponent, Modal, Setting } from 'obsidian';
-import IconPalettePlugin, { FileItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { FileItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
 import PathListComponent from 'src/components/PathListComponent.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
 

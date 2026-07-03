@@ -1,5 +1,6 @@
 import { AbstractInputSuggest, SearchMatches, TextComponent, prepareFuzzySearch } from 'obsidian';
-import IconPalettePlugin, { Category } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Category } from 'src/types.js';
 import { ConditionItem } from 'src/managers/RuleManager.js';
 
 const SUGGEST_FILE_NAMES = 'file-name';

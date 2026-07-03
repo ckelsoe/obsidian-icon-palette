@@ -1,5 +1,8 @@
 import { ButtonComponent, ColorComponent, DropdownComponent, ExtraButtonComponent, Menu, Modal, Platform, Setting, TextComponent, displayTooltip, prepareFuzzySearch, setTooltip } from 'obsidian';
-import IconPalettePlugin, { Category, Item, Icon, IconLibraryFilter, ICONS, EMOJIS, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Category, Item, Icon, IconLibraryFilter } from 'src/types.js';
+import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
+import type { MenuItemWithIconElement } from 'src/obsidian-internals.js';
 import { isLibraryIcon, populateLibraryIcons, registerIconLibraries } from 'src/IconLibraries.js';
 import ColorUtils, { COLORS } from 'src/ColorUtils.js';
 import { RuleItem } from 'src/managers/RuleManager.js';
@@ -11,10 +14,6 @@ const ICON_LIBRARY_FILTERS: IconLibraryFilter[] = ['lucide', 'devicon', 'simple'
 
 function isHTMLElement(value: EventTarget | Node | null): value is HTMLElement {
 	return value instanceof Node && value.instanceOf(HTMLElement);
-}
-
-interface MenuItemWithIconElement {
-	iconEl?: HTMLElement;
 }
 
 /**
