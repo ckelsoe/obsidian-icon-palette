@@ -1,6 +1,6 @@
 import { ExtraButtonComponent } from 'obsidian';
 import ColorUtils from 'src/ColorUtils.js';
-import { ICONS, EMOJIS } from 'src/IconPalettePlugin.js';
+import { ICONS, EMOJIS } from 'src/registry.js';
 
 const DEFAULT_ICON = 'lucide-file';
 

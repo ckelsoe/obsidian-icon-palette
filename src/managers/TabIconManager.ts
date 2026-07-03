@@ -1,23 +1,11 @@
 import { Platform } from 'obsidian';
-import IconPalettePlugin, { Category, FileItem, TabItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Category, FileItem, TabItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
+import type { MenuItemWithIconElement, WorkspaceWithMobileSplits } from 'src/obsidian-internals.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
-
-interface MenuItemWithIconElement {
-	iconEl?: HTMLElement;
-}
-
-interface WorkspaceSplitWithMobileTabs {
-	activeTabSelectEl?: HTMLElement;
-	activeTabIconEl?: HTMLElement;
-	activeTabHeaderEl?: HTMLElement;
-}
-
-interface WorkspaceWithMobileSplits {
-	leftSplit?: WorkspaceSplitWithMobileTabs;
-	rightSplit?: WorkspaceSplitWithMobileTabs;
-}
 
 /**
  * Handles icons in workspace tab headers.

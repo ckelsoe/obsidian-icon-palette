@@ -1,7 +1,9 @@
 import { Editor, MarkdownView, Menu } from 'obsidian';
 import { EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
-import IconPalettePlugin, { TagItem, PropertyItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { TagItem, PropertyItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
 import ColorUtils from 'src/ColorUtils.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';

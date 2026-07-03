@@ -1,5 +1,5 @@
 import { ExtraButtonComponent, Menu, Setting, ToggleComponent } from 'obsidian';
-import { STRINGS } from 'src/IconPalettePlugin.js';
+import { STRINGS } from 'src/registry.js';
 import { RuleItem } from 'src/managers/RuleManager.js';
 
 /**

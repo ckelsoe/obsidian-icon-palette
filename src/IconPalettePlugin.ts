@@ -1,7 +1,5 @@
 import { Command, Hotkey, Notice, Platform, Plugin, Scope, TAbstractFile, TFile, TFolder, View, WorkspaceFloating, WorkspaceLeaf, WorkspaceRoot, getIconIds, getLanguage, normalizePath } from 'obsidian';
 import IconPaletteSettingTab from 'src/IconPaletteSettingTab.js';
-import EMOJIS from 'src/Emojis.js';
-import STRINGS from 'src/Strings.js';
 import { registerIconLibraries, populateLibraryIcons, isLibraryIcon } from 'src/IconLibraries.js';
 import MenuManager from 'src/managers/MenuManager.js';
 import RuleManager, { RuleTrigger } from 'src/managers/RuleManager.js';
@@ -18,22 +16,9 @@ import SuggestionIconManager from 'src/managers/SuggestionIconManager.js';
 import SuggestionDialogIconManager from 'src/managers/SuggestionDialogIconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
 import RulePicker from 'src/dialogs/RulePicker.js';
-
-export const ICONS = new Map<string, string>();
-export { EMOJIS };
-export { STRINGS };
-export type Category = 'app' | 'tab' | 'file' | 'folder' | 'group' | 'search' | 'graph' | 'url' | 'tag' | 'property' | 'ribbon' | 'rule';
-export type IconLibraryFilter = 'lucide' | 'devicon' | 'simple' | 'emoji';
-export type AppItemId = 'help' | 'settings' | 'pin' | 'sidebarLeft' | 'sidebarRight' | 'minimize' | 'maximize' | 'unmaximize' | 'close';
-
-// Plugin tabs that contain a file, but should still display a tab-specific icon
-export const PLUGIN_TAB_TYPES = [
-	'backlink',
-	'file-properties',
-	'footnotes',
-	'outgoing-link',
-	'outline',
-];
+import type { Category, IconLibraryFilter, AppItemId, AppItem, TabItem, FileItem, BookmarkItem, TagItem, PropertyItem, RibbonItem, RuleBase } from 'src/types.js';
+import { ICONS, STRINGS, PLUGIN_TAB_TYPES } from 'src/registry.js';
+import type { BookmarkBase, PropertyBase, RibbonItemBase, TagBase, AppWithInternalPlugins, AppWithMetadataTypes, WorkspaceWithRibbon, AppWithHotkeys, AppWithCustomCss, AppWithPlugins, MetadataCacheWithTags, WorkspaceLeafWithElements, WorkspaceWithMobileSplits } from 'src/obsidian-internals.js';
 
 const IMAGE_EXTENSIONS = ['bmp', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'avif'];
 const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', '3gp', 'flac', 'ogg', 'oga', 'opus'];
@@ -42,165 +27,12 @@ const HOUR = 1000 * 60 * 60; // 1 hour in millis
 const MINUTE = 1000 * 60; // 1 minute in millis
 const SECOND = 1000; // 1 second in millis
 
-/**
- * Base interface for all icon objects.
- */
-export interface Icon {
-	icon: string | null;
-	color: string | null;
-}
-export interface Item extends Icon {
-	id: string;
-	name: string;
-	category: Category;
-	iconDefault: string | null;
-}
-export type AppItem = Item;
-export interface TabItem extends Item {
-	isActive: boolean;
-	isRoot: boolean;
-	isStacked: boolean;
-	iconEl: HTMLElement | null;
-	tabEl: HTMLElement | null;
-}
-export interface FileItem extends Item {
-	items: FileItem[] | null;
-}
-export interface BookmarkItem extends Item {
-	items: BookmarkItem[] | null;
-}
-export type TagItem = Item;
-export interface PropertyItem extends Item {
-	type: string | null;
-}
-export interface RibbonItem extends Item {
-	isHidden: boolean;
-	iconEl: HTMLElement | null;
-}
-
 interface IconSetting {
 	icon?: string | null;
 	color?: string | null;
 }
 
 type IconSettingMap = Record<string, IconSetting>;
-
-export interface ConditionBase {
-	source?: string;
-	operator?: string;
-	value?: string;
-}
-
-export interface RuleBase {
-	id?: string;
-	name?: string;
-	icon?: string;
-	color?: string;
-	match?: string;
-	conditions?: ConditionBase[];
-	enabled?: boolean;
-}
-
-interface BookmarkBase {
-	type?: Category;
-	path?: string;
-	subpath?: string;
-	ctime?: string;
-	title?: string;
-	query?: string;
-	url?: string;
-	items?: BookmarkBase[];
-}
-
-interface TagBase {
-	id: string;
-	name: string;
-}
-
-interface PropertyBase {
-	name?: string;
-	widget?: string;
-}
-
-interface MetadataWidget {
-	icon?: string;
-}
-
-interface RibbonItemBase {
-	id?: string;
-	title?: string;
-	icon?: string;
-	hidden?: boolean;
-	buttonEl?: HTMLElement;
-}
-
-interface AppWithInternalPlugins {
-	internalPlugins?: {
-		plugins?: {
-			bookmarks?: {
-				instance?: {
-					items?: BookmarkBase[];
-				};
-			};
-		};
-	};
-}
-
-interface AppWithMetadataTypes {
-	metadataTypeManager?: {
-		properties?: Record<string, PropertyBase>;
-		getWidget?: (type: string) => MetadataWidget | undefined;
-	};
-}
-
-interface WorkspaceWithRibbon {
-	leftRibbon?: {
-		items?: RibbonItemBase[];
-	};
-}
-
-interface HotkeyManagerBase {
-	customKeys?: Record<string, Hotkey[]>;
-}
-
-interface AppWithHotkeys {
-	hotkeyManager?: HotkeyManagerBase;
-}
-
-interface AppWithCustomCss {
-	customCss?: {
-		theme?: string;
-	};
-}
-
-interface AppWithPlugins {
-	plugins?: {
-		plugins?: Record<string, unknown>;
-	};
-}
-
-interface MetadataCacheWithTags {
-	getTags(): Record<string, number>;
-}
-
-interface WorkspaceLeafWithElements {
-	containerEl?: HTMLElement;
-	tabHeaderInnerIconEl?: HTMLElement;
-	tabHeaderEl?: HTMLElement;
-	parent?: {
-		isStacked?: boolean;
-	};
-}
-
-interface WorkspaceSplitWithMobileTabs {
-	activeTabContentEl?: HTMLElement;
-	activeTabIconEl?: HTMLElement;
-}
-
-interface WorkspaceWithMobileSplits {
-	leftSplit?: WorkspaceSplitWithMobileTabs;
-	rightSplit?: WorkspaceSplitWithMobileTabs;
-}
 
 /**
  * Interface for storing plugin settings and user-selected icons.

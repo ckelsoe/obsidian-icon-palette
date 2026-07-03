@@ -1,5 +1,7 @@
 import { App, setIcon } from 'obsidian';
-import IconPalettePlugin, { Item, Icon, ICONS, EMOJIS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Item, Icon } from 'src/types.js';
+import { ICONS, EMOJIS } from 'src/registry.js';
 import ColorUtils from 'src/ColorUtils.js';
 
 /**

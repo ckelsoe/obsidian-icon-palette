@@ -1,5 +1,5 @@
 import { DropdownComponent, ExtraButtonComponent, Platform, Setting, TextComponent } from 'obsidian';
-import { STRINGS } from 'src/IconPalettePlugin.js';
+import { STRINGS } from 'src/registry.js';
 import { ConditionItem } from 'src/managers/RuleManager.js';
 
 /**

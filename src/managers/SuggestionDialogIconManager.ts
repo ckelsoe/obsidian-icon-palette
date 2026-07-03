@@ -1,5 +1,7 @@
 import { Instruction, Plugin, SuggestModal, TFile, TFolder, WorkspaceLeaf } from 'obsidian';
-import IconPalettePlugin, { Category, PLUGIN_TAB_TYPES } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { Category } from 'src/types.js';
+import { PLUGIN_TAB_TYPES } from 'src/registry.js';
 import IconManager from 'src/managers/IconManager.js';
 
 type UnknownSuggestModal = SuggestModal<unknown>;

@@ -1,5 +1,7 @@
 import { Menu, WorkspaceLeaf } from 'obsidian';
-import IconPalettePlugin, { TagItem, STRINGS } from 'src/IconPalettePlugin.js';
+import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type { TagItem } from 'src/types.js';
+import { STRINGS } from 'src/registry.js';
 import IconManager from 'src/managers/IconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
 
