@@ -12,6 +12,10 @@ interface AppWithSettingsUI {
 
 /**
  * Exposes UI settings for the plugin.
+ *
+ * TODO(icon-palette): migrate to the declarative getSettingDefinitions() API so settings appear in
+ * Obsidian's settings search (obsidianmd/settings-tab/prefer-setting-definitions). Tracked as a
+ * dedicated follow-up PR; the lint budget is --max-warnings 1 for this one known warning until then.
  */
 export default class IconPaletteSettingTab extends PluginSettingTab {
 	private readonly plugin: IconPalettePlugin;

@@ -954,7 +954,9 @@ export default class RuleManager {
 		if (value === null || value === undefined) return value;
 		if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return value;
 		if (Array.isArray(value)) return value.map(item => item === null ? null : String(item));
-		return String(value);
+		if (typeof value === 'symbol' || typeof value === 'function') return value.toString();
+		if (typeof value === 'bigint') return value.toString();
+		return JSON.stringify(value);
 	}
 
 	private static toStringArray(value: unknown): string[] {

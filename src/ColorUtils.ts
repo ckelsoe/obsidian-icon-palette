@@ -179,7 +179,7 @@ const REGEX_COLOR_MIX = /color-mix\(in srgb, rgba?\((\d+), (\d+), (\d+)(?:, ([\d
  * Shared utility functions for setting icon colors.
  */
 export default class ColorUtils {
-	private static readonly convertEl = activeDocument.createElement('div');
+	private static readonly convertEl = createDiv();
 
 	/**
 	 * Convert color into rgb/rgba() string.
