@@ -70,6 +70,28 @@ describe('RuleManager.evaluateOperator number operators', () => {
 	});
 });
 
+describe('RuleManager.evaluateOperator now-relative datetime operators', () => {
+	// These operators have no UI value field, so production always calls them
+	// with value === '' and relies on `now` for the comparison target.
+	const past = new Date('2026-07-03T11:00:00.000Z');
+	const future = new Date('2026-07-03T13:00:00.000Z');
+
+	it('isBeforeNow/isAfterNow classify a past number-source timestamp', () => {
+		expect(evaluateOperator('isBeforeNow', past.getTime(), '', NOW)).toBe(true);
+		expect(evaluateOperator('isAfterNow', past.getTime(), '', NOW)).toBe(false);
+	});
+
+	it('isBeforeNow/isAfterNow classify a future number-source timestamp', () => {
+		expect(evaluateOperator('isAfterNow', future.getTime(), '', NOW)).toBe(true);
+		expect(evaluateOperator('isBeforeNow', future.getTime(), '', NOW)).toBe(false);
+	});
+
+	it('isBeforeNow/isAfterNow classify a past string-source timestamp', () => {
+		expect(evaluateOperator('isBeforeNow', past.toISOString(), '', NOW)).toBe(true);
+		expect(evaluateOperator('isAfterNow', past.toISOString(), '', NOW)).toBe(false);
+	});
+});
+
 describe('RuleManager.evaluateOperator array operators', () => {
 	it('evaluates membership, count, any, and none', () => {
 		const tags = ['apple', 'banana', 'cherry'];

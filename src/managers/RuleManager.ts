@@ -695,8 +695,8 @@ export default class RuleManager {
 			case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
 			case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
 			case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
-			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', value); break;
-			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', value); break;
+			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', now); break;
+			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', now); break;
 			case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
 			case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
 			case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
@@ -747,8 +747,8 @@ export default class RuleManager {
 			case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
 			case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
 			case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
-			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', value); break;
-			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', value); break;
+			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', now); break;
+			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', now); break;
 			case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
 			case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
 			case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
