@@ -8,7 +8,7 @@
 		"dev": "node esbuild.config.mjs",
 		"generate:icons": "node scripts/generate-icon-library-data.mjs",
 		"build": "npm run generate:icons && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && node scripts/check-bundle-size.mjs",
-		"lint": "eslint . --max-warnings 1 && node scripts/check-submission.mjs",
+		"lint": "eslint . --max-warnings 0 --ignore-pattern src/IconPaletteSettingTab.ts && eslint src/IconPaletteSettingTab.ts --max-warnings 1 && node scripts/check-submission.mjs",
 		"test": "jest --passWithNoTests",
 		"typecheck": "tsc -noEmit -skipLibCheck",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
