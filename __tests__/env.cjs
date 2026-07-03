@@ -1,4 +1,8 @@
-const { TestEnvironment: NodeEnvironment } = require('jest-environment-node');
+// jest-environment-node exposes the class as the `TestEnvironment` named export
+// (v28+) and also as the default export; fall back across both so the harness is
+// resilient to either module shape.
+const nodeEnv = require('jest-environment-node');
+const NodeEnvironment = nodeEnv.TestEnvironment ?? nodeEnv.default ?? nodeEnv;
 
 // Custom jest environment (node) that injects the browser/Obsidian globals
 // ColorUtils touches at import time (`createDiv`, used for a static field) and
