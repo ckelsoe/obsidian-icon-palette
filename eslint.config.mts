@@ -43,6 +43,7 @@ export default tseslint.config(
 		"package-lock.json",
 		"tsconfig.json",
 		"jest.config.cjs",
+		"__tests__/env.cjs",
 		"eslint.config.mts",
 	]),
 );
