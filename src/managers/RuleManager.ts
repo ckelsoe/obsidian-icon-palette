@@ -953,8 +953,24 @@ export default class RuleManager {
 	private static normalizeConditionSource(value: unknown): ConditionSource {
 		if (value === null || value === undefined) return value;
 		if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return value;
-		if (Array.isArray(value)) return value.map(item => item === null ? null : String(item));
-		return String(value);
+		if (Array.isArray(value)) return value.map(item => item === null ? null : RuleManager.stringifyScalar(item));
+		return RuleManager.stringifyScalar(value);
+	}
+
+	/**
+	 * Coerce a single non-array value to a string without ever producing '[object Object]' or throwing.
+	 */
+	private static stringifyScalar(value: unknown): string {
+		if (value === undefined || value === null) return '';
+		if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return String(value);
+		if (value instanceof Date) return value.toString();
+		if (typeof value === 'symbol' || typeof value === 'function' || typeof value === 'bigint') return value.toString();
+		// Remaining values are plain objects; serialize defensively so cycles never throw.
+		try {
+			return JSON.stringify(value);
+		} catch {
+			return '';
+		}
 	}
 
 	private static toStringArray(value: unknown): string[] {

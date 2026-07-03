@@ -7,14 +7,14 @@ interface MenuItemWithSection extends MenuItem {
 type ShowAtPositionMethod = (this: Menu, position: MenuPositionDef, doc?: Document) => Menu;
 
 function getMenuItems(menu: Menu): MenuItemWithSection[] {
-	const items = Reflect.get(menu, 'items');
+	const items: unknown = Reflect.get(menu, 'items');
 	return Array.isArray(items)
 		? items.filter((item): item is MenuItemWithSection => item instanceof MenuItem)
 		: [];
 }
 
 function getMenuSections(menu: Menu): unknown[] {
-	const sections = Reflect.get(menu, 'sections');
+	const sections: unknown = Reflect.get(menu, 'sections');
 	return Array.isArray(sections) ? sections : [];
 }
 
