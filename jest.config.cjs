@@ -13,6 +13,8 @@ module.exports = {
 		// Source uses node16 resolution, so relative imports carry an explicit
 		// `.js` extension. Strip it for jest so it resolves the `.ts` source.
 		'^(\\.{1,2}/.*)\\.js$': '$1',
+		// Root-relative `src/...` specifiers (from the tsconfig paths mapping).
+		'^src/(.*)\\.js$': '<rootDir>/src/$1',
 	},
 	transform: {
 		'^.+\\.ts$': ['ts-jest', {

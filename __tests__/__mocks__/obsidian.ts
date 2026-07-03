@@ -17,3 +17,9 @@ export interface RGB {
 	g: number;
 	b: number;
 }
+
+// `Strings.ts` imports getLanguage and runs a static localiser at module load;
+// return a language that short-circuits to the default (no dynamic import).
+export function getLanguage(): string {
+	return 'en';
+}
