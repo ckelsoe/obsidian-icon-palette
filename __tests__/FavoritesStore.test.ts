@@ -42,6 +42,16 @@ describe('FavoritesStore.recordRecent', () => {
 		expect(keys(s.recent)).toEqual(['a:', 'b:']);
 	});
 
+	it('does not throw and trims to empty for a non-positive cap', () => {
+		const zero = state([], [combo('a')]);
+		expect(() => FavoritesStore.recordRecent(zero, combo('b'), 0)).not.toThrow();
+		expect(zero.recent).toEqual([]);
+
+		const negative = state([], [combo('a')]);
+		expect(() => FavoritesStore.recordRecent(negative, combo('b'), -5)).not.toThrow();
+		expect(negative.recent).toEqual([]);
+	});
+
 	it('never records a combo that is currently pinned', () => {
 		const s = state([combo('a')], [combo('b')]);
 		expect(FavoritesStore.recordRecent(s, combo('a'), 20)).toBe(false);
