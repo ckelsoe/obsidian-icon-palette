@@ -42,13 +42,17 @@ describe('FavoritesStore.recordRecent', () => {
 		expect(keys(s.recent)).toEqual(['a:', 'b:']);
 	});
 
-	it('does not throw and trims to empty for a non-positive cap', () => {
+	it('does not throw, trims to empty, and reports the change for a non-positive cap', () => {
 		const zero = state([], [combo('a')]);
-		expect(() => FavoritesStore.recordRecent(zero, combo('b'), 0)).not.toThrow();
+		let zeroChanged = false;
+		expect(() => { zeroChanged = FavoritesStore.recordRecent(zero, combo('b'), 0); }).not.toThrow();
+		expect(zeroChanged).toBe(true);
 		expect(zero.recent).toEqual([]);
 
 		const negative = state([], [combo('a')]);
-		expect(() => FavoritesStore.recordRecent(negative, combo('b'), -5)).not.toThrow();
+		let negativeChanged = false;
+		expect(() => { negativeChanged = FavoritesStore.recordRecent(negative, combo('b'), -5); }).not.toThrow();
+		expect(negativeChanged).toBe(true);
 		expect(negative.recent).toEqual([]);
 	});
 
