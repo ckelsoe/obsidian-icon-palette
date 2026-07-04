@@ -233,6 +233,10 @@ export default class Strings {
 		resetColor: 'Reset color',
 		toggleIcons: 'Toggle icons',
 		toggleEmojis: 'Toggle emojis',
+		pinned: 'Pinned',
+		recent: 'Recent',
+		pin: 'Pin',
+		unpin: 'Unpin',
 		libraries: {
 			lucide: 'Lucide',
 			devicon: 'Devicons',
