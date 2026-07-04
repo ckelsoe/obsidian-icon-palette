@@ -14,6 +14,26 @@ export interface Icon {
 	icon: string | null;
 	color: string | null;
 }
+
+/**
+ * A reusable icon+color pairing for the favorites feature. Unlike {@link Icon},
+ * the icon is never null: a combo is always a concrete icon or emoji. `color`
+ * may be null, meaning the default/theme color.
+ */
+export interface IconColorCombo {
+	icon: string;
+	color: string | null;
+}
+
+/**
+ * Persisted favorites: manually pinned combos and an automatic recent list,
+ * both most-recent/newest first. A combo that is pinned never also appears in
+ * `recent`.
+ */
+export interface FavoritesState {
+	pinned: IconColorCombo[];
+	recent: IconColorCombo[];
+}
 export interface Item extends Icon {
 	id: string;
 	name: string;
