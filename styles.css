@@ -248,14 +248,19 @@ a.tag {
 	margin-inline-start: auto;
 }
 
-/* Search results container */
+/* Search results container: two-row wrapping grid, vertical scroll past two rows.
+   max-height is a first-pass two-row height; tune against the vault render. */
 .icon-palette-search-results {
-	overflow-x: scroll;
+	max-height: 5.5rem;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 .icon-palette-search-results > .setting-item-info {
 	display: none;
 }
 .icon-palette-search-results > .setting-item-control {
+	flex-wrap: wrap;
+	align-content: flex-start;
 	justify-content: center;
 }
 .icon-palette-search-results:focus-visible {

@@ -385,14 +385,6 @@ export default class IconPicker extends Modal {
 		this.searchResultsSetting = new Setting(this.contentEl);
 		this.searchResultsSetting.settingEl.addClass('icon-palette-search-results');
 		this.searchResultsSetting.settingEl.tabIndex = 0;
-		// Allow vertical scrolling to work horizontally
-		this.iconManager.setEventListener(this.searchResultsSetting.settingEl, 'wheel', event => {
-			if (this.modalEl.doc.body.hasClass('mod-rtl')) {
-				this.searchResultsSetting.settingEl.scrollLeft -= event.deltaY;
-			} else {
-				this.searchResultsSetting.settingEl.scrollLeft += event.deltaY;
-			}
-		}, { passive: true });
 
 		// Match styling of bookmark edit dialog
 		const buttonContainerEl = this.modalEl.createDiv({ cls: 'modal-button-container' });
@@ -634,7 +626,7 @@ export default class IconPicker extends Modal {
 		const { controlEl, settingEl } = this.searchResultsSetting;
 		const focusedEl = this.modalEl.doc.activeElement;
 		const focusedIndex = focusedEl ? controlEl.indexOf(focusedEl) : -1;
-		const scrollLeft = settingEl.scrollLeft;
+		const scrollTop = settingEl.scrollTop;
 
 		// Populate icon buttons
 		this.searchResultsSetting.clear();
@@ -665,7 +657,7 @@ export default class IconPicker extends Modal {
 			const iconEl = controlEl.children[focusedIndex];
 			if (iconEl?.instanceOf(HTMLElement)) iconEl.focus();
 		}
-		settingEl.scrollLeft = scrollLeft;
+		settingEl.scrollTop = scrollTop;
 
 		// Use an invisible button to preserve height
 		if (this.searchResults.length === 0) {
