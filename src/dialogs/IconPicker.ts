@@ -8,9 +8,12 @@ import ColorUtils, { COLORS } from 'src/ColorUtils.js';
 import { RuleItem } from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
+import FavoritesStore from 'src/FavoritesStore.js';
 
 const COLOR_KEYS = [...COLORS.keys()];
 const ICON_LIBRARY_FILTERS: IconLibraryFilter[] = ['lucide', 'devicon', 'simple', 'emoji'];
+// How many recent icon+color combos to keep. About two wrapping rows in the picker.
+const RECENT_CAP = 20;
 
 function isHTMLElement(value: EventTarget | Node | null): value is HTMLElement {
 	return value instanceof Node && value.instanceOf(HTMLElement);
@@ -738,7 +741,25 @@ export default class IconPicker extends Modal {
 		} else if (this.multiCallback) {
 			this.multiCallback(icon, color);
 		}
+		this.recordRecent(icon, color);
 		this.close();
+	}
+
+	/**
+	 * Record an applied icon+color combo in the recent list. Only a concrete
+	 * icon+color combo counts. Skip icon removal (icon null), a mixed
+	 * multi-selection icon (icon undefined), and the multi-selection
+	 * "leave colors unchanged" sentinel (color undefined): recording the last as
+	 * a default (null) color would store a combo the user never applied and then
+	 * clear colors if that entry were reused. Saves settings only when the recent
+	 * list actually changed.
+	 */
+	private recordRecent(icon: string | null | undefined, color: string | null | undefined): void {
+		if (typeof icon !== 'string' || icon === '') return;
+		if (color === undefined) return;
+		if (FavoritesStore.recordRecent(this.plugin.settings.favorites, { icon, color }, RECENT_CAP)) {
+			void this.plugin.saveSettings();
+		}
 	}
 
 	/**
