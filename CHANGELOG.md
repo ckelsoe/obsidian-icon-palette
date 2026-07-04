@@ -9,6 +9,8 @@ Initial Icon Palette release, based on a clean fork of the MIT-0 licensed
 - Icon libraries: Lucide, emoji, Simple Icons, and Devicon.
 - Rulebook to apply icons automatically by name, extension, path, tags, properties, or date.
 - Select multiple files, bookmarks, or properties to apply an icon at once.
+- Reapply recently used icon and color combinations from a Recent row in the picker, and pin favorites to a Pinned row (secondary-click or long-press to pin and unpin).
+- Icon picker results wrap across two rows and scroll vertically instead of a single horizontal strip.
 
 ### Fixed
 

@@ -29,7 +29,11 @@ Simple Icons and Devicon are compressed and bundled, so there are no separate fi
 
 Secondary-click an item and choose `Change icon`. On mobile, press and hold. In the Files, Bookmarks, and Properties lists you can hold Alt or Shift to select several items and change them at once.
 
-Search any icon by name, filter between icons and emojis with the toggles, and click to confirm. Pick one of nine theme colors, or secondary-click the color bubble for a full RGB picker.
+Search any icon by name, filter between icons and emojis with the toggles, and click to confirm. Pick one of nine theme colors, or secondary-click the color bubble for a full RGB picker. Results wrap across two rows and scroll down for more.
+
+### Recent and pinned icons
+
+The picker remembers the icon and color combinations you apply. Recently used combinations show up in a `Recent` row at the top of the picker, so you can reapply one with a single click, its original color and all. Secondary-click a recent combination (press and hold on mobile) and choose `Pin` to keep it in a `Pinned` row that sticks around; secondary-click a pinned one and choose `Unpin` to drop it. A pinned combination no longer appears under `Recent`.
 
 ### Rules
 
