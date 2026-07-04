@@ -162,6 +162,16 @@ export default class IconPicker extends Modal {
 					} else if (!event.repeat) {
 						focusEl = this.searchResultsSetting.controlEl.lastElementChild;
 					}
+				// Favorite grids
+				} else {
+					const grid = event.target.closest('.icon-palette-favorite-grid');
+					if (grid) {
+						if (event.target !== grid && event.target.previousElementSibling) {
+							focusEl = event.target.previousElementSibling;
+						} else if (!event.repeat) {
+							focusEl = grid.lastElementChild;
+						}
+					}
 				}
 				break;
 			}
@@ -172,6 +182,16 @@ export default class IconPicker extends Modal {
 						focusEl = event.target.nextElementSibling;
 					} else if (!event.repeat) {
 						focusEl = this.searchResultsSetting.controlEl.firstElementChild;
+					}
+				// Favorite grids
+				} else {
+					const grid = event.target.closest('.icon-palette-favorite-grid');
+					if (grid) {
+						if (event.target !== grid && event.target.nextElementSibling) {
+							focusEl = event.target.nextElementSibling;
+						} else if (!event.repeat) {
+							focusEl = grid.firstElementChild;
+						}
 					}
 				}
 			}
@@ -695,12 +715,15 @@ export default class IconPicker extends Modal {
 		if (combos.length === 0) return;
 		const sectionEl = this.favoritesEl.createDiv({ cls: 'icon-palette-favorite-section' });
 		sectionEl.createDiv({ cls: 'icon-palette-favorite-header', text: title });
+		// One tab stop per grid; arrow keys rove between tiles (mirrors the search
+		// results), so keyboard users do not tab through every favorite.
 		const gridEl = sectionEl.createDiv({ cls: 'icon-palette-favorite-grid' });
+		gridEl.tabIndex = 0;
 		for (const combo of combos) {
 			const button = new ExtraButtonComponent(gridEl);
 			const iconEl = button.extraSettingsEl;
 			iconEl.addClass('icon-palette-search-result');
-			iconEl.tabIndex = 0;
+			iconEl.tabIndex = -1;
 			this.iconManager.refreshIcon({ icon: combo.icon, color: combo.color }, iconEl, () => {
 				this.closeAndSave(combo.icon, combo.color);
 			});
