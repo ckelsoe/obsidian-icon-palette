@@ -17,7 +17,7 @@ import SuggestionIconManager from 'src/managers/SuggestionIconManager.js';
 import SuggestionDialogIconManager from 'src/managers/SuggestionDialogIconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
 import RulePicker from 'src/dialogs/RulePicker.js';
-import type { Category, IconLibraryFilter, AppItemId, AppItem, TabItem, FileItem, BookmarkItem, TagItem, PropertyItem, RibbonItem, RuleBase } from 'src/types.js';
+import type { Category, IconLibraryFilter, AppItemId, AppItem, TabItem, FileItem, BookmarkItem, TagItem, PropertyItem, RibbonItem, RuleBase, FavoritesState } from 'src/types.js';
 import { ICONS, STRINGS, PLUGIN_TAB_TYPES } from 'src/registry.js';
 import type { BookmarkBase, PropertyBase, RibbonItemBase, TagBase, AppWithInternalPlugins, AppWithMetadataTypes, WorkspaceWithRibbon, AppWithHotkeys, AppWithCustomCss, AppWithPlugins, MetadataCacheWithTags, WorkspaceLeafWithElements, WorkspaceWithMobileSplits } from 'src/obsidian-internals.js';
 
@@ -76,6 +76,7 @@ interface IconPaletteSettings {
 	ribbonIcons: IconSettingMap;
 	fileRules: RuleBase[];
 	folderRules: RuleBase[];
+	favorites: FavoritesState;
 }
 
 const DEFAULT_SETTINGS: IconPaletteSettings = {
@@ -116,6 +117,7 @@ const DEFAULT_SETTINGS: IconPaletteSettings = {
 	ribbonIcons: {},
 	fileRules: [],
 	folderRules: [],
+	favorites: { pinned: [], recent: [] },
 }
 
 /**
@@ -1380,6 +1382,7 @@ export default class IconPalettePlugin extends Plugin {
 			: {};
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, settingsPatch);
 		this.settings.dialogState = Object.assign({}, DEFAULT_SETTINGS.dialogState, settingsPatch.dialogState);
+		this.settings.favorites = Object.assign({}, DEFAULT_SETTINGS.favorites, settingsPatch.favorites);
 	}
 
 	/**
