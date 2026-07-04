@@ -248,6 +248,13 @@ a.tag {
 	margin-inline-start: auto;
 }
 
+/* Shared two-row height for the favorite and search-results grids. First-pass
+   value; tune against the vault render. Kept in one place so the two grids that
+   reuse the wrapping/vertical-scroll primitive cannot drift apart. */
+.icon-palette-icon-picker {
+	--icon-palette-grid-max-height: 5.5rem;
+}
+
 /* Favorites (pinned + recent) sections, above the search field. Reuse the same
    two-row wrapping, vertical-scroll grid primitive as the search results. */
 .icon-palette-favorite-header {
@@ -260,15 +267,14 @@ a.tag {
 	flex-wrap: wrap;
 	align-content: flex-start;
 	justify-content: center;
-	max-height: 5.5rem;
+	max-height: var(--icon-palette-grid-max-height);
 	overflow-x: hidden;
 	overflow-y: auto;
 }
 
-/* Search results container: two-row wrapping grid, vertical scroll past two rows.
-   max-height is a first-pass two-row height; tune against the vault render. */
+/* Search results container: two-row wrapping grid, vertical scroll past two rows. */
 .icon-palette-search-results {
-	max-height: 5.5rem;
+	max-height: var(--icon-palette-grid-max-height);
 	overflow-x: hidden;
 	overflow-y: auto;
 }
