@@ -1382,7 +1382,14 @@ export default class IconPalettePlugin extends Plugin {
 			: {};
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, settingsPatch);
 		this.settings.dialogState = Object.assign({}, DEFAULT_SETTINGS.dialogState, settingsPatch.dialogState);
-		this.settings.favorites = Object.assign({}, DEFAULT_SETTINGS.favorites, settingsPatch.favorites);
+		// Build fresh, type-checked arrays: a shallow merge would share the
+		// module-level DEFAULT_SETTINGS arrays (recordRecent would then mutate the
+		// defaults), and a partial/corrupt data.json could pass a non-array
+		// through that later crashes FavoritesStore.
+		this.settings.favorites = {
+			pinned: Array.isArray(settingsPatch.favorites?.pinned) ? settingsPatch.favorites.pinned : [],
+			recent: Array.isArray(settingsPatch.favorites?.recent) ? settingsPatch.favorites.recent : [],
+		};
 	}
 
 	/**
