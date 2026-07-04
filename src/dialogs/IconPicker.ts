@@ -1,6 +1,6 @@
 import { ButtonComponent, ColorComponent, DropdownComponent, ExtraButtonComponent, Menu, Modal, Platform, Setting, TextComponent, displayTooltip, prepareFuzzySearch, setTooltip } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
-import type { Category, Item, Icon, IconLibraryFilter } from 'src/types.js';
+import type { Category, Item, Icon, IconLibraryFilter, IconColorCombo } from 'src/types.js';
 import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 import type { MenuItemWithIconElement } from 'src/obsidian-internals.js';
 import { isLibraryIcon, populateLibraryIcons, registerIconLibraries } from 'src/IconLibraries.js';
@@ -93,6 +93,7 @@ export default class IconPicker extends Modal {
 
 	// Components
 	private overruleEl!: HTMLElement;
+	private favoritesEl!: HTMLElement;
 	private searchSetting!: Setting;
 	private searchResultsSetting!: Setting;
 	private colorResetButton!: ExtraButtonComponent;
@@ -296,6 +297,10 @@ export default class IconPicker extends Modal {
 				case 'rule': setting.setName(STRINGS.categories.rules); break;
 			}
 		}
+
+		// Favorites (pinned + recent combos), above the search for fast reuse
+		this.favoritesEl = this.contentEl.createDiv({ cls: 'icon-palette-favorites' });
+		this.updateFavorites();
 
 		// Search
 		this.searchSetting = new Setting(this.contentEl)
@@ -668,6 +673,63 @@ export default class IconPicker extends Modal {
 				button.extraSettingsEl.addClasses(['icon-palette-invisible', 'icon-palette-search-result']);
 			});
 		}
+	}
+
+	/**
+	 * Rebuild the Pinned and Recent favorite sections. Each is a wrapping grid
+	 * that hides entirely when empty. Recent excludes anything pinned.
+	 */
+	private updateFavorites(): void {
+		this.favoritesEl.empty();
+		const { favorites } = this.plugin.settings;
+		this.renderFavoriteSection(STRINGS.iconPicker.pinned, favorites.pinned, true);
+		this.renderFavoriteSection(STRINGS.iconPicker.recent, FavoritesStore.visibleRecent(favorites), false);
+	}
+
+	/**
+	 * Render one favorite section: a header plus a grid of combo buttons drawn in
+	 * their own colors. Clicking a combo applies it; right-click / long-press
+	 * opens a pin or unpin action.
+	 */
+	private renderFavoriteSection(title: string, combos: IconColorCombo[], pinned: boolean): void {
+		if (combos.length === 0) return;
+		const sectionEl = this.favoritesEl.createDiv({ cls: 'icon-palette-favorite-section' });
+		sectionEl.createDiv({ cls: 'icon-palette-favorite-header', text: title });
+		const gridEl = sectionEl.createDiv({ cls: 'icon-palette-favorite-grid' });
+		for (const combo of combos) {
+			const button = new ExtraButtonComponent(gridEl);
+			const iconEl = button.extraSettingsEl;
+			iconEl.addClass('icon-palette-search-result');
+			iconEl.tabIndex = 0;
+			this.iconManager.refreshIcon({ icon: combo.icon, color: combo.color }, iconEl, () => {
+				this.closeAndSave(combo.icon, combo.color);
+			});
+			this.iconManager.setEventListener(iconEl, 'contextmenu', event => {
+				event.preventDefault();
+				if (Platform.isPhone) navigator.vibrate?.(100); // Not supported on iOS
+				this.openFavoriteMenu(combo, pinned, event.clientX, event.clientY);
+			});
+		}
+	}
+
+	/**
+	 * Open a pin or unpin action for a favorite combo, then persist and re-render.
+	 */
+	private openFavoriteMenu(combo: IconColorCombo, pinned: boolean, x: number, y: number): void {
+		const menu = new Menu();
+		menu.addItem(menuItem => menuItem
+			.setTitle(pinned ? STRINGS.iconPicker.unpin : STRINGS.iconPicker.pin)
+			.setIcon(pinned ? 'lucide-pin-off' : 'lucide-pin')
+			.onClick(() => {
+				const changed = pinned
+					? FavoritesStore.unpin(this.plugin.settings.favorites, combo)
+					: FavoritesStore.pin(this.plugin.settings.favorites, combo);
+				if (changed) {
+					void this.plugin.saveSettings();
+					this.updateFavorites();
+				}
+			}));
+		menu.showAtPosition({ x, y });
 	}
 
 	/**
