@@ -18,8 +18,8 @@ export interface Icon {
 /**
  * A reusable icon+color pairing for the favorites feature. Unlike {@link Icon},
  * the icon is never null: a combo is always a concrete icon or emoji. `color`
- * may be null, meaning the default/theme color; an empty string is treated the
- * same as null for combo identity (see {@link FavoritesStore.comboKey}).
+ * may be null, meaning the default/theme color; an empty-string color counts as
+ * the same as null (no color) when two combos are compared for identity.
  */
 export interface IconColorCombo {
 	icon: string;
