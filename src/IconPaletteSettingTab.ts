@@ -512,6 +512,26 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				})
 			)
 		);
+
+		// Footer: version + links, the same trailing row the workspace's other
+		// plugins render (shell-path-copy settings-tab renderFooter, annoteca
+		// settings renderFooter).
+		this.renderFooter(this.containerEl.createDiv());
+	}
+
+	/**
+	 * Render the version + links footer as a trailing settings row, matching the
+	 * other plugins in the workspace.
+	 */
+	private renderFooter(host: HTMLElement): void {
+		host.addClass('icon-palette-settings-footer');
+		host.createSpan({ text: `Version ${this.plugin.manifest.version} | ` });
+		const link = (text: string, url: string): void => {
+			host.createEl('a', { text, href: url, attr: { target: '_blank', rel: 'noopener' } });
+		};
+		link('GitHub', 'https://github.com/ckelsoe/obsidian-icon-palette');
+		host.createSpan({ text: ' | ' });
+		link('Report Issues', 'https://github.com/ckelsoe/obsidian-icon-palette/issues');
 	}
 
 	private async openUnusedIcons(): Promise<void> {
