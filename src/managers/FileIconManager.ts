@@ -367,6 +367,11 @@ export default class FileIconManager extends IconManager {
 		} else {
 			this.plugin.saveFileIcons(files, combo.icon, combo.color);
 		}
+		// Applying from the menu counts as usage, same as applying from the picker,
+		// so promote the combo in the recent list. A no-op for a pinned combo.
+		if (FavoritesStore.recordRecent(this.plugin.settings.favorites, combo, FavoritesStore.RECENT_CAP)) {
+			void this.plugin.saveSettings();
+		}
 		this.plugin.refreshManagers('file', 'folder');
 	}
 
