@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0 - 2026-07-05
+
 Initial Icon Palette release, based on a clean fork of the MIT-0 licensed
 [Iconic](https://github.com/gfxholo/iconic) and [Better Icons](https://github.com/christianlempa/obsidian-iconic).
 
