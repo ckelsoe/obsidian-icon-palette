@@ -12,8 +12,6 @@ import FavoritesStore from 'src/FavoritesStore.js';
 
 const COLOR_KEYS = [...COLORS.keys()];
 const ICON_LIBRARY_FILTERS: IconLibraryFilter[] = ['lucide', 'devicon', 'simple', 'emoji'];
-// How many recent icon+color combos to keep. About two wrapping rows in the picker.
-const RECENT_CAP = 20;
 
 function isHTMLElement(value: EventTarget | Node | null): value is HTMLElement {
 	return value instanceof Node && value.instanceOf(HTMLElement);
@@ -842,7 +840,7 @@ export default class IconPicker extends Modal {
 	private recordRecent(icon: string | null | undefined, color: string | null | undefined): void {
 		if (typeof icon !== 'string' || icon === '') return;
 		if (color === undefined) return;
-		if (FavoritesStore.recordRecent(this.plugin.settings.favorites, { icon, color }, RECENT_CAP)) {
+		if (FavoritesStore.recordRecent(this.plugin.settings.favorites, { icon, color }, FavoritesStore.RECENT_CAP)) {
 			void this.plugin.saveSettings();
 		}
 	}

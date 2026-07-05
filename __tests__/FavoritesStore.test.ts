@@ -108,3 +108,50 @@ describe('FavoritesStore.isPinned / visibleRecent', () => {
 		expect(keys(FavoritesStore.visibleRecent(s))).toEqual(['b:']);
 	});
 });
+
+describe('FavoritesStore.menuCombos', () => {
+	it('caps each group independently and preserves order', () => {
+		const s = state(
+			[combo('p1'), combo('p2'), combo('p3'), combo('p4')],
+			[combo('r1'), combo('r2'), combo('r3'), combo('r4')],
+		);
+		const { pinned, recent } = FavoritesStore.menuCombos(s, 3);
+		expect(keys(pinned)).toEqual(['p1:', 'p2:', 'p3:']);
+		expect(keys(recent)).toEqual(['r1:', 'r2:', 'r3:']);
+	});
+
+	it('returns fewer than the cap when a group is short', () => {
+		const s = state([combo('a')], []);
+		const { pinned, recent } = FavoritesStore.menuCombos(s, 3);
+		expect(keys(pinned)).toEqual(['a:']);
+		expect(recent).toEqual([]);
+	});
+
+	it('excludes a pinned combo that is stale in recent', () => {
+		const s = state([combo('a')], [combo('a'), combo('b')]);
+		const { pinned, recent } = FavoritesStore.menuCombos(s, 3);
+		expect(keys(pinned)).toEqual(['a:']);
+		expect(keys(recent)).toEqual(['b:']);
+	});
+
+	it('returns two empty lists for empty state', () => {
+		const { pinned, recent } = FavoritesStore.menuCombos(state(), 3);
+		expect(pinned).toEqual([]);
+		expect(recent).toEqual([]);
+	});
+
+	it('does not throw and yields empty lists for a non-positive cap', () => {
+		const s = state([combo('a')], [combo('b')]);
+		let result: ReturnType<typeof FavoritesStore.menuCombos> | undefined;
+		expect(() => { result = FavoritesStore.menuCombos(s, 0); }).not.toThrow();
+		expect(result?.pinned).toEqual([]);
+		expect(result?.recent).toEqual([]);
+	});
+
+	it('does not mutate the source state', () => {
+		const s = state([combo('p1'), combo('p2')], [combo('r1'), combo('r2')]);
+		FavoritesStore.menuCombos(s, 1);
+		expect(keys(s.pinned)).toEqual(['p1:', 'p2:']);
+		expect(keys(s.recent)).toEqual(['r1:', 'r2:']);
+	});
+});
