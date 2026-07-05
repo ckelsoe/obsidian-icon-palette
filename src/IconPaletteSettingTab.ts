@@ -527,13 +527,13 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	private renderFooter(host: HTMLElement): void {
 		host.empty();
 		host.addClass('icon-palette-settings-footer');
-		host.createSpan({ text: `Version ${this.plugin.manifest.version} | ` });
+		host.createSpan({ text: `${STRINGS.settings.footer.version.replace('{#}', this.plugin.manifest.version)} | ` });
 		const link = (text: string, url: string): void => {
 			host.createEl('a', { text, href: url, attr: { target: '_blank', rel: 'noopener' } });
 		};
-		link('GitHub', 'https://github.com/ckelsoe/obsidian-icon-palette');
+		link(STRINGS.settings.footer.github, 'https://github.com/ckelsoe/obsidian-icon-palette');
 		host.createSpan({ text: ' | ' });
-		link('Report Issues', 'https://github.com/ckelsoe/obsidian-icon-palette/issues');
+		link(STRINGS.settings.footer.reportIssues, 'https://github.com/ckelsoe/obsidian-icon-palette/issues');
 	}
 
 	private async openUnusedIcons(): Promise<void> {
