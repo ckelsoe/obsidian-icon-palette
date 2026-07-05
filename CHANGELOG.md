@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.1 - 2026-07-05
+
 ### Added
 
 - Settings now show a footer with the plugin version and links to the GitHub repository and issue tracker.
