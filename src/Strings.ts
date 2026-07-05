@@ -20,6 +20,9 @@ export default class Strings {
 		resetColor: 'Reset color',
 		resetColors: 'Reset {#} colors',
 		editRule: 'Edit rule...',
+		pinnedAndRecent: 'Pinned & recent icons',
+		pinnedHeading: 'Pinned',
+		recentHeading: 'Recent',
 	};
 	static rulePicker = {
 		selectPage: 'Select a page',

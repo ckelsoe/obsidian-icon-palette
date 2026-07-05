@@ -1,10 +1,19 @@
-import { WorkspaceLeaf } from 'obsidian';
+import { Menu, WorkspaceLeaf } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
-import type { FileItem } from 'src/types.js';
+import type { FileItem, IconColorCombo } from 'src/types.js';
+import type { MenuItemWithIconElement, MenuItemWithSubmenu } from 'src/obsidian-internals.js';
 import { STRINGS } from 'src/registry.js';
+import FavoritesStore from 'src/FavoritesStore.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
+
+/**
+ * Most-recently-first pinned combos and most-recently-first recent combos to
+ * offer per group in the right-click submenu. The full picker dialog reaches the
+ * rest. Per group, so the submenu shows at most 2 * this many combo rows.
+ */
+const PINNED_MENU_CAP = 3;
 
 /**
  * Handles icons in the Files pane.
@@ -214,10 +223,10 @@ export default class FileIconManager extends IconManager {
 	private onContextMenu(...fileIds: string[]): void {
 		this.plugin.menuManager?.closeAndFlush();
 		const files: FileItem[] = [];
-		const firstFile = files.first();
 		for (const fileId of fileIds) {
 			files.push(this.plugin.getFileItem(fileId));
 		}
+		const firstFile = files.first();
 
 		// Change icon(s)
 		const changeTitle = files.length === 1
@@ -241,6 +250,9 @@ export default class FileIconManager extends IconManager {
 				}
 			})
 		);
+
+		// Pinned & recent combos, one click to apply
+		this.addPinnedMenu(files);
 
 		// Remove icon(s) / Reset color(s)
 		const anyIcons = files.some(file => file.icon);
@@ -293,6 +305,61 @@ export default class FileIconManager extends IconManager {
 				});
 			}
 		}
+	}
+
+	/**
+	 * Add a submenu of pinned and recent combos to the current menu. One click on
+	 * a combo applies it to the target file(s) without opening the picker dialog.
+	 * Omitted entirely when nothing is pinned and nothing is recent, so a fresh
+	 * install sees no new menu entry until it has a combo.
+	 */
+	private addPinnedMenu(files: FileItem[]): void {
+		const { pinned, recent } = FavoritesStore.menuCombos(this.plugin.settings.favorites, PINNED_MENU_CAP);
+		if (pinned.length === 0 && recent.length === 0) return;
+
+		this.plugin.menuManager?.addItem(item => {
+			item
+				.setTitle(STRINGS.menu.pinnedAndRecent)
+				.setIcon('lucide-pin')
+				.setSection('icon');
+			const submenu = (item as typeof item & MenuItemWithSubmenu).setSubmenu?.();
+			if (!submenu) return;
+			this.addComboSection(submenu, STRINGS.menu.pinnedHeading, pinned, files);
+			this.addComboSection(submenu, STRINGS.menu.recentHeading, recent, files);
+		});
+	}
+
+	/**
+	 * Add a labeled group of combo items to a menu. Each item renders its icon in
+	 * its own color, the same way the picker's color menu paints its swatches. No
+	 * items and no heading are added for an empty group.
+	 */
+	private addComboSection(menu: Menu, heading: string, combos: IconColorCombo[], files: FileItem[]): void {
+		if (combos.length === 0) return;
+		menu.addItem(item => item.setTitle(heading).setIsLabel(true));
+		for (const combo of combos) {
+			menu.addItem(item => {
+				item
+					.setTitle(combo.icon)
+					.onClick(() => this.applyCombo(files, combo));
+				const iconEl = (item as typeof item & MenuItemWithIconElement).iconEl;
+				if (iconEl) this.refreshIcon({ icon: combo.icon, color: combo.color }, iconEl);
+			});
+		}
+	}
+
+	/**
+	 * Apply a combo to the target file(s), reusing the same save path the picker
+	 * uses, then refresh the file and folder managers.
+	 */
+	private applyCombo(files: FileItem[], combo: IconColorCombo): void {
+		const firstFile = files.first();
+		if (files.length === 1 && firstFile) {
+			this.plugin.saveFileIcon(firstFile, combo.icon, combo.color);
+		} else {
+			this.plugin.saveFileIcons(files, combo.icon, combo.color);
+		}
+		this.plugin.refreshManagers('file', 'folder');
 	}
 
 	/**

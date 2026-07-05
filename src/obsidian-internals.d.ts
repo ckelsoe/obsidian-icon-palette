@@ -6,7 +6,7 @@
 // here keeps the full internal-API dependency auditable in one place when a new
 // Obsidian version ships. The casts themselves are unchanged.
 
-import type { Hotkey } from 'obsidian';
+import type { Hotkey, Menu } from 'obsidian';
 import type { Category } from 'src/types.js';
 
 // --- Internal data shapes read through the augmentation interfaces below ---
@@ -50,6 +50,17 @@ export interface HotkeyManagerBase {
 
 export interface MenuItemWithIconElement {
 	iconEl?: HTMLElement;
+}
+
+// `MenuItem.setSubmenu()` returns a nested Menu to populate. It is a real,
+// long-standing runtime method but is absent from Obsidian's published
+// obsidian.d.ts, so it cannot be called through the public type. Because it
+// carries no `@since` tag, the obsidianmd no-unsupported-api rule (which version-
+// gates only documented APIs) neither flags nor vouches for it; a human review
+// could still question the undocumented reach. Used for the pinned/recent submenu
+// in FileIconManager.
+export interface MenuItemWithSubmenu {
+	setSubmenu?: () => Menu;
 }
 
 // --- App augmentations ---

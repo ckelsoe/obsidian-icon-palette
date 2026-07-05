@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Right-click a file or folder to apply a pinned or recently used icon and color combination in one click, from a "Pinned & recent icons" submenu, without opening the picker. The submenu appears only once you have pinned or applied a combo, and applies to every file in a multiple selection.
+
+### Fixed
+
+- Single-file "Change icon..." routed through the multiple-file path because the target file was captured before it was resolved.
+
 ## 0.1.0 - 2026-07-05
 
 Initial Icon Palette release, based on a clean fork of the MIT-0 licensed
