@@ -77,6 +77,7 @@ interface IconPaletteSettings {
 	fileRules: RuleBase[];
 	folderRules: RuleBase[];
 	favorites: FavoritesState;
+	customColors: string[];
 }
 
 const DEFAULT_SETTINGS: IconPaletteSettings = {
@@ -118,6 +119,7 @@ const DEFAULT_SETTINGS: IconPaletteSettings = {
 	fileRules: [],
 	folderRules: [],
 	favorites: { pinned: [], recent: [] },
+	customColors: [],
 }
 
 /**
@@ -1397,6 +1399,11 @@ export default class IconPalettePlugin extends Plugin {
 			pinned: Array.isArray(settingsPatch.favorites?.pinned) ? settingsPatch.favorites.pinned : [],
 			recent: Array.isArray(settingsPatch.favorites?.recent) ? settingsPatch.favorites.recent : [],
 		};
+		// Same defense as favorites: a partial/corrupt data.json could pass a
+		// non-array or non-string members that later crash CustomColorsStore.
+		this.settings.customColors = Array.isArray(settingsPatch.customColors)
+			? settingsPatch.customColors.filter((color): color is string => typeof color === 'string')
+			: [];
 	}
 
 	/**

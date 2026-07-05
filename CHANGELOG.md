@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Save a custom color once and reuse it. In the icon picker's color menu, "Save current color" stores the color you picked as a swatch that then appears in the menu alongside the theme colors, one click away every time. Select a saved swatch again to choose "Remove saved color", or manage the whole set from a new "Saved colors" section in the plugin settings.
+
 ## 0.2.0 - 2026-07-05
 
 ### Added

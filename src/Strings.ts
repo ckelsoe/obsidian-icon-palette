@@ -234,6 +234,8 @@ export default class Strings {
 		searchMix: 'Search icons / emojis...',
 		changeColor: 'Change color',
 		resetColor: 'Reset color',
+		saveColor: 'Save current color',
+		removeColor: 'Remove saved color',
 		toggleIcons: 'Toggle icons',
 		toggleEmojis: 'Toggle emojis',
 		pinned: 'Pinned',
@@ -405,6 +407,12 @@ export default class Strings {
 			name: 'Second color picker',
 			descDesktop: 'Appears when you secondary-click the color bubble.',
 			descMobile: 'Appears when you press & hold the color bubble.',
+		},
+		headingSavedColors: 'Saved colors',
+		savedColors: {
+			desc: 'Colors you save from the icon picker appear here and in its color menu.',
+			empty: 'No saved colors yet. Save one from the color menu in the icon picker.',
+			removeTooltip: 'Click to remove',
 		},
 		headingAdvanced: 'Advanced',
 		uncolorHover: {
