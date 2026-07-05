@@ -1,4 +1,4 @@
-import { Menu, WorkspaceLeaf } from 'obsidian';
+import { Menu, MenuItem, WorkspaceLeaf } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem, IconColorCombo } from 'src/types.js';
 import type { MenuItemWithIconElement, MenuItemWithSubmenu } from 'src/obsidian-internals.js';
@@ -14,6 +14,13 @@ import IconPicker from 'src/dialogs/IconPicker.js';
  * rest. Per group, so the submenu shows at most 2 * this many combo rows.
  */
 const PINNED_MENU_CAP = 3;
+
+/**
+ * Whether this Obsidian build exposes the undocumented `MenuItem.setSubmenu`.
+ * Checked once so the submenu entry is omitted entirely on a build without it,
+ * rather than adding a dead menu item that has no submenu and does nothing.
+ */
+const MENU_ITEM_SUPPORTS_SUBMENU = typeof (MenuItem.prototype as unknown as MenuItemWithSubmenu).setSubmenu === 'function';
 
 /**
  * Handles icons in the Files pane.
@@ -314,6 +321,7 @@ export default class FileIconManager extends IconManager {
 	 * install sees no new menu entry until it has a combo.
 	 */
 	private addPinnedMenu(files: FileItem[]): void {
+		if (!MENU_ITEM_SUPPORTS_SUBMENU) return;
 		const { pinned, recent } = FavoritesStore.menuCombos(this.plugin.settings.favorites, PINNED_MENU_CAP);
 		if (pinned.length === 0 && recent.length === 0) return;
 

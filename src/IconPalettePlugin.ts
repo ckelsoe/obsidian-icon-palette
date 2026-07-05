@@ -1327,6 +1327,13 @@ export default class IconPalettePlugin extends Plugin {
 		for (const rule of [...this.settings.fileRules, ...this.settings.folderRules]) {
 			collect(rule.icon);
 		}
+		// Pinned and recent combos render in the file context menu before the
+		// picker is ever opened, so their library icons must be registered at
+		// startup too, otherwise a devicon/simple favorite not assigned anywhere
+		// else falls back to a help icon after a restart.
+		for (const combo of [...this.settings.favorites.pinned, ...this.settings.favorites.recent]) {
+			collect(combo.icon);
+		}
 		return [...iconIds];
 	}
 
