@@ -339,12 +339,13 @@ a.tag {
 	cursor: pointer;
 }
 
-/* Settings footer: version + links, matching the other plugins' footers. */
+/* Settings footer: version + links, matching the other plugins' footers. The
+   host is a Setting row (display: flex), so center with justify-content like the
+   annoteca footer rather than text-align. */
 .icon-palette-settings-footer {
-	text-align: center;
+	justify-content: center;
 	color: var(--text-muted);
 	font-size: var(--font-ui-small);
-	margin-top: var(--size-4-4);
 }
 .icon-palette-settings-footer a {
 	margin: 0 4px;

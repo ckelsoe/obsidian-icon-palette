@@ -1,4 +1,4 @@
-import { ExtraButtonComponent, Platform, PluginSettingTab, SettingGroup } from 'obsidian';
+import { ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
@@ -515,8 +515,9 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 
 		// Footer: version + links, the same trailing row the workspace's other
 		// plugins render (shell-path-copy settings-tab renderFooter, annoteca
-		// settings renderFooter).
-		this.renderFooter(this.containerEl.createDiv());
+		// settings renderFooter). Rendered into a Setting row's element like the
+		// reference plugins, so it picks up the standard settings-item spacing.
+		this.renderFooter(new Setting(this.containerEl).settingEl);
 	}
 
 	/**
@@ -524,6 +525,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * other plugins in the workspace.
 	 */
 	private renderFooter(host: HTMLElement): void {
+		host.empty();
 		host.addClass('icon-palette-settings-footer');
 		host.createSpan({ text: `Version ${this.plugin.manifest.version} | ` });
 		const link = (text: string, url: string): void => {
