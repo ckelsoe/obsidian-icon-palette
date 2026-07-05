@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-07-05
+
 ### Added
 
 - Right-click a file or folder to apply a pinned or recently used icon and color combination in one click, from a "Pinned & recent icons" submenu, without opening the picker. The submenu appears only once you have pinned or applied a combo, and applies to every file in a multiple selection.

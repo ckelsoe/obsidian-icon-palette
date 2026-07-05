@@ -1,7 +1,7 @@
 {
 	"id": "icon-palette",
 	"name": "Icon Palette",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"minAppVersion": "1.11.0",
 	"description": "Set custom icons and colors on files, folders, tabs, tags, properties, and bookmarks, with a rulebook to apply them automatically.",
 	"author": "Charles Kelsoe (ckelsoe)",
