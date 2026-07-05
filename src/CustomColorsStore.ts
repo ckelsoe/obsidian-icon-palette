@@ -1,9 +1,11 @@
 /**
  * Pure logic for the custom color palette: a capped, most-recently-saved-first
  * list of user-saved colors (hex swatches). No Obsidian imports, so the dedup /
- * ordering / cap rules are unit-testable in isolation, mirroring FavoritesStore.
- * The IconPicker color menu and the settings tab call these and render the
- * result; all list mutation lives here.
+ * ordering / cap rules are unit-testable in isolation, in the same pure-store
+ * style as FavoritesStore (though `save` enforces the cap unconditionally, so
+ * the behavior is not identical to FavoritesStore.recordRecent). The IconPicker
+ * color menu and the settings tab call these and render the result; all list
+ * mutation lives here.
  *
  * Every mutator returns whether the state changed, so the caller saves settings
  * only when needed.
@@ -36,9 +38,9 @@ export default class CustomColorsStore {
 	/**
 	 * Save a color at the front of the list, most-recent-first. An existing entry
 	 * is moved to the front rather than duplicated; if it is already at the front
-	 * this is a no-op. The raw string is stored (so the swatch renders the user's
-	 * exact value) while dedup compares normalized keys. The list is trimmed to
-	 * `cap`.
+	 * and the list is within `cap` this is a no-op, but an over-cap list is still
+	 * trimmed. The raw string is stored (so the swatch renders the user's exact
+	 * value) while dedup compares normalized keys. The list is trimmed to `cap`.
 	 */
 	static save(colors: string[], color: string, cap: number): boolean {
 		const key = CustomColorsStore.normalize(color);
