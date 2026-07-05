@@ -412,7 +412,7 @@ export default class Strings {
 		savedColors: {
 			desc: 'Colors you save from the icon picker appear here and in its color menu.',
 			empty: 'No saved colors yet. Save one from the color menu in the icon picker.',
-			removeTooltip: 'Click to remove',
+			removeTooltip: '{color} (click to remove)',
 		},
 		headingAdvanced: 'Advanced',
 		uncolorHover: {

@@ -25,6 +25,9 @@ export default class CustomColorsStore {
 		return color.trim().toLowerCase();
 	}
 
+	/**
+	 * Whether the list already contains this color, compared case-insensitively.
+	 */
 	static has(colors: string[], color: string): boolean {
 		const key = CustomColorsStore.normalize(color);
 		return colors.some(c => CustomColorsStore.normalize(c) === key);
@@ -40,13 +43,23 @@ export default class CustomColorsStore {
 	static save(colors: string[], color: string, cap: number): boolean {
 		const key = CustomColorsStore.normalize(color);
 		const existingIndex = colors.findIndex(c => CustomColorsStore.normalize(c) === key);
-		if (existingIndex === 0) return false;
-
-		if (existingIndex > 0) colors.splice(existingIndex, 1);
-		colors.unshift(color);
 		// Clamp: a non-positive cap trims to empty rather than throwing a
 		// RangeError on a negative array length.
 		const max = Math.max(0, cap);
+
+		// Already at the front: nothing to reorder, but still enforce the cap so an
+		// over-cap list (a lowered cap or a hand-edited data.json) is shrunk here
+		// rather than left oversized.
+		if (existingIndex === 0) {
+			if (colors.length > max) {
+				colors.length = max;
+				return true;
+			}
+			return false;
+		}
+
+		if (existingIndex > 0) colors.splice(existingIndex, 1);
+		colors.unshift(color);
 		if (colors.length > max) colors.length = max;
 		return true;
 	}

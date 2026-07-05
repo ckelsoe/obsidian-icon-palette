@@ -486,19 +486,7 @@ export default class IconPicker extends Modal {
 				.setTitle(STRINGS.iconPicker.colors[color as keyof typeof STRINGS.iconPicker.colors])
 				.setChecked(color === this.color)
 				.setSection('color')
-				.onClick(() => {
-					if (this.color === color) {
-						this.color = null;
-						this.colorResetButton.extraSettingsEl.addClass('icon-palette-invisible');
-						this.colorResetButton.extraSettingsEl.tabIndex = -1;
-					} else {
-						this.color = color;
-						this.colorResetButton.extraSettingsEl.removeClass('icon-palette-invisible');
-						this.colorResetButton.extraSettingsEl.tabIndex = 0;
-					}
-					this.updateColorPicker();
-					this.updateSearchResults();
-				});
+				.onClick(() => this.selectMenuColor(this.color === color ? null : color));
 				const iconEl = (menuItem as typeof menuItem & MenuItemWithIconElement).iconEl;
 				if (iconEl) this.iconManager.refreshIcon({ icon: 'lucide-paint-bucket', color }, iconEl);
 			});
@@ -510,19 +498,7 @@ export default class IconPicker extends Modal {
 				.setTitle(color)
 				.setChecked(this.isSameCustomColor(this.color, color))
 				.setSection('custom-color')
-				.onClick(() => {
-					if (this.isSameCustomColor(this.color, color)) {
-						this.color = null;
-						this.colorResetButton.extraSettingsEl.addClass('icon-palette-invisible');
-						this.colorResetButton.extraSettingsEl.tabIndex = -1;
-					} else {
-						this.color = color;
-						this.colorResetButton.extraSettingsEl.removeClass('icon-palette-invisible');
-						this.colorResetButton.extraSettingsEl.tabIndex = 0;
-					}
-					this.updateColorPicker();
-					this.updateSearchResults();
-				});
+				.onClick(() => this.selectMenuColor(this.isSameCustomColor(this.color, color) ? null : color));
 				const iconEl = (menuItem as typeof menuItem & MenuItemWithIconElement).iconEl;
 				if (iconEl) this.iconManager.refreshIcon({ icon: 'lucide-paint-bucket', color }, iconEl);
 			});
@@ -547,6 +523,20 @@ export default class IconPicker extends Modal {
 		}
 
 		menu.showAtPosition({ x, y });
+	}
+
+	/**
+	 * Apply or clear the active color from a color-menu selection, then sync the
+	 * reset button and dependent UI. Shared by the theme-color and custom-color
+	 * menu items so the two cannot drift apart; each caller decides whether its
+	 * item is a toggle-off (pass null) or a select (pass the color).
+	 */
+	private selectMenuColor(color: string | null): void {
+		this.color = color;
+		this.colorResetButton.extraSettingsEl.toggleClass('icon-palette-invisible', color === null);
+		this.colorResetButton.extraSettingsEl.tabIndex = color === null ? -1 : 0;
+		this.updateColorPicker();
+		this.updateSearchResults();
 	}
 
 	/**

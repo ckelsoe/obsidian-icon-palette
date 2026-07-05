@@ -38,9 +38,15 @@ describe('CustomColorsStore.save', () => {
 		expect(colors).toEqual(['#AABBCC', '#111111']);
 	});
 
-	it('is a case-insensitive no-op when the color is already at the front', () => {
+	it('is a case-insensitive no-op when the color is already at the front and within cap', () => {
 		const colors = ['#aabbcc', '#111111'];
 		expect(CustomColorsStore.save(colors, '#AABBCC', 12)).toBe(false);
+		expect(colors).toEqual(['#aabbcc', '#111111']);
+	});
+
+	it('still enforces the cap when the color is already at the front but the list is over cap', () => {
+		const colors = ['#aabbcc', '#111111', '#222222'];
+		expect(CustomColorsStore.save(colors, '#aabbcc', 2)).toBe(true);
 		expect(colors).toEqual(['#aabbcc', '#111111']);
 	});
 

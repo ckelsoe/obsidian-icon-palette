@@ -396,7 +396,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			for (const color of customColors) {
 				const swatch = new ExtraButtonComponent(gridEl)
 					.setIcon('lucide-paint-bucket')
-					.setTooltip(`${color} (${STRINGS.settings.savedColors.removeTooltip})`)
+					.setTooltip(STRINGS.settings.savedColors.removeTooltip.replace('{color}', color))
 					.onClick(() => {
 						if (CustomColorsStore.remove(customColors, color)) {
 							void this.plugin.saveSettings();
