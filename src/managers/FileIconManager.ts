@@ -2,7 +2,7 @@ import { Menu, WorkspaceLeaf } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem, IconColorCombo } from 'src/types.js';
 import type { MenuItemWithIconElement, MenuItemWithSubmenu } from 'src/obsidian-internals.js';
-import { STRINGS } from 'src/registry.js';
+import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 import FavoritesStore from 'src/FavoritesStore.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
@@ -340,7 +340,7 @@ export default class FileIconManager extends IconManager {
 		for (const combo of combos) {
 			menu.addItem(item => {
 				item
-					.setTitle(combo.icon)
+					.setTitle(ICONS.get(combo.icon) ?? EMOJIS.get(combo.icon) ?? combo.icon)
 					.onClick(() => this.applyCombo(files, combo));
 				const iconEl = (item as typeof item & MenuItemWithIconElement).iconEl;
 				if (iconEl) this.refreshIcon({ icon: combo.icon, color: combo.color }, iconEl);
