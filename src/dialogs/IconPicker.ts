@@ -9,6 +9,7 @@ import { RuleItem } from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
 import FavoritesStore from 'src/FavoritesStore.js';
+import CustomColorsStore from 'src/CustomColorsStore.js';
 
 const COLOR_KEYS = [...COLORS.keys()];
 const ICON_LIBRARY_FILTERS: IconLibraryFilter[] = ['lucide', 'devicon', 'simple', 'emoji'];
@@ -485,24 +486,67 @@ export default class IconPicker extends Modal {
 				.setTitle(STRINGS.iconPicker.colors[color as keyof typeof STRINGS.iconPicker.colors])
 				.setChecked(color === this.color)
 				.setSection('color')
-				.onClick(() => {
-					if (this.color === color) {
-						this.color = null;
-						this.colorResetButton.extraSettingsEl.addClass('icon-palette-invisible');
-						this.colorResetButton.extraSettingsEl.tabIndex = -1;
-					} else {
-						this.color = color;
-						this.colorResetButton.extraSettingsEl.removeClass('icon-palette-invisible');
-						this.colorResetButton.extraSettingsEl.tabIndex = 0;
-					}
-					this.updateColorPicker();
-					this.updateSearchResults();
-				});
+				.onClick(() => this.selectMenuColor(this.color === color ? null : color));
 				const iconEl = (menuItem as typeof menuItem & MenuItemWithIconElement).iconEl;
 				if (iconEl) this.iconManager.refreshIcon({ icon: 'lucide-paint-bucket', color }, iconEl);
 			});
 		}
+
+		// Saved custom colors, below the theme colors as their own section.
+		for (const color of this.plugin.settings.customColors) {
+			menu.addItem(menuItem => { menuItem
+				.setTitle(color)
+				.setChecked(this.isSameCustomColor(this.color, color))
+				.setSection('custom-color')
+				.onClick(() => this.selectMenuColor(this.isSameCustomColor(this.color, color) ? null : color));
+				const iconEl = (menuItem as typeof menuItem & MenuItemWithIconElement).iconEl;
+				if (iconEl) this.iconManager.refreshIcon({ icon: 'lucide-paint-bucket', color }, iconEl);
+			});
+		}
+
+		// Contextual save/remove action for the active color. Only a concrete color
+		// (a hex from the RGB picker, not a theme-color name or the default) can be
+		// saved; if it is already saved, the same slot removes it instead.
+		const active = this.color;
+		if (active && !COLORS.has(active)) {
+			const saved = CustomColorsStore.has(this.plugin.settings.customColors, active);
+			menu.addItem(menuItem => menuItem
+				.setTitle(saved ? STRINGS.iconPicker.removeColor : STRINGS.iconPicker.saveColor)
+				.setIcon(saved ? 'lucide-trash-2' : 'lucide-plus')
+				.setSection('custom-color')
+				.onClick(() => {
+					const changed = saved
+						? CustomColorsStore.remove(this.plugin.settings.customColors, active)
+						: CustomColorsStore.save(this.plugin.settings.customColors, active, CustomColorsStore.CAP);
+					if (changed) void this.plugin.saveSettings();
+				}));
+		}
+
 		menu.showAtPosition({ x, y });
+	}
+
+	/**
+	 * Apply or clear the active color from a color-menu selection, then sync the
+	 * reset button and dependent UI. Shared by the theme-color and custom-color
+	 * menu items so the two cannot drift apart; each caller decides whether its
+	 * item is a toggle-off (pass null) or a select (pass the color).
+	 */
+	private selectMenuColor(color: string | null): void {
+		this.color = color;
+		this.colorResetButton.extraSettingsEl.toggleClass('icon-palette-invisible', color === null);
+		this.colorResetButton.extraSettingsEl.tabIndex = color === null ? -1 : 0;
+		this.updateColorPicker();
+		this.updateSearchResults();
+	}
+
+	/**
+	 * Whether `color` is the same saved swatch as `candidate`, compared with the
+	 * store's case-insensitive identity so a saved swatch reads as checked
+	 * regardless of hex casing.
+	 */
+	private isSameCustomColor(color: string | null | undefined, candidate: string): boolean {
+		return typeof color === 'string'
+			&& CustomColorsStore.normalize(color) === CustomColorsStore.normalize(candidate);
 	}
 
 	/**

@@ -323,6 +323,22 @@ a.tag {
 	--icon-stroke: var(--icon-l-stroke-width);
 }
 
+/* Saved colors settings section: stack the description and a full-width swatch
+   grid (block flow overrides the default flex row so the grid sits below the
+   description rather than beside it). */
+.setting-item.icon-palette-saved-colors-row {
+	display: block;
+}
+.icon-palette-saved-colors {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-2);
+}
+.icon-palette-saved-color {
+	cursor: pointer;
+}
+
 /* Rule picker */
 .is-mobile .mod-confirmation > .modal.icon-palette-rule-picker {
 	background-color: var(--modal-background);

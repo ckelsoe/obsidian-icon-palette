@@ -5,6 +5,8 @@ import { STRINGS } from 'src/registry.js';
 import type { AppWithSettingsUI } from 'src/obsidian-internals.js';
 import RulePicker from 'src/dialogs/RulePicker.js';
 import UsageChecker from 'src/dialogs/UsageChecker.js';
+import ColorUtils from 'src/ColorUtils.js';
+import CustomColorsStore from 'src/CustomColorsStore.js';
 
 /**
  * Exposes UI settings for the plugin.
@@ -372,6 +374,40 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				this.refreshIndicator(this.indicators.colorPicker2, dropdown.getValue());
 			})
 		);
+
+		// GROUP: Saved colors
+		const groupSavedColors = new SettingGroup(this.containerEl)
+			.setHeading(STRINGS.settings.headingSavedColors);
+		const customColors = this.plugin.settings.customColors;
+
+		// SETTING: Saved colors grid
+		groupSavedColors.addSetting(setting => {
+			setting.setDesc(customColors.length === 0
+				? STRINGS.settings.savedColors.empty
+				: STRINGS.settings.savedColors.desc
+			);
+			if (customColors.length === 0) return;
+
+			// Full-width swatch grid below the description (stacked-row layout: this
+			// plugin has no createStackedRow helper, so the setting row is switched
+			// to block flow in styles.css and the grid appended under the info).
+			setting.settingEl.addClass('icon-palette-saved-colors-row');
+			const gridEl = setting.settingEl.createDiv({ cls: 'icon-palette-saved-colors' });
+			for (const color of customColors) {
+				const swatch = new ExtraButtonComponent(gridEl)
+					.setIcon('lucide-paint-bucket')
+					.setTooltip(STRINGS.settings.savedColors.removeTooltip.replace('{color}', color))
+					.onClick(() => {
+						if (CustomColorsStore.remove(customColors, color)) {
+							void this.plugin.saveSettings();
+							this.display();
+						}
+					});
+				swatch.extraSettingsEl.addClass('icon-palette-saved-color');
+				const svgEl = swatch.extraSettingsEl.find('svg');
+				if (svgEl) svgEl.style.setProperty('color', ColorUtils.toRgb(color));
+			}
+		});
 
 		// GROUP: Advanced
 		const groupAdvanced = new SettingGroup(this.containerEl)
