@@ -339,6 +339,18 @@ a.tag {
 	cursor: pointer;
 }
 
+/* Settings footer: version + links, matching the other plugins' footers. The
+   host is a Setting row (display: flex), so center with justify-content like the
+   annoteca footer rather than text-align. */
+.icon-palette-settings-footer {
+	justify-content: center;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+.icon-palette-settings-footer a {
+	margin: 0 4px;
+}
+
 /* Rule picker */
 .is-mobile .mod-confirmation > .modal.icon-palette-rule-picker {
 	background-color: var(--modal-background);

@@ -414,6 +414,11 @@ export default class Strings {
 			empty: 'No saved colors yet. Save one from the color menu in the icon picker.',
 			removeTooltip: '{color} (click to remove)',
 		},
+		footer: {
+			version: 'Version {#}',
+			github: 'GitHub',
+			reportIssues: 'Report Issues',
+		},
 		headingAdvanced: 'Advanced',
 		uncolorHover: {
 			name: 'Colorless hover',

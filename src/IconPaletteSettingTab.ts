@@ -1,4 +1,4 @@
-import { ExtraButtonComponent, Platform, PluginSettingTab, SettingGroup } from 'obsidian';
+import { ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
@@ -512,6 +512,28 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				})
 			)
 		);
+
+		// Footer: version + links, the same trailing row the workspace's other
+		// plugins render (shell-path-copy settings-tab renderFooter, annoteca
+		// settings renderFooter). Rendered into a Setting row's element like the
+		// reference plugins, so it picks up the standard settings-item spacing.
+		this.renderFooter(new Setting(this.containerEl).settingEl);
+	}
+
+	/**
+	 * Render the version + links footer as a trailing settings row, matching the
+	 * other plugins in the workspace.
+	 */
+	private renderFooter(host: HTMLElement): void {
+		host.empty();
+		host.addClass('icon-palette-settings-footer');
+		host.createSpan({ text: `${STRINGS.settings.footer.version.replace('{#}', this.plugin.manifest.version)} | ` });
+		const link = (text: string, url: string): void => {
+			host.createEl('a', { text, href: url, attr: { target: '_blank', rel: 'noopener' } });
+		};
+		link(STRINGS.settings.footer.github, 'https://github.com/ckelsoe/obsidian-icon-palette');
+		host.createSpan({ text: ' | ' });
+		link(STRINGS.settings.footer.reportIssues, 'https://github.com/ckelsoe/obsidian-icon-palette/issues');
 	}
 
 	private async openUnusedIcons(): Promise<void> {
