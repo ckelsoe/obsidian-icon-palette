@@ -28,3 +28,7 @@ release-notes.md
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# Brooks-Lint review history and reports
+.brooks-lint-history.json
+.brooks-lint-review/
