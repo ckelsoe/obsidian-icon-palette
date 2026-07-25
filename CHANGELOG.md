@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.2 - 2026-07-25
+
+### Fixed
+
+- Icon picker search results could not scroll to the top when they wrapped past the visible height, leaving the first rows of icons unreachable. The results grid now anchors to the top so every row can be scrolled into view.
+
 ## 0.3.1 - 2026-07-05
 
 ### Added

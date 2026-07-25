@@ -272,8 +272,12 @@ a.tag {
 	overflow-y: auto;
 }
 
-/* Search results container: two-row wrapping grid, vertical scroll past two rows. */
+/* Search results container: two-row wrapping grid, vertical scroll past two rows.
+   The host is an Obsidian Setting row, which defaults to align-items: center. With
+   a capped height and a taller wrapped child, centering strands the first rows above
+   the scroll origin where they cannot be reached, so anchor the child to the top. */
 .icon-palette-search-results {
+	align-items: flex-start;
 	max-height: var(--icon-palette-grid-max-height);
 	overflow-x: hidden;
 	overflow-y: auto;
