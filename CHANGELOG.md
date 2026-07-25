@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.3 - 2026-07-25
+
+### Added
+
+- Settings now appear in Obsidian's built-in settings search on Obsidian 1.13 and later. Every toggle, dropdown, and slider in the plugin's settings can be found by searching from the top of the Settings window, the same as Obsidian's own settings. Older versions keep the existing settings screen unchanged.
+
 ## 0.3.2 - 2026-07-25
 
 ### Fixed

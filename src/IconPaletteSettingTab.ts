@@ -1,4 +1,4 @@
-import { ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup } from 'obsidian';
+import { ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup, type SettingDefinitionItem } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
@@ -11,10 +11,13 @@ import CustomColorsStore from 'src/CustomColorsStore.js';
 /**
  * Exposes UI settings for the plugin.
  *
- * TODO(icon-palette): migrate to the declarative getSettingDefinitions() API so settings appear in
- * Obsidian's settings search (obsidianmd/settings-tab/prefer-setting-definitions). Tracked as a
- * dedicated follow-up PR. Until then the lint script keeps the whole repo at --max-warnings 0 and
- * only this file at --max-warnings 1, so the rest of the codebase stays strict.
+ * Dual-support (per the workspace `dual-support-settings-playbook`): Obsidian
+ * 1.13+ calls getSettingDefinitions() and renders the declarative path, which
+ * makes every setting findable in the global settings search. Obsidian < 1.13
+ * has never heard of that method and calls display(), the imperative path. Both
+ * paths route value changes through applyControlChange() so coercion and side
+ * effects cannot drift. SettingDefinitionItem is imported type-only and never
+ * appears in main.js, so the bundle stays clean for the 1.11.0 floor.
  */
 export default class IconPaletteSettingTab extends PluginSettingTab {
 	private readonly plugin: IconPalettePlugin;
@@ -33,6 +36,198 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	// The four-way visibility dropdowns (on/desktop/mobile/off) share one option
+	// map across both settings paths.
+	private platformOptions(): Record<string, string> {
+		return {
+			on: STRINGS.settings.values.on,
+			desktop: STRINGS.settings.values.desktop,
+			mobile: STRINGS.settings.values.mobile,
+			off: STRINGS.settings.values.off,
+		};
+	}
+
+	private colorModeOptions(): Record<string, string> {
+		return {
+			list: STRINGS.settings.values.list,
+			rgb: STRINGS.settings.values.rgb,
+		};
+	}
+
+	private maxBackupsOptions(): Record<string, string> {
+		return {
+			'0': STRINGS.settings.values.none,
+			'1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+			'6': '6', '7': '7', '8': '8', '9': '9',
+		};
+	}
+
+	/**
+	 * Declarative settings for Obsidian 1.13+. Returning object literals keeps the
+	 * 1.13 types out of the runtime bundle; buttons and the saved-colors grid have
+	 * no declarative control equivalent, so they render imperatively and are not
+	 * search-indexable. Mirrors display() setting-for-setting.
+	 */
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		const S = STRINGS.settings;
+		return [
+			// Ungrouped top settings.
+			{
+				name: S.rulebook.name,
+				desc: S.rulebook.desc,
+				searchable: false,
+				render: (setting: Setting) => this.renderRulesButton(setting),
+			},
+			{
+				name: S.biggerIcons.name,
+				desc: S.biggerIcons.desc,
+				control: { type: 'dropdown', key: 'biggerIcons', options: this.platformOptions() },
+			},
+			{
+				name: Platform.isDesktop ? S.clickableIcons.nameDesktop : S.clickableIcons.nameMobile,
+				desc: Platform.isDesktop ? S.clickableIcons.descDesktop : S.clickableIcons.descMobile,
+				control: { type: 'dropdown', key: 'clickableIcons', options: this.platformOptions() },
+			},
+			{
+				type: 'group',
+				heading: S.headingSidebarsAndTabs,
+				items: [
+					{ name: S.showAllFileIcons.name, desc: S.showAllFileIcons.desc, control: { type: 'toggle', key: 'showAllFileIcons' } },
+					{ name: S.showAllFolderIcons.name, desc: S.showAllFolderIcons.desc, control: { type: 'toggle', key: 'showAllFolderIcons' } },
+					{ name: S.minimalFolderIcons.name, desc: S.minimalFolderIcons.desc, control: { type: 'toggle', key: 'minimalFolderIcons' } },
+					{ name: S.showMarkdownTabIcons.name, desc: S.showMarkdownTabIcons.desc, control: { type: 'toggle', key: 'showMarkdownTabIcons' } },
+				],
+			},
+			{
+				type: 'group',
+				heading: S.headingEditor,
+				items: [
+					{ name: S.showTitleIcons.name, desc: S.showTitleIcons.desc, control: { type: 'toggle', key: 'showTitleIcons' } },
+					{ name: S.showTagPillIcons.name, desc: S.showTagPillIcons.desc, control: { type: 'toggle', key: 'showTagPillIcons' } },
+				],
+			},
+			{
+				type: 'group',
+				heading: S.headingMenusAndDialogs,
+				items: [
+					{ name: S.showMenuActions.name, desc: S.showMenuActions.desc, control: { type: 'toggle', key: 'showMenuActions' } },
+					{ name: S.showSuggestionIcons.name, desc: S.showSuggestionIcons.desc, control: { type: 'toggle', key: 'showSuggestionIcons' } },
+					{ name: S.showQuickSwitcherIcons.name, desc: S.showQuickSwitcherIcons.desc, control: { type: 'toggle', key: 'showQuickSwitcherIcons' } },
+					{ name: S.showMoveFileIcons.name, desc: S.showMoveFileIcons.desc, control: { type: 'toggle', key: 'showMoveFileIcons' } },
+				],
+			},
+			{
+				type: 'group',
+				heading: S.headingIconPicker,
+				items: [
+					{ name: S.showItemName.name, desc: S.showItemName.desc, control: { type: 'dropdown', key: 'showItemName', options: this.platformOptions() } },
+					{ name: S.biggerSearchResults.name, desc: S.biggerSearchResults.desc, control: { type: 'dropdown', key: 'biggerSearchResults', options: this.platformOptions() } },
+					{ name: S.maxSearchResults.name, desc: S.maxSearchResults.desc, control: { type: 'slider', key: 'maxSearchResults', min: 10, max: 300, step: 10 } },
+					{ name: S.colorPicker1.name, desc: Platform.isDesktop ? S.colorPicker1.descDesktop : S.colorPicker1.descMobile, control: { type: 'dropdown', key: 'colorPicker1', options: this.colorModeOptions() } },
+					{ name: S.colorPicker2.name, desc: Platform.isDesktop ? S.colorPicker2.descDesktop : S.colorPicker2.descMobile, control: { type: 'dropdown', key: 'colorPicker2', options: this.colorModeOptions() } },
+				],
+			},
+			{
+				type: 'group',
+				heading: S.headingSavedColors,
+				items: [
+					{ name: '', searchable: false, render: (setting: Setting) => this.renderSavedColors(setting) },
+				],
+			},
+			{
+				type: 'group',
+				heading: S.headingAdvanced,
+				items: [
+					{ name: S.uncolorHover.name, desc: S.uncolorHover.desc, control: { type: 'toggle', key: 'uncolorHover' } },
+					{ name: S.uncolorDrag.name, desc: S.uncolorDrag.desc, control: { type: 'toggle', key: 'uncolorDrag' } },
+					{ name: S.uncolorSelect.name, desc: S.uncolorSelect.desc, control: { type: 'toggle', key: 'uncolorSelect' } },
+					{ name: S.uncolorQuick.name, desc: S.uncolorQuick.desc, control: { type: 'toggle', key: 'uncolorQuick' } },
+					{ name: S.viewUnusedIcons.name, desc: S.viewUnusedIcons.desc, searchable: false, render: (setting: Setting) => this.renderViewUnusedIcons(setting) },
+					// The desktop-only "open plugin folder" shortcut has no declarative
+					// control slot; it stays on the imperative path. The value itself is
+					// the searchable dropdown here.
+					{ name: S.maxBackups.name, desc: S.maxBackups.desc, control: { type: 'dropdown', key: 'maxBackups', options: this.maxBackupsOptions() } },
+				],
+			},
+			{
+				name: '',
+				searchable: false,
+				render: (setting: Setting) => this.renderFooter(setting.settingEl),
+			},
+		];
+	}
+
+	/**
+	 * Reads a settings value for a declarative control. maxBackups is stored as a
+	 * number but its dropdown deals in string keys, so it is stringified at the
+	 * boundary; every other value is returned as stored.
+	 */
+	getControlValue(key: string): unknown {
+		if (key === 'maxBackups') return String(this.plugin.settings.maxBackups);
+		return (this.plugin.settings as unknown as Record<string, unknown>)[key];
+	}
+
+	setControlValue(key: string, value: unknown): void | Promise<void> {
+		return this.applyControlChange(key, value);
+	}
+
+	/**
+	 * Coerces and persists a single settings change, then runs its side effect.
+	 * Shared by the declarative setControlValue() (1.13+) and the imperative
+	 * onChange handlers in display() (< 1.13), so neither path can drift.
+	 */
+	private async applyControlChange(key: string, value: unknown): Promise<void> {
+		const settings = this.plugin.settings as unknown as Record<string, unknown>;
+		if (key === 'maxBackups') {
+			settings.maxBackups = Number(value) || 0;
+		} else if (key === 'maxSearchResults') {
+			settings.maxSearchResults = Number(value);
+		} else {
+			settings[key] = value;
+		}
+		await this.plugin.saveSettings();
+		this.runSideEffect(key);
+	}
+
+	/**
+	 * Applies the same refresh a setting triggered on the imperative path.
+	 */
+	private runSideEffect(key: string): void {
+		switch (key) {
+			case 'biggerIcons':
+			case 'showMarkdownTabIcons':
+			case 'biggerSearchResults':
+			case 'uncolorHover':
+			case 'uncolorDrag':
+			case 'uncolorSelect':
+				this.plugin.refreshBody();
+				break;
+			case 'clickableIcons':
+				this.plugin.refreshManagers();
+				this.plugin.refreshBody();
+				break;
+			case 'showAllFileIcons':
+			case 'showTitleIcons':
+				this.plugin.refreshManagers('file');
+				break;
+			case 'showAllFolderIcons':
+			case 'minimalFolderIcons':
+				this.plugin.refreshManagers('folder');
+				break;
+			case 'showTagPillIcons':
+				this.plugin.refreshManagers('tag');
+				break;
+			case 'showMenuActions':
+				this.plugin.refreshManagers();
+				break;
+			case 'uncolorQuick':
+				this.plugin.refreshManagers('ribbon');
+				break;
+			default:
+				break;
+		}
+	}
+
 	/**
 	 * @override
 	 */
@@ -48,12 +243,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.rulebook.desc)
 			.addButton(button => { button
 				.setButtonText(STRINGS.settings.manage)
-				.onClick(() => {
-					// Silently no-op if rulebook hasn't finished loading
-					if (!this.plugin.ruleManager) return;
-					(this.app as unknown as AppWithSettingsUI).setting?.close();
-					RulePicker.open(this.plugin);
-				});
+				.onClick(() => this.openRulePicker());
 			})
 		);
 
@@ -73,9 +263,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.biggerIcons)
 				.onChange(value => {
 					this.refreshIndicator(this.indicators.biggerIcons, value);
-					this.plugin.settings.biggerIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshBody();
+					void this.applyControlChange('biggerIcons', value);
 				});
 				this.refreshIndicator(this.indicators.biggerIcons, dropdown.getValue());
 			})
@@ -103,10 +291,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.clickableIcons)
 				.onChange(value => {
 					this.refreshIndicator(this.indicators.clickableIcons, value);
-					this.plugin.settings.clickableIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers();
-					this.plugin.refreshBody();
+					void this.applyControlChange('clickableIcons', value);
 				});
 				this.refreshIndicator(this.indicators.clickableIcons, dropdown.getValue());
 			})
@@ -122,11 +307,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showAllFileIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showAllFileIcons)
-				.onChange(value => {
-					this.plugin.settings.showAllFileIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers('file');
-				})
+				.onChange(value => void this.applyControlChange('showAllFileIcons', value))
 			)
 		);
 
@@ -136,11 +317,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showAllFolderIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showAllFolderIcons)
-				.onChange(value => {
-					this.plugin.settings.showAllFolderIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers('folder');
-				})
+				.onChange(value => void this.applyControlChange('showAllFolderIcons', value))
 			)
 		);
 
@@ -150,11 +327,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.minimalFolderIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.minimalFolderIcons)
-				.onChange(value => {
-					this.plugin.settings.minimalFolderIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers('folder');
-				})
+				.onChange(value => void this.applyControlChange('minimalFolderIcons', value))
 			)
 		);
 
@@ -164,11 +337,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showMarkdownTabIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showMarkdownTabIcons)
-				.onChange(value => {
-					this.plugin.settings.showMarkdownTabIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshBody();
-				})
+				.onChange(value => void this.applyControlChange('showMarkdownTabIcons', value))
 			)
 		);
 
@@ -182,11 +351,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showTitleIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showTitleIcons)
-				.onChange(value => {
-					this.plugin.settings.showTitleIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers('file');
-				})
+				.onChange(value => void this.applyControlChange('showTitleIcons', value))
 			)
 		);
 
@@ -196,11 +361,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showTagPillIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showTagPillIcons)
-				.onChange(value => {
-					this.plugin.settings.showTagPillIcons = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers('tag');
-				})
+				.onChange(value => void this.applyControlChange('showTagPillIcons', value))
 			)
 		);
 
@@ -214,11 +375,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showMenuActions.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showMenuActions)
-				.onChange(value => {
-					this.plugin.settings.showMenuActions = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers();
-				})
+				.onChange(value => void this.applyControlChange('showMenuActions', value))
 			)
 		);
 
@@ -228,10 +385,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showSuggestionIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showSuggestionIcons)
-				.onChange(value => {
-					this.plugin.settings.showSuggestionIcons = value;
-					void this.plugin.saveSettings();
-				})
+				.onChange(value => void this.applyControlChange('showSuggestionIcons', value))
 			)
 		);
 
@@ -241,10 +395,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showQuickSwitcherIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showQuickSwitcherIcons)
-				.onChange(value => {
-					this.plugin.settings.showQuickSwitcherIcons = value;
-					void this.plugin.saveSettings();
-				})
+				.onChange(value => void this.applyControlChange('showQuickSwitcherIcons', value))
 			)
 		);
 
@@ -254,10 +405,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.showMoveFileIcons.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showMoveFileIcons)
-				.onChange(value => {
-					this.plugin.settings.showMoveFileIcons = value;
-					void this.plugin.saveSettings();
-				})
+				.onChange(value => void this.applyControlChange('showMoveFileIcons', value))
 			)
 		);
 
@@ -281,8 +429,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showItemName)
 				.onChange(value => {
 					this.refreshIndicator(this.indicators.showItemName, value);
-					this.plugin.settings.showItemName = value;
-					void this.plugin.saveSettings();
+					void this.applyControlChange('showItemName', value);
 				});
 				this.refreshIndicator(this.indicators.showItemName, dropdown.getValue());
 			})
@@ -304,28 +451,35 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.biggerSearchResults)
 				.onChange(value => {
 					this.refreshIndicator(this.indicators.biggerSearchResults, value);
-					this.plugin.settings.biggerSearchResults = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshBody();
+					void this.applyControlChange('biggerSearchResults', value);
 				});
 				this.refreshIndicator(this.indicators.biggerSearchResults, dropdown.getValue());
 			})
 		);
 
-		// SETTING: Maximum search results
-		groupIconPicker.addSetting(setting => void setting
-			.setName(STRINGS.settings.maxSearchResults.name)
-			.setDesc(STRINGS.settings.maxSearchResults.desc)
-			.addSlider(slider => slider
+		// SETTING: Maximum search results. Obsidian shows a slider's value inline on
+		// 1.13+, but on the imperative (< 1.13) path the value was only visible via
+		// setDynamicTooltip(), which is deprecated in 1.13 and cannot be used (the
+		// marketplace scan rejects eslint-disable). Render our own readout so the
+		// value stays visible on every version.
+		groupIconPicker.addSetting(setting => {
+			setting
+				.setName(STRINGS.settings.maxSearchResults.name)
+				.setDesc(STRINGS.settings.maxSearchResults.desc);
+			let valueEl: HTMLElement | undefined;
+			setting.addSlider(slider => slider
 				.setLimits(10, 300, 10)
 				.setValue(this.plugin.settings.maxSearchResults)
-				.setDynamicTooltip()
 				.onChange(value => {
-					this.plugin.settings.maxSearchResults = value;
-					void this.plugin.saveSettings();
+					valueEl?.setText(String(value));
+					void this.applyControlChange('maxSearchResults', value);
 				})
-			)
-		);
+			);
+			valueEl = setting.controlEl.createSpan({
+				cls: 'icon-palette-slider-value',
+				text: String(this.plugin.settings.maxSearchResults),
+			});
+		});
 
 		// SETTING: Main color picker
 		groupIconPicker.addSetting(setting => void setting
@@ -344,9 +498,8 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.colorPicker1)
 				.onChange(value => {
 					this.refreshIndicator(this.indicators.colorPicker1, value);
-					this.plugin.settings.colorPicker1 = value;
-					void this.plugin.saveSettings();
-				})
+					void this.applyControlChange('colorPicker1', value);
+				});
 				this.refreshIndicator(this.indicators.colorPicker1, dropdown.getValue());
 			})
 		);
@@ -368,8 +521,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.colorPicker2)
 				.onChange(value => {
 					this.refreshIndicator(this.indicators.colorPicker2, value);
-					this.plugin.settings.colorPicker2 = value;
-					void this.plugin.saveSettings();
+					void this.applyControlChange('colorPicker2', value);
 				});
 				this.refreshIndicator(this.indicators.colorPicker2, dropdown.getValue());
 			})
@@ -393,20 +545,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			// to block flow in styles.css and the grid appended under the info).
 			setting.settingEl.addClass('icon-palette-saved-colors-row');
 			const gridEl = setting.settingEl.createDiv({ cls: 'icon-palette-saved-colors' });
-			for (const color of customColors) {
-				const swatch = new ExtraButtonComponent(gridEl)
-					.setIcon('lucide-paint-bucket')
-					.setTooltip(STRINGS.settings.savedColors.removeTooltip.replace('{color}', color))
-					.onClick(() => {
-						if (CustomColorsStore.remove(customColors, color)) {
-							void this.plugin.saveSettings();
-							this.display();
-						}
-					});
-				swatch.extraSettingsEl.addClass('icon-palette-saved-color');
-				const svgEl = swatch.extraSettingsEl.find('svg');
-				if (svgEl) svgEl.style.setProperty('color', ColorUtils.toRgb(color));
-			}
+			this.appendSavedColorSwatches(gridEl, () => this.display());
 		});
 
 		// GROUP: Advanced
@@ -419,11 +558,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.uncolorHover.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.uncolorHover)
-				.onChange(value => {
-					this.plugin.settings.uncolorHover = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshBody();
-				})
+				.onChange(value => void this.applyControlChange('uncolorHover', value))
 			)
 		);
 
@@ -433,11 +568,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.uncolorDrag.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.uncolorDrag)
-				.onChange(value => {
-					this.plugin.settings.uncolorDrag = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshBody();
-				})
+				.onChange(value => void this.applyControlChange('uncolorDrag', value))
 			)
 		);
 
@@ -447,11 +578,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.uncolorSelect.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.uncolorSelect)
-				.onChange(value => {
-					this.plugin.settings.uncolorSelect = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshBody();
-				})
+				.onChange(value => void this.applyControlChange('uncolorSelect', value))
 			)
 		);
 
@@ -461,11 +588,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			.setDesc(STRINGS.settings.uncolorQuick.desc)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.uncolorQuick)
-				.onChange(value => {
-					this.plugin.settings.uncolorQuick = value;
-					void this.plugin.saveSettings();
-					this.plugin.refreshManagers('ribbon');
-				})
+				.onChange(value => void this.applyControlChange('uncolorQuick', value))
 			)
 		);
 
@@ -506,10 +629,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.addOption('8', '8')
 				.addOption('9', '9')
 				.setValue(this.plugin.settings.maxBackups.toString())
-				.onChange(value => {
-					this.plugin.settings.maxBackups = Number(value) || 0;
-					void this.plugin.saveSettings();
-				})
+				.onChange(value => void this.applyControlChange('maxBackups', value))
 			)
 		);
 
@@ -518,6 +638,80 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		// settings renderFooter). Rendered into a Setting row's element like the
 		// reference plugins, so it picks up the standard settings-item spacing.
 		this.renderFooter(new Setting(this.containerEl).settingEl);
+	}
+
+	/**
+	 * Opens the rulebook editor. Shared by both settings paths.
+	 */
+	private openRulePicker(): void {
+		// Silently no-op if rulebook hasn't finished loading
+		if (!this.plugin.ruleManager) return;
+		(this.app as unknown as AppWithSettingsUI).setting?.close();
+		RulePicker.open(this.plugin);
+	}
+
+	/**
+	 * Declarative render for the rulebook button (1.13+ has no button control).
+	 */
+	private renderRulesButton(setting: Setting): void {
+		setting.addButton(button => button
+			.setButtonText(STRINGS.settings.manage)
+			.onClick(() => this.openRulePicker())
+		);
+	}
+
+	/**
+	 * Declarative render for the "view unused icons" button.
+	 */
+	private renderViewUnusedIcons(setting: Setting): void {
+		setting.addButton(button => button
+			.setButtonText(STRINGS.settings.manage)
+			.onClick(() => void this.openUnusedIcons())
+		);
+	}
+
+	/**
+	 * Declarative (1.13+) saved-colors row. A self-managing block that rebuilds its
+	 * own DOM after a removal instead of calling this.display() (not the render path
+	 * on 1.13) or this.update() (a 1.13-only API barred below the 1.11 floor).
+	 */
+	private renderSavedColors(setting: Setting): void {
+		const host = setting.settingEl;
+		host.empty();
+		host.addClass('icon-palette-saved-colors-row');
+		const customColors = this.plugin.settings.customColors;
+		host.createDiv({
+			cls: 'setting-item-description',
+			text: customColors.length === 0
+				? STRINGS.settings.savedColors.empty
+				: STRINGS.settings.savedColors.desc,
+		});
+		if (customColors.length === 0) return;
+		const gridEl = host.createDiv({ cls: 'icon-palette-saved-colors' });
+		this.appendSavedColorSwatches(gridEl, () => this.renderSavedColors(setting));
+	}
+
+	/**
+	 * Fills a grid element with removable saved-color swatches. Shared by both
+	 * settings paths; onAfterRemove refreshes the surrounding UI (the imperative
+	 * path re-renders the whole tab, the declarative row rebuilds in place).
+	 */
+	private appendSavedColorSwatches(gridEl: HTMLElement, onAfterRemove: () => void): void {
+		const customColors = this.plugin.settings.customColors;
+		for (const color of customColors) {
+			const swatch = new ExtraButtonComponent(gridEl)
+				.setIcon('lucide-paint-bucket')
+				.setTooltip(STRINGS.settings.savedColors.removeTooltip.replace('{color}', color))
+				.onClick(() => {
+					if (CustomColorsStore.remove(customColors, color)) {
+						void this.plugin.saveSettings();
+						onAfterRemove();
+					}
+				});
+			swatch.extraSettingsEl.addClass('icon-palette-saved-color');
+			const svgEl = swatch.extraSettingsEl.find('svg');
+			if (svgEl) svgEl.style.setProperty('color', ColorUtils.toRgb(color));
+		}
 	}
 
 	/**

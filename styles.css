@@ -354,6 +354,12 @@ a.tag {
 .icon-palette-settings-footer a {
 	margin: 0 4px;
 }
+.icon-palette-slider-value {
+	min-width: 3ch;
+	margin-inline-start: var(--size-4-2);
+	color: var(--text-muted);
+	text-align: end;
+}
 
 /* Rule picker */
 .is-mobile .mod-confirmation > .modal.icon-palette-rule-picker {
