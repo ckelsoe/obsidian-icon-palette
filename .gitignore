@@ -29,6 +29,14 @@ release-notes.md
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 
+# AI assistant files
+.claude
+CLAUDE.md
+WARP.md
+
+# Internal documentation
+internal-docs/
+
 # Brooks-Lint review history and reports
 .brooks-lint-history.json
 .brooks-lint-review/
