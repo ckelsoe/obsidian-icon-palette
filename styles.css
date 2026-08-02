@@ -351,8 +351,18 @@ a.tag {
 	color: var(--text-muted);
 	font-size: var(--font-ui-small);
 }
-.icon-palette-settings-footer a {
-	margin: 0 4px;
+/* Separators are a flex gap, not whitespace in text nodes: the row is a flex
+   row and a flex item drops the whitespace at its own edges, which collapsed
+   "GitHub | Discord" into "GitHub|Discord". */
+.icon-palette-settings-footer-inner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: var(--size-4-2);
+}
+.icon-palette-settings-footer-separator {
+	color: var(--text-faint);
 }
 .icon-palette-slider-value {
 	min-width: 3ch;

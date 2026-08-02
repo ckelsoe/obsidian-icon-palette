@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- A Discord link in the settings footer and the README. Questions, ideas, and general discussion now have somewhere to go that is not a GitHub issue. The invite never expires. A GitHub issue is still the better home for anything that needs tracking.
+
+### Fixed
+
+- The links in the settings footer no longer run together. The separators between them depended on plain whitespace, which the layout dropped, so the row could read `GitHub|Report issues`. They are spaced by the layout now.
+
 ## 0.3.3 - 2026-07-25
 
 ### Added

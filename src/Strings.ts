@@ -417,7 +417,8 @@ export default class Strings {
 		footer: {
 			version: 'Version {#}',
 			github: 'GitHub',
-			reportIssues: 'Report Issues',
+			discord: 'Discord',
+			reportIssues: 'Report issues',
 		},
 		headingAdvanced: 'Advanced',
 		uncolorHover: {
