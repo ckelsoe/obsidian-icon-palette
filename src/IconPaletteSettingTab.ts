@@ -4,6 +4,12 @@ import type { FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
 import type { AppWithSettingsUI } from 'src/obsidian-internals.js';
 import RulePicker from 'src/dialogs/RulePicker.js';
+
+// Community discussion for this plugin. This must stay a never-expiring
+// discord.gg invite. A discord.com/channels/... deep link only resolves for
+// accounts already in the server, so it cannot get anyone in, and a default
+// invite expires after 7 days and would rot in a shipped release.
+const DISCORD_URL = 'https://discord.gg/gd6tKJDPj4';
 import UsageChecker from 'src/dialogs/UsageChecker.js';
 import ColorUtils from 'src/ColorUtils.js';
 import CustomColorsStore from 'src/CustomColorsStore.js';
@@ -721,12 +727,18 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	private renderFooter(host: HTMLElement): void {
 		host.empty();
 		host.addClass('icon-palette-settings-footer');
-		host.createSpan({ text: `${STRINGS.settings.footer.version.replace('{#}', this.plugin.manifest.version)} | ` });
+		// One inner flex container, and the separators are a gap rather than
+		// whitespace in text nodes. The row is a flex row, and a flex item drops
+		// the whitespace at its own edges, so the old ' | ' spans could render as
+		// "GitHub|Report issues". Same fix as the reference plugin's footer.
+		const inner = host.createDiv({ cls: 'icon-palette-settings-footer-inner' });
+		inner.createSpan({ text: STRINGS.settings.footer.version.replace('{#}', this.plugin.manifest.version) });
 		const link = (text: string, url: string): void => {
-			host.createEl('a', { text, href: url, attr: { target: '_blank', rel: 'noopener' } });
+			inner.createSpan({ cls: 'icon-palette-settings-footer-separator', text: '|' });
+			inner.createEl('a', { text, href: url, attr: { target: '_blank', rel: 'noopener' } });
 		};
 		link(STRINGS.settings.footer.github, 'https://github.com/ckelsoe/obsidian-icon-palette');
-		host.createSpan({ text: ' | ' });
+		link(STRINGS.settings.footer.discord, DISCORD_URL);
 		link(STRINGS.settings.footer.reportIssues, 'https://github.com/ckelsoe/obsidian-icon-palette/issues');
 	}
 

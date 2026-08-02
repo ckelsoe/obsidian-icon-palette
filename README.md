@@ -47,6 +47,10 @@ English, Arabic, German, Spanish, French, Indonesian, Japanese, Russian, Ukraini
 
 Runs entirely locally and makes no network requests. It reads vault file and folder metadata so icons and rule conditions can be matched against names, paths, tags, links, headings, properties, and timestamps.
 
+## Community
+
+Questions, ideas, and general discussion happen on [Discord](https://discord.gg/gd6tKJDPj4). For anything that needs tracking, a GitHub issue is still the better home.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
