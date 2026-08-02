@@ -49,7 +49,7 @@ Runs entirely locally and makes no network requests. It reads vault file and fol
 
 ## Community
 
-Questions, ideas, and general discussion happen on [Discord](https://discord.gg/gd6tKJDPj4). For anything that needs tracking, a GitHub issue is still the better home.
+Questions, ideas, and general discussion happen on [Discord](https://discord.gg/gd6tKJDPj4). For anything that needs tracking, a [GitHub issue](https://github.com/ckelsoe/obsidian-icon-palette/issues) is still the better home.
 
 ## Contributing
 
