@@ -52,5 +52,8 @@
 		"@iconify-json/devicon": "^1.2.62",
 		"@iconify-json/simple-icons": "^1.2.87",
 		"fflate": "^0.8.3"
+	},
+	"overrides": {
+		"fast-uri": "^3.1.5"
 	}
 }

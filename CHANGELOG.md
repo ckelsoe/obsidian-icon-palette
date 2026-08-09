@@ -16,6 +16,10 @@
 
 - The links in the settings footer no longer run together. The separators between them depended on plain whitespace, which the layout dropped, so the row could read `GitHub|Report issues`. They are spaced by the layout now.
 
+### Security
+
+- Updated a build-time dependency (`fast-uri`) to 3.1.5 to clear a security advisory. It is used only when building the plugin and is never part of the plugin you install.
+
 ## 0.3.3 - 2026-07-25
 
 ### Added
