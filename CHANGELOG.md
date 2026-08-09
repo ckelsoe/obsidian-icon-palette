@@ -18,7 +18,7 @@
 
 ### Security
 
-- Updated a build-time dependency (`fast-uri`) to 3.1.5 to clear a security advisory. It is used only when building the plugin and is never part of the plugin you install.
+- Updated build-time dependencies (`fast-uri`, `js-yaml`, and `brace-expansion`) to their patched versions to clear dependency advisories. These are used only when building the plugin and are never part of the plugin you install.
 
 ## 0.3.3 - 2026-07-25
 
