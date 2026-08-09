@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Review once when a PR opens; do not re-review on every push. Batch fixes,
+# then comment `@coderabbitai full review` to request the final pass.
+reviews:
+  auto_review:
+    enabled: true
+    auto_incremental_review: false
+    drafts: false
