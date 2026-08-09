@@ -410,9 +410,14 @@ export default class Strings {
 		},
 		headingSavedColors: 'Saved colors',
 		savedColors: {
-			desc: 'Colors you save from the icon picker appear here and in its color menu.',
-			empty: 'No saved colors yet. Save one from the color menu in the icon picker.',
-			removeTooltip: '{color} (click to remove)',
+			desc: 'These appear in the icon picker\'s color menu. Add one below, or save one from the picker. Give a color a name to recognize it.',
+			empty: 'No saved colors yet. Add one below, or save one from the color menu in the icon picker.',
+			addColorLabel: 'New color',
+			namePlaceholder: 'Name (optional)',
+			add: 'Add',
+			addAria: 'Add color',
+			nameLabel: 'Name for {color}',
+			remove: 'Remove saved color',
 		},
 		footer: {
 			version: 'Version {#}',

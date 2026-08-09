@@ -5,6 +5,12 @@
 ### Added
 
 - A Discord link in the settings footer and the README. Questions, ideas, and general discussion now have somewhere to go that is not a GitHub issue. The invite never expires. A GitHub issue is still the better home for anything that needs tracking.
+- Saved colors can now have a name. In Settings, each saved color shows its hex code next to an editable name field, so you can label a color "Brand blue" and still see its code. Named colors show their name in the icon picker's color menu; unnamed ones show their hex.
+- You can now add a saved color straight from Settings, with an optional name, without opening the icon picker first.
+
+### Changed
+
+- The saved colors list in Settings is now one row per color, each with its own name field and a separate remove button. Removing a color is a deliberate button press now, rather than clicking the swatch itself, which was easy to trigger by accident.
 
 ### Fixed
 
