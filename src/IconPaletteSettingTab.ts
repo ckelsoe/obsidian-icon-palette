@@ -1,4 +1,4 @@
-import { ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup, type SettingDefinitionItem } from 'obsidian';
+import { ButtonComponent, ColorComponent, ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup, TextComponent, setIcon, type SettingDefinitionItem } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
@@ -10,6 +10,11 @@ import RulePicker from 'src/dialogs/RulePicker.js';
 // accounts already in the server, so it cannot get anyone in, and a default
 // invite expires after 7 days and would rot in a shipped release.
 const DISCORD_URL = 'https://discord.gg/gd6tKJDPj4';
+
+// The color the "add a color" picker starts on before the user opens it. A
+// concrete, valid hex (not black, which reads as "no color") so the swatch looks
+// intentional; the user picks their own before pressing Add.
+const DEFAULT_NEW_SAVED_COLOR = '#4c78ff';
 import UsageChecker from 'src/dialogs/UsageChecker.js';
 import ColorUtils from 'src/ColorUtils.js';
 import CustomColorsStore from 'src/CustomColorsStore.js';
@@ -36,10 +41,46 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		colorPicker2: undefined as unknown,
 	} as Record<string, ExtraButtonComponent>;
 	public icon = 'lucide-images';
+	// A saved-color name edit updates settings in memory on every keystroke but
+	// persists only on blur or when the tab hides, so a rename is never lost if the
+	// user closes Settings without blurring the field. This tracks a pending write.
+	private savedColorsDirty = false;
+	// saveSettings() drops overlapping calls (its in-flight guard), so two
+	// saved-color saves close together could leave the latest edit unwritten. Chain
+	// every saved-color persist onto this promise so each runs after the previous
+	// resolves, when the guard is clear, and writes the current settings.
+	private savedColorsSaveChain: Promise<void> = Promise.resolve();
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin.app, plugin);
 		this.plugin = plugin;
+	}
+
+	hide(): void {
+		this.flushSavedColorNames();
+		super.hide();
+	}
+
+	/** Persist a pending saved-color name edit, if any. */
+	private flushSavedColorNames(): void {
+		if (!this.savedColorsDirty) return;
+		this.savedColorsDirty = false;
+		this.queueSavedColorsSave();
+	}
+
+	/** Serialize a saved-color settings write behind any in-flight one, so an
+	 *  overlapping saveSettings() call cannot be dropped and lose the latest edit. */
+	private queueSavedColorsSave(): void {
+		this.savedColorsSaveChain = this.savedColorsSaveChain
+			.catch(() => {})
+			.then(() => this.plugin.saveSettings());
+	}
+
+	/** Return focus to the add-a-color picker after the list is rebuilt, so a
+	 *  keyboard user is not dropped to the document body when a row detaches. */
+	private focusAddColor(host: HTMLElement): void {
+		const el = host.querySelector('.icon-palette-add-color input[type="color"]');
+		if (el instanceof HTMLElement) el.focus();
 	}
 
 	// The four-way visibility dropdowns (on/desktop/mobile/off) share one option
@@ -536,22 +577,12 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		// GROUP: Saved colors
 		const groupSavedColors = new SettingGroup(this.containerEl)
 			.setHeading(STRINGS.settings.headingSavedColors);
-		const customColors = this.plugin.settings.customColors;
 
-		// SETTING: Saved colors grid
+		// SETTING: add-a-color control plus the editable saved-colors list
 		groupSavedColors.addSetting(setting => {
-			setting.setDesc(customColors.length === 0
-				? STRINGS.settings.savedColors.empty
-				: STRINGS.settings.savedColors.desc
-			);
-			if (customColors.length === 0) return;
-
-			// Full-width swatch grid below the description (stacked-row layout: this
-			// plugin has no createStackedRow helper, so the setting row is switched
-			// to block flow in styles.css and the grid appended under the info).
-			setting.settingEl.addClass('icon-palette-saved-colors-row');
-			const gridEl = setting.settingEl.createDiv({ cls: 'icon-palette-saved-colors' });
-			this.appendSavedColorSwatches(gridEl, () => this.display());
+			const host = setting.settingEl;
+			const rerender = (): void => this.renderSavedColorsBody(host, rerender);
+			rerender();
 		});
 
 		// GROUP: Advanced
@@ -683,8 +714,23 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 */
 	private renderSavedColors(setting: Setting): void {
 		const host = setting.settingEl;
+		const rerender = (): void => this.renderSavedColorsBody(host, rerender);
+		rerender();
+	}
+
+	/**
+	 * Renders the whole saved-colors body into `host`: an always-present "add a
+	 * color" control, the description/empty text, then one editable row per saved
+	 * color. Shared by both settings paths (the imperative tab and the 1.13
+	 * declarative render) so they cannot drift. `rerender` rebuilds this body in
+	 * place after a mutation, avoiding this.display() (missing on the render path)
+	 * and this.update() (a 1.13-only API barred below the 1.11 floor).
+	 */
+	private renderSavedColorsBody(host: HTMLElement, rerender: () => void): void {
 		host.empty();
 		host.addClass('icon-palette-saved-colors-row');
+		this.appendAddSavedColor(host, rerender);
+
 		const customColors = this.plugin.settings.customColors;
 		host.createDiv({
 			cls: 'setting-item-description',
@@ -693,30 +739,94 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				: STRINGS.settings.savedColors.desc,
 		});
 		if (customColors.length === 0) return;
-		const gridEl = host.createDiv({ cls: 'icon-palette-saved-colors' });
-		this.appendSavedColorSwatches(gridEl, () => this.renderSavedColors(setting));
+
+		const listEl = host.createDiv({ cls: 'icon-palette-saved-colors' });
+		this.appendSavedColorRows(listEl, rerender, host);
 	}
 
 	/**
-	 * Fills a grid element with removable saved-color swatches. Shared by both
-	 * settings paths; onAfterRemove refreshes the surrounding UI (the imperative
-	 * path re-renders the whole tab, the declarative row rebuilds in place).
+	 * Renders the "add a color" row: a color picker, an optional name field, and
+	 * an Add button. Reuses CustomColorsStore.save (the same path the icon picker
+	 * uses) so dedup, ordering, and cap eviction behave identically wherever a
+	 * color is added, then prunes any name stranded by an eviction.
 	 */
-	private appendSavedColorSwatches(gridEl: HTMLElement, onAfterRemove: () => void): void {
-		const customColors = this.plugin.settings.customColors;
+	private appendAddSavedColor(host: HTMLElement, rerender: () => void): void {
+		const rowEl = host.createDiv({ cls: 'icon-palette-add-color' });
+		let pendingColor = DEFAULT_NEW_SAVED_COLOR;
+
+		new ColorComponent(rowEl)
+			.setValue(pendingColor)
+			.onChange(value => { pendingColor = value; });
+		// Label the color input itself; ColorComponent does not expose its element,
+		// so reach the just-created <input type="color"> in this row.
+		const colorInputEl = rowEl.querySelector('input[type="color"]');
+		if (colorInputEl) colorInputEl.setAttribute('aria-label', STRINGS.settings.savedColors.addColorLabel);
+
+		const nameField = new TextComponent(rowEl)
+			.setPlaceholder(STRINGS.settings.savedColors.namePlaceholder);
+		nameField.inputEl.addClass('icon-palette-saved-color-name');
+		nameField.inputEl.setAttribute('aria-label', STRINGS.settings.savedColors.namePlaceholder);
+
+		const addButton = new ButtonComponent(rowEl)
+			.setButtonText(STRINGS.settings.savedColors.add)
+			.setCta()
+			.onClick(() => {
+				const { customColors, customColorNames } = this.plugin.settings;
+				CustomColorsStore.save(customColors, pendingColor, CustomColorsStore.CAP);
+				// Only set the name when one was typed. A blank field must not clear
+				// the name of a color that was already saved and named.
+				const newName = nameField.getValue().trim();
+				if (newName) CustomColorsStore.setName(customColorNames, pendingColor, newName);
+				CustomColorsStore.pruneNames(customColors, customColorNames);
+				this.queueSavedColorsSave();
+				rerender();
+				this.focusAddColor(host);
+			});
+		addButton.buttonEl.setAttribute('aria-label', STRINGS.settings.savedColors.addAria);
+	}
+
+	/**
+	 * Fills the list element with one editable row per saved color: a swatch, the
+	 * hex code (kept visible next to the name), a name field, and a remove button.
+	 * The name updates settings in memory on every keystroke and persists on blur
+	 * (saveSettings() sleeps, writes a backup, and drops overlapping saves, so it
+	 * must not run per keystroke); hide() flushes any edit left pending on close.
+	 * Shared by both settings paths; `rerender` rebuilds the body after a removal.
+	 */
+	private appendSavedColorRows(listEl: HTMLElement, rerender: () => void, host: HTMLElement): void {
+		const { customColors, customColorNames } = this.plugin.settings;
 		for (const color of customColors) {
-			const swatch = new ExtraButtonComponent(gridEl)
-				.setIcon('lucide-paint-bucket')
-				.setTooltip(STRINGS.settings.savedColors.removeTooltip.replace('{color}', color))
+			const rowEl = listEl.createDiv({ cls: 'icon-palette-saved-color-row' });
+
+			const swatchEl = rowEl.createSpan({ cls: 'icon-palette-saved-color' });
+			setIcon(swatchEl, 'lucide-paint-bucket');
+			const svgEl = swatchEl.find('svg');
+			if (svgEl) svgEl.style.setProperty('color', ColorUtils.toRgb(color));
+
+			rowEl.createSpan({ cls: 'icon-palette-saved-color-code', text: color });
+
+			const nameField = new TextComponent(rowEl)
+				.setPlaceholder(STRINGS.settings.savedColors.namePlaceholder)
+				.setValue(CustomColorsStore.getName(customColorNames, color));
+			nameField.inputEl.addClass('icon-palette-saved-color-name');
+			nameField.inputEl.setAttribute('aria-label', STRINGS.settings.savedColors.nameLabel.replace('{color}', color));
+			nameField.onChange(value => {
+				if (CustomColorsStore.setName(customColorNames, color, value)) this.savedColorsDirty = true;
+			});
+			nameField.inputEl.addEventListener('blur', () => this.flushSavedColorNames());
+
+			const removeButton = new ExtraButtonComponent(rowEl)
+				.setIcon('lucide-trash-2')
+				.setTooltip(STRINGS.settings.savedColors.remove)
 				.onClick(() => {
 					if (CustomColorsStore.remove(customColors, color)) {
-						void this.plugin.saveSettings();
-						onAfterRemove();
+						CustomColorsStore.pruneNames(customColors, customColorNames);
+						this.queueSavedColorsSave();
+						rerender();
+						this.focusAddColor(host);
 					}
 				});
-			swatch.extraSettingsEl.addClass('icon-palette-saved-color');
-			const svgEl = swatch.extraSettingsEl.find('svg');
-			if (svgEl) svgEl.style.setProperty('color', ColorUtils.toRgb(color));
+			removeButton.extraSettingsEl.addClass('icon-palette-saved-color-remove');
 		}
 	}
 

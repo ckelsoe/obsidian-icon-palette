@@ -90,3 +90,103 @@ describe('CustomColorsStore.remove', () => {
 		expect(colors).toEqual(['#111111']);
 	});
 });
+
+describe('CustomColorsStore.getName / setName', () => {
+	it('returns an empty string when a color has no name', () => {
+		expect(CustomColorsStore.getName({}, '#aabbcc')).toBe('');
+	});
+
+	it('sets a name, trims it, and reports a change', () => {
+		const names: Record<string, string> = {};
+		expect(CustomColorsStore.setName(names, '#AABBCC', '  Brand blue  ')).toBe(true);
+		expect(names).toEqual({ '#aabbcc': 'Brand blue' });
+		expect(CustomColorsStore.getName(names, '#aabbcc')).toBe('Brand blue');
+	});
+
+	it('reads and writes case-insensitively via the normalized key', () => {
+		const names: Record<string, string> = {};
+		CustomColorsStore.setName(names, '#aabbcc', 'Sky');
+		expect(CustomColorsStore.getName(names, '#AABBCC')).toBe('Sky');
+	});
+
+	it('is a no-op when the name is unchanged', () => {
+		const names = { '#aabbcc': 'Sky' };
+		expect(CustomColorsStore.setName(names, '#AABBCC', 'Sky')).toBe(false);
+	});
+
+	it('deletes the entry (not stores an empty string) when the name is blank, reporting a change only when one existed', () => {
+		const names = { '#aabbcc': 'Sky' };
+		expect(CustomColorsStore.setName(names, '#aabbcc', '   ')).toBe(true);
+		expect(names).toEqual({});
+		expect(CustomColorsStore.setName(names, '#aabbcc', '')).toBe(false);
+	});
+
+	it('does not read inherited object keys as a name (e.g. "constructor")', () => {
+		const names: Record<string, string> = {};
+		// Without an own-property guard, names["constructor"] resolves up the
+		// prototype chain to a function, which would become a menu title.
+		expect(CustomColorsStore.getName(names, 'constructor')).toBe('');
+		// setName treats the inherited key as absent, so a blank is a no-op...
+		expect(CustomColorsStore.setName(names, 'constructor', '')).toBe(false);
+		// ...and a real name creates an own property that then reads back.
+		expect(CustomColorsStore.setName(names, 'constructor', 'Weird')).toBe(true);
+		expect(CustomColorsStore.getName(names, 'constructor')).toBe('Weird');
+	});
+
+	it('stores a "__proto__" name as an own property without corrupting the prototype', () => {
+		const names: Record<string, string> = {};
+		expect(CustomColorsStore.setName(names, '__proto__', 'Name')).toBe(true);
+		// The name persists as an own data property...
+		expect(CustomColorsStore.getName(names, '__proto__')).toBe('Name');
+		expect(Object.prototype.hasOwnProperty.call(names, '__proto__')).toBe(true);
+		// ...and the object's prototype is untouched (no setter was invoked).
+		expect(Object.getPrototypeOf(names)).toBe(Object.prototype);
+	});
+});
+
+describe('CustomColorsStore.pruneNames', () => {
+	it('drops names whose color is no longer in the list', () => {
+		const names = { '#aabbcc': 'Sky', '#111111': 'Ink' };
+		expect(CustomColorsStore.pruneNames(['#aabbcc'], names)).toBe(true);
+		expect(names).toEqual({ '#aabbcc': 'Sky' });
+	});
+
+	it('keeps a name when the color is still present under different casing', () => {
+		const names = { '#aabbcc': 'Sky' };
+		expect(CustomColorsStore.pruneNames(['#AABBCC'], names)).toBe(false);
+		expect(names).toEqual({ '#aabbcc': 'Sky' });
+	});
+
+	it('prunes the name of a color evicted past the cap by save()', () => {
+		const colors = ['#222222', '#333333'];
+		const names = { '#333333': 'Old', '#222222': 'Keep' };
+		CustomColorsStore.save(colors, '#111111', 2); // evicts #333333
+		expect(CustomColorsStore.pruneNames(colors, names)).toBe(true);
+		expect(names).toEqual({ '#222222': 'Keep' });
+	});
+
+	it('prunes the name of a removed color', () => {
+		const colors = ['#aabbcc', '#111111'];
+		const names = { '#aabbcc': 'Sky', '#111111': 'Ink' };
+		CustomColorsStore.remove(colors, '#aabbcc');
+		expect(CustomColorsStore.pruneNames(colors, names)).toBe(true);
+		expect(names).toEqual({ '#111111': 'Ink' });
+	});
+});
+
+describe('customColorNames load normalization', () => {
+	// Mirrors IconPalettePlugin.loadSettings: rebuild the names map through setName
+	// (normalizing keys, dropping blank/non-string names) then prune orphans, so a
+	// hand-edited or older data.json loads into the same shape the UI writes.
+	it('normalizes mixed-case keys and prunes names whose color is gone', () => {
+		const raw: Record<string, unknown> = { '#AABBCC': 'Sky', '#123456': 'Orphan', '#ffffff': '  ', bad: 42 };
+		const colors = ['#aabbcc'];
+		const names: Record<string, string> = {};
+		for (const [color, name] of Object.entries(raw)) {
+			if (typeof name === 'string') CustomColorsStore.setName(names, color, name);
+		}
+		CustomColorsStore.pruneNames(colors, names);
+		expect(names).toEqual({ '#aabbcc': 'Sky' });
+		expect(CustomColorsStore.getName(names, '#AABBCC')).toBe('Sky');
+	});
+});

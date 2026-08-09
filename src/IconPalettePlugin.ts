@@ -1,5 +1,6 @@
 import { Command, Hotkey, Notice, Platform, Plugin, Scope, TAbstractFile, TFile, TFolder, View, WorkspaceFloating, WorkspaceLeaf, WorkspaceRoot, getIconIds, getLanguage, normalizePath } from 'obsidian';
 import IconPaletteSettingTab from 'src/IconPaletteSettingTab.js';
+import CustomColorsStore from 'src/CustomColorsStore.js';
 import { registerIconLibraries, populateLibraryIcons, isLibraryIcon } from 'src/IconLibraries.js';
 import MenuManager from 'src/managers/MenuManager.js';
 import RuleManager, { RuleTrigger } from 'src/managers/RuleManager.js';
@@ -78,6 +79,7 @@ interface IconPaletteSettings {
 	folderRules: RuleBase[];
 	favorites: FavoritesState;
 	customColors: string[];
+	customColorNames: Record<string, string>;
 }
 
 const DEFAULT_SETTINGS: IconPaletteSettings = {
@@ -120,6 +122,7 @@ const DEFAULT_SETTINGS: IconPaletteSettings = {
 	folderRules: [],
 	favorites: { pinned: [], recent: [] },
 	customColors: [],
+	customColorNames: {},
 }
 
 /**
@@ -1404,6 +1407,19 @@ export default class IconPalettePlugin extends Plugin {
 		this.settings.customColors = Array.isArray(settingsPatch.customColors)
 			? settingsPatch.customColors.filter((color): color is string => typeof color === 'string')
 			: [];
+		// The parallel names map (added after the color list shipped) is absent in
+		// older data.json. Rebuild it through the store so keys are normalized the
+		// same way lookups are (a hand-edited "#AABBCC" key still matches), blank
+		// and non-string names are dropped, then prune any name whose color is gone.
+		const rawNames: unknown = settingsPatch.customColorNames;
+		const names: Record<string, string> = {};
+		if (rawNames && typeof rawNames === 'object' && !Array.isArray(rawNames)) {
+			for (const [color, name] of Object.entries(rawNames as Record<string, unknown>)) {
+				if (typeof name === 'string') CustomColorsStore.setName(names, color, name);
+			}
+		}
+		CustomColorsStore.pruneNames(this.settings.customColors, names);
+		this.settings.customColorNames = names;
 	}
 
 	/**

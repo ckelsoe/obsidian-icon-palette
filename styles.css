@@ -327,20 +327,51 @@ a.tag {
 	--icon-stroke: var(--icon-l-stroke-width);
 }
 
-/* Saved colors settings section: stack the description and a full-width swatch
-   grid (block flow overrides the default flex row so the grid sits below the
-   description rather than beside it). */
+/* Saved colors settings section: stack the add-a-color control, the description,
+   and a full-width list (block flow overrides the default flex row so content
+   sits below the heading rather than beside it). */
 .setting-item.icon-palette-saved-colors-row {
 	display: block;
 }
-.icon-palette-saved-colors {
+/* Add-a-color row: color picker, a flex-grow name field, and the Add button. */
+.icon-palette-add-color {
 	display: flex;
-	flex-wrap: wrap;
+	align-items: center;
 	gap: var(--size-4-2);
 	margin-top: var(--size-4-2);
 }
+/* Saved colors list: one row per color, stacked vertically. */
+.icon-palette-saved-colors {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-1);
+	margin-top: var(--size-4-2);
+}
+/* One saved color: swatch, a flex-grow name field, and a remove button. */
+.icon-palette-saved-color-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+/* The name field fills the row, in both the add control and each saved row. */
+.icon-palette-add-color .icon-palette-saved-color-name,
+.icon-palette-saved-color-row .icon-palette-saved-color-name {
+	flex: 1;
+	min-width: 0;
+}
+/* The swatch shows the color; it is not a control. */
 .icon-palette-saved-color {
-	cursor: pointer;
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+}
+/* The hex code stays visible next to the name, in a fixed-width muted column. */
+.icon-palette-saved-color-code {
+	flex: 0 0 auto;
+	min-width: 8ch;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
 }
 
 /* Settings footer: version + links, matching the other plugins' footers. The

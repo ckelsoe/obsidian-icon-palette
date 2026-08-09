@@ -492,10 +492,12 @@ export default class IconPicker extends Modal {
 			});
 		}
 
-		// Saved custom colors, below the theme colors as their own section.
+		// Saved custom colors, below the theme colors as their own section. A named
+		// color shows its name; an unnamed one still shows its hex.
 		for (const color of this.plugin.settings.customColors) {
+			const label = CustomColorsStore.getName(this.plugin.settings.customColorNames, color) || color;
 			menu.addItem(menuItem => { menuItem
-				.setTitle(color)
+				.setTitle(label)
 				.setChecked(this.isSameCustomColor(this.color, color))
 				.setSection('custom-color')
 				.onClick(() => this.selectMenuColor(this.isSameCustomColor(this.color, color) ? null : color));
@@ -518,7 +520,12 @@ export default class IconPicker extends Modal {
 					const changed = saved
 						? CustomColorsStore.remove(this.plugin.settings.customColors, active)
 						: CustomColorsStore.save(this.plugin.settings.customColors, active, CustomColorsStore.CAP);
-					if (changed) void this.plugin.saveSettings();
+					if (changed) {
+						// Drop the name of any color this removed or evicted past the cap,
+						// so re-saving that hex later does not resurrect its old name.
+						CustomColorsStore.pruneNames(this.plugin.settings.customColors, this.plugin.settings.customColorNames);
+						void this.plugin.saveSettings();
+					}
 				}));
 		}
 
