@@ -45,6 +45,11 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	// persists only on blur or when the tab hides, so a rename is never lost if the
 	// user closes Settings without blurring the field. This tracks a pending write.
 	private savedColorsDirty = false;
+	// saveSettings() drops overlapping calls (its in-flight guard), so two
+	// saved-color saves close together could leave the latest edit unwritten. Chain
+	// every saved-color persist onto this promise so each runs after the previous
+	// resolves, when the guard is clear, and writes the current settings.
+	private savedColorsSaveChain: Promise<void> = Promise.resolve();
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin.app, plugin);
@@ -60,7 +65,15 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	private flushSavedColorNames(): void {
 		if (!this.savedColorsDirty) return;
 		this.savedColorsDirty = false;
-		void this.plugin.saveSettings();
+		this.queueSavedColorsSave();
+	}
+
+	/** Serialize a saved-color settings write behind any in-flight one, so an
+	 *  overlapping saveSettings() call cannot be dropped and lose the latest edit. */
+	private queueSavedColorsSave(): void {
+		this.savedColorsSaveChain = this.savedColorsSaveChain
+			.catch(() => {})
+			.then(() => this.plugin.saveSettings());
 	}
 
 	/** Return focus to the add-a-color picker after the list is rebuilt, so a
@@ -765,7 +778,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				const newName = nameField.getValue().trim();
 				if (newName) CustomColorsStore.setName(customColorNames, pendingColor, newName);
 				CustomColorsStore.pruneNames(customColors, customColorNames);
-				void this.plugin.saveSettings();
+				this.queueSavedColorsSave();
 				rerender();
 				this.focusAddColor(host);
 			});
@@ -808,7 +821,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				.onClick(() => {
 					if (CustomColorsStore.remove(customColors, color)) {
 						CustomColorsStore.pruneNames(customColors, customColorNames);
-						void this.plugin.saveSettings();
+						this.queueSavedColorsSave();
 						rerender();
 						this.focusAddColor(host);
 					}
