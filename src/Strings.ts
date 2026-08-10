@@ -49,6 +49,7 @@ export default class Strings {
 		buttonMatch: '1 match',
 		buttonMatches: '{#} matches',
 		buttonNoMatches: 'No matches',
+		noConditionsAdded: 'No conditions added',
 		enterName: 'Give this rule a name',
 		enterValue: 'Enter a value',
 		enterRegex: 'Enter a regex',

@@ -1194,7 +1194,7 @@ export default class RuleEditor extends Modal {
 		if (!this.rule.conditions?.length) {
 			matchesButton.setButtonText(STRINGS.ruleEditor.buttonNoMatches);
 			matchesButton.setDisabled(true);
-			matchesButton.setTooltip('No conditions added', {
+			matchesButton.setTooltip(STRINGS.ruleEditor.noConditionsAdded, {
 				placement: 'top',
 				delay: 100,
 			});
