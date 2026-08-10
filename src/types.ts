@@ -3,9 +3,30 @@
 // of from the lifecycle class, breaking the type-level import cycle back to the
 // entry file.
 
-export type Category = 'app' | 'tab' | 'file' | 'folder' | 'group' | 'search' | 'graph' | 'url' | 'tag' | 'property' | 'ribbon' | 'rule';
+export type Category =
+	| 'app'
+	| 'tab'
+	| 'file'
+	| 'folder'
+	| 'group'
+	| 'search'
+	| 'graph'
+	| 'url'
+	| 'tag'
+	| 'property'
+	| 'ribbon'
+	| 'rule';
 export type IconLibraryFilter = 'lucide' | 'devicon' | 'simple' | 'emoji';
-export type AppItemId = 'help' | 'settings' | 'pin' | 'sidebarLeft' | 'sidebarRight' | 'minimize' | 'maximize' | 'unmaximize' | 'close';
+export type AppItemId =
+	| 'help'
+	| 'settings'
+	| 'pin'
+	| 'sidebarLeft'
+	| 'sidebarRight'
+	| 'minimize'
+	| 'maximize'
+	| 'unmaximize'
+	| 'close';
 
 /**
  * Base interface for all icon objects.

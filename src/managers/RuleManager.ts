@@ -1,12 +1,27 @@
 import { TFile } from 'obsidian';
 import type { CachedMetadata, TAbstractFile } from 'obsidian';
 import type IconPalettePlugin from 'src/IconPalettePlugin.js';
-import type { Category, ConditionBase, Item, FileItem, RuleBase } from 'src/types.js';
+import type {
+	Category,
+	ConditionBase,
+	Item,
+	FileItem,
+	RuleBase,
+} from 'src/types.js';
 import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 
 const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-export type RuleTrigger = 'icon' | 'color' | 'rename' | 'move' | 'tag' | 'property' | 'modify' | 'date' | 'time';
+export type RuleTrigger =
+	| 'icon'
+	| 'color'
+	| 'rename'
+	| 'move'
+	| 'tag'
+	| 'property'
+	| 'modify'
+	| 'date'
+	| 'time';
 
 export interface RuleItem extends Item {
 	category: 'rule';
@@ -20,7 +35,8 @@ export interface ConditionItem {
 	value: string;
 }
 
-type ConditionSource = boolean | number | string | (string | null)[] | null | undefined;
+type ConditionSource =
+	boolean | number | string | (string | null)[] | null | undefined;
 
 /**
  * Handles core rule logic, and tracks which items are currently affected by a ruling.
@@ -62,11 +78,14 @@ export default class RuleManager {
 	/**
 	 * Start a self-looping timer to manage time-based triggers. Runs once per minute.
 	 */
-	private async startTriggerTimer(): Promise<void> {
+	private startTriggerTimer(): void {
 		if (this.triggerTimerId) {
 			const isMidnight = 86400000 - (Date.now() % 86400000) < 3600000;
 			// Check time triggers every minute, and date triggers every midnight
-			if (this.fileTriggers.has('time') || this.fileTriggers.has('date') && isMidnight) {
+			if (
+				this.fileTriggers.has('time') ||
+				(this.fileTriggers.has('date') && isMidnight)
+			) {
 				const isRulingChanged = this.triggerRulings('file', 'time');
 				if (isRulingChanged) {
 					this.plugin.refreshManagers('file');
@@ -86,9 +105,16 @@ export default class RuleManager {
 	 */
 	getRules(page: Category): RuleItem[] {
 		switch (page) {
-			case 'file': return this.plugin.settings.fileRules.map(ruleBase => this.defineRule(page, ruleBase));
-			case 'folder': return this.plugin.settings.folderRules.map(ruleBase => this.defineRule(page, ruleBase));
-			default: return [];
+			case 'file':
+				return this.plugin.settings.fileRules.map((ruleBase) =>
+					this.defineRule(page, ruleBase),
+				);
+			case 'folder':
+				return this.plugin.settings.folderRules.map((ruleBase) =>
+					this.defineRule(page, ruleBase),
+				);
+			default:
+				return [];
 		}
 	}
 
@@ -98,22 +124,32 @@ export default class RuleManager {
 	getRule(page: Category, ruleId: string): RuleItem | null {
 		let ruleBases: typeof this.plugin.settings.fileRules;
 		switch (page) {
-			case 'file': ruleBases = this.plugin.settings.fileRules; break;
-			case 'folder': ruleBases = this.plugin.settings.folderRules; break;
-			default: ruleBases = [];
+			case 'file':
+				ruleBases = this.plugin.settings.fileRules;
+				break;
+			case 'folder':
+				ruleBases = this.plugin.settings.folderRules;
+				break;
+			default:
+				ruleBases = [];
 		}
-		const ruleBase = ruleBases.find(rule => rule.id === ruleId);
+		const ruleBase = ruleBases.find((rule) => rule.id === ruleId);
 		return ruleBase ? this.defineRule(page, ruleBase) : null;
 	}
 
 	/**
 	 * Get array of rule bases from a given page.
 	 */
-	private getRuleBases(page: Category): typeof this.plugin.settings.fileRules {
+	private getRuleBases(
+		page: Category,
+	): typeof this.plugin.settings.fileRules {
 		switch (page) {
-			default: return this.plugin.settings.fileRules;
-			case 'file': return this.plugin.settings.fileRules;
-			case 'folder': return this.plugin.settings.folderRules;
+			default:
+				return this.plugin.settings.fileRules;
+			case 'file':
+				return this.plugin.settings.fileRules;
+			case 'folder':
+				return this.plugin.settings.folderRules;
 		}
 	}
 
@@ -122,9 +158,12 @@ export default class RuleManager {
 	 */
 	getPageIcon(page: Category): string {
 		switch (page) {
-			default: return 'lucide-file';
-			case 'file': return 'lucide-file';
-			case 'folder': return 'lucide-folder';
+			default:
+				return 'lucide-file';
+			case 'file':
+				return 'lucide-file';
+			case 'folder':
+				return 'lucide-folder';
 		}
 	}
 
@@ -132,10 +171,11 @@ export default class RuleManager {
 	 * Create rule definition.
 	 */
 	private defineRule(page: Category, ruleBase: RuleBase): RuleItem {
-		const match: RuleItem['match'] = ruleBase.match === 'any' || ruleBase.match === 'none'
-			? ruleBase.match
-			: 'all';
-		const conditions = (ruleBase.conditions ?? []).map(condition => ({
+		const match: RuleItem['match'] =
+			ruleBase.match === 'any' || ruleBase.match === 'none'
+				? ruleBase.match
+				: 'all';
+		const conditions = (ruleBase.conditions ?? []).map((condition) => ({
 			source: condition.source ?? '',
 			operator: condition.operator ?? '',
 			value: condition.value ?? '',
@@ -150,22 +190,24 @@ export default class RuleManager {
 			match,
 			conditions,
 			enabled: ruleBase.enabled ?? false,
-		}
+		};
 	}
 
 	/**
 	 * Generate a 5-character rule ID. 916,132,832 possible values.
 	 */
 	newRuleId(page: Category): string {
-		const ids = this.getRuleBases(page).map(ruleBase => ruleBase.id);
+		const ids = this.getRuleBases(page).map((ruleBase) => ruleBase.id);
 		let id: string;
 		let collisions = 0;
-		do { // Try to generate a unique ID (up to 10 times)
-			id = BASE62.charAt(Math.floor(Math.random() * BASE62.length))
-				+ BASE62.charAt(Math.floor(Math.random() * BASE62.length))
-				+ BASE62.charAt(Math.floor(Math.random() * BASE62.length))
-				+ BASE62.charAt(Math.floor(Math.random() * BASE62.length))
-				+ BASE62.charAt(Math.floor(Math.random() * BASE62.length));
+		do {
+			// Try to generate a unique ID (up to 10 times)
+			id =
+				BASE62.charAt(Math.floor(Math.random() * BASE62.length)) +
+				BASE62.charAt(Math.floor(Math.random() * BASE62.length)) +
+				BASE62.charAt(Math.floor(Math.random() * BASE62.length)) +
+				BASE62.charAt(Math.floor(Math.random() * BASE62.length)) +
+				BASE62.charAt(Math.floor(Math.random() * BASE62.length));
 		} while (ids.includes(id) && ++collisions < 10);
 		return id;
 	}
@@ -184,7 +226,7 @@ export default class RuleManager {
 			match: 'all',
 			conditions: [{ source: 'name', operator: 'contains', value: '' }],
 			enabled: true,
-		}
+		};
 		this.saveRule(page, newRule);
 		return newRule;
 	}
@@ -194,7 +236,7 @@ export default class RuleManager {
 	 */
 	duplicateRule(page: Category, rule: RuleItem): RuleItem {
 		const ruleBases = this.getRuleBases(page);
-		const ruleBase = ruleBases.find(ruleBase => ruleBase.id === rule.id);
+		const ruleBase = ruleBases.find((ruleBase) => ruleBase.id === rule.id);
 		if (!ruleBase) return this.newRule(page);
 
 		const duplicateRule: RuleItem = {
@@ -229,7 +271,7 @@ export default class RuleManager {
 	 */
 	moveRule(page: Category, rule: RuleItem, toIndex: number): boolean {
 		const ruleBases = this.getRuleBases(page);
-		const ruleBase = ruleBases.find(ruleBase => ruleBase.id === rule.id);
+		const ruleBase = ruleBases.find((ruleBase) => ruleBase.id === rule.id);
 		if (!ruleBase) return false;
 
 		const index = ruleBases.indexOf(ruleBase);
@@ -245,7 +287,7 @@ export default class RuleManager {
 	 */
 	saveRule(page: Category, newRule: RuleItem): boolean {
 		const ruleBases = this.getRuleBases(page);
-		let ruleBase = ruleBases.find(rule => rule.id === newRule.id);
+		let ruleBase = ruleBases.find((rule) => rule.id === newRule.id);
 		if (!ruleBase) {
 			ruleBase = { id: newRule.id };
 			ruleBases.push({ id: newRule.id });
@@ -260,16 +302,18 @@ export default class RuleManager {
 		if (newRule.match) ruleBase.match = newRule.match;
 		else delete ruleBase.match;
 		if (newRule.conditions.length > 0) {
-			ruleBase.conditions = newRule.conditions.map(({ source, operator, value }) => {
-				const conditionBase: ConditionBase = {};
-				if (source) conditionBase.source = source;
-				if (operator) conditionBase.operator = operator;
-				if (value) conditionBase.value = value;
-				return conditionBase;
-			});
-		}
-		else delete ruleBase.conditions;
-		if (typeof newRule.enabled === 'boolean') ruleBase.enabled = newRule.enabled;
+			ruleBase.conditions = newRule.conditions.map(
+				({ source, operator, value }) => {
+					const conditionBase: ConditionBase = {};
+					if (source) conditionBase.source = source;
+					if (operator) conditionBase.operator = operator;
+					if (value) conditionBase.value = value;
+					return conditionBase;
+				},
+			);
+		} else delete ruleBase.conditions;
+		if (typeof newRule.enabled === 'boolean')
+			ruleBase.enabled = newRule.enabled;
 		else delete ruleBase.enabled;
 
 		void this.plugin.saveSettings();
@@ -281,7 +325,7 @@ export default class RuleManager {
 	 */
 	deleteRule(page: Category, ruleId: string): boolean {
 		const ruleBases = this.getRuleBases(page);
-		const index = ruleBases.findIndex(ruleBase => ruleBase.id === ruleId);
+		const index = ruleBases.findIndex((ruleBase) => ruleBase.id === ruleId);
 		if (index === -1) return false;
 		ruleBases.splice(index, 1);
 
@@ -292,12 +336,19 @@ export default class RuleManager {
 	/**
 	 * Check the ruling for a given item.
 	 */
-	checkRuling(page: Category, itemId: string, unloading?: boolean): RuleItem | null {
+	checkRuling(
+		page: Category,
+		itemId: string,
+		unloading?: boolean,
+	): RuleItem | null {
 		if (unloading) return null;
 		switch (page) {
-			case 'file': return this.fileRulings.get(itemId) ?? null;
-			case 'folder': return this.folderRulings.get(itemId) ?? null;
-			default: return null;
+			case 'file':
+				return this.fileRulings.get(itemId) ?? null;
+			case 'folder':
+				return this.folderRulings.get(itemId) ?? null;
+			default:
+				return null;
 		}
 	}
 
@@ -306,7 +357,7 @@ export default class RuleManager {
 	 */
 	updateRulings(page: Category): boolean {
 		const now = new Date(); // Use this timestamp to check any chronological conditions
-		const enabledRules = this.getRules(page).filter(rule => rule.enabled);
+		const enabledRules = this.getRules(page).filter((rule) => rule.enabled);
 
 		// If no rules are enabled, clear out the rulings
 		if (enabledRules.length === 0) {
@@ -337,9 +388,11 @@ export default class RuleManager {
 
 		switch (page) {
 			case 'file': {
-				const files = this.plugin.getFileItems().filter(file => !file.items);
+				const files = this.plugin
+					.getFileItems()
+					.filter((file) => !file.items);
 				// Prune file rulings (remove files that no longer exist)
-				const existingIds = files.map(file => file.id);
+				const existingIds = files.map((file) => file.id);
 				for (const [fileId] of this.fileRulings) {
 					if (!existingIds.contains(fileId)) {
 						this.fileRulings.delete(fileId);
@@ -360,7 +413,9 @@ export default class RuleManager {
 					currentRule = this.fileRulings.get(file.id);
 					if (matchedRule) {
 						this.fileRulings.set(file.id, matchedRule);
-						anyRulingsChanged = anyRulingsChanged || RuleManager.distinguish(currentRule, matchedRule);
+						anyRulingsChanged =
+							anyRulingsChanged ||
+							RuleManager.distinguish(currentRule, matchedRule);
 					} else if (currentRule) {
 						this.fileRulings.delete(file.id);
 						anyRulingsChanged = anyRulingsChanged || true;
@@ -376,9 +431,11 @@ export default class RuleManager {
 				break;
 			}
 			case 'folder': {
-				const folders = this.plugin.getFileItems().filter(folder => folder.items);
+				const folders = this.plugin
+					.getFileItems()
+					.filter((folder) => folder.items);
 				// Prune folder rulings (remove folders that no longer exist)
-				const folderIds = folders.map(folder => folder.id);
+				const folderIds = folders.map((folder) => folder.id);
 				for (const [folderId] of this.folderRulings) {
 					if (!folderIds.contains(folderId)) {
 						this.folderRulings.delete(folderId);
@@ -399,7 +456,9 @@ export default class RuleManager {
 					currentRule = this.folderRulings.get(folder.id);
 					if (matchedRule) {
 						this.folderRulings.set(folder.id, matchedRule);
-						anyRulingsChanged = anyRulingsChanged || RuleManager.distinguish(currentRule, matchedRule);
+						anyRulingsChanged =
+							anyRulingsChanged ||
+							RuleManager.distinguish(currentRule, matchedRule);
 					} else if (currentRule) {
 						this.folderRulings.delete(folder.id);
 						anyRulingsChanged = anyRulingsChanged || true;
@@ -425,53 +484,72 @@ export default class RuleManager {
 	private updateTriggers(page: Category, condition: ConditionItem): void {
 		let triggers: Set<RuleTrigger>;
 		switch (page) {
-			case 'file': triggers = this.fileTriggers; break;
-			case 'folder': triggers = this.folderTriggers; break;
-			default: return;
+			case 'file':
+				triggers = this.fileTriggers;
+				break;
+			case 'folder':
+				triggers = this.folderTriggers;
+				break;
+			default:
+				return;
 		}
 		switch (condition.source) {
-			case 'icon': triggers.add('icon'); break;
-			case 'color': triggers.add('color'); break;
-			case 'name': {
-				triggers.add('rename');
-				triggers.add('move');
+			case 'icon':
+				triggers.add('icon');
 				break;
-			}
-			case 'filename': {
-				triggers.add('rename');
-				triggers.add('move');
+			case 'color':
+				triggers.add('color');
 				break;
-			}
-			case 'extension': {
-				triggers.add('rename');
-				triggers.add('move');
-				break;
-			}
-			case 'tree': {
-				triggers.add('rename');
-				triggers.add('move');
-				break;
-			}
+			case 'name':
+			case 'filename':
+			case 'extension':
+			case 'tree':
 			case 'path': {
 				triggers.add('rename');
 				triggers.add('move');
 				break;
 			}
-			case 'headings': triggers.add('modify'); break;
-			case 'links': triggers.add('modify'); break;
-			case 'embeds': triggers.add('modify'); break;
-			case 'tags': triggers.add('modify'); break;
-			case 'modified': triggers.add('modify'); break;
+			case 'headings':
+				triggers.add('modify');
+				break;
+			case 'links':
+				triggers.add('modify');
+				break;
+			case 'embeds':
+				triggers.add('modify');
+				break;
+			case 'tags':
+				triggers.add('modify');
+				break;
+			case 'modified':
+				triggers.add('modify');
+				break;
 			case 'clock': {
 				switch (condition.operator) {
-					case 'is': triggers.add('time'); break;
-					case '!is': triggers.add('time'); break;
-					case 'isBefore': triggers.add('time'); break;
-					case 'timeIs': triggers.add('time'); break;
-					case '!timeIs': triggers.add('time'); break;
-					case 'timeIsBefore': triggers.add('time'); break;
-					case 'timeIsAfter': triggers.add('time'); break;
-					default: triggers.add('date'); break;
+					case 'is':
+						triggers.add('time');
+						break;
+					case '!is':
+						triggers.add('time');
+						break;
+					case 'isBefore':
+						triggers.add('time');
+						break;
+					case 'timeIs':
+						triggers.add('time');
+						break;
+					case '!timeIs':
+						triggers.add('time');
+						break;
+					case 'timeIsBefore':
+						triggers.add('time');
+						break;
+					case 'timeIsAfter':
+						triggers.add('time');
+						break;
+					default:
+						triggers.add('date');
+						break;
 				}
 				break;
 			}
@@ -483,38 +561,69 @@ export default class RuleManager {
 			}
 		}
 		switch (condition.operator) {
-			case 'isNow': triggers.add('time'); break;
-			case '!isNow': triggers.add('time'); break;
-			case 'isBeforeNow': triggers.add('time'); break;
-			case 'isAfterNow': triggers.add('time'); break;
-			case 'isToday': triggers.add('date'); break;
-			case '!isToday': triggers.add('date'); break;
-			case 'isBeforeToday': triggers.add('date'); break;
-			case 'isAfterToday': triggers.add('date'); break;
-			case 'isLessDaysAgo': triggers.add('date'); break;
-			case 'isLessDaysAway': triggers.add('date'); break;
-			case 'isMoreDaysAgo': triggers.add('date'); break;
-			case 'isMoreDaysAway': triggers.add('date'); break;
+			case 'isNow':
+				triggers.add('time');
+				break;
+			case '!isNow':
+				triggers.add('time');
+				break;
+			case 'isBeforeNow':
+				triggers.add('time');
+				break;
+			case 'isAfterNow':
+				triggers.add('time');
+				break;
+			case 'isToday':
+				triggers.add('date');
+				break;
+			case '!isToday':
+				triggers.add('date');
+				break;
+			case 'isBeforeToday':
+				triggers.add('date');
+				break;
+			case 'isAfterToday':
+				triggers.add('date');
+				break;
+			case 'isLessDaysAgo':
+				triggers.add('date');
+				break;
+			case 'isLessDaysAway':
+				triggers.add('date');
+				break;
+			case 'isMoreDaysAgo':
+				triggers.add('date');
+				break;
+			case 'isMoreDaysAway':
+				triggers.add('date');
+				break;
 		}
 	}
 
 	/**
 	 * Check whether two rules have any different properties.
 	 */
-	private static distinguish(rule1: RuleItem | undefined, rule2: RuleItem | undefined): boolean {
-		return (rule1 === undefined) !== (rule2 === undefined)
-			|| rule1?.enabled !== rule2?.enabled
-			|| rule1?.id !== rule2?.id
-			|| rule1?.name !== rule2?.name
-			|| rule1?.icon !== rule2?.icon
-			|| rule1?.color !== rule2?.color
-			|| rule1?.match !== rule2?.match
-			|| rule1?.conditions?.length !== rule2?.conditions?.length
-			|| rule1?.conditions?.some((condition, i) => {
-				return condition.source !== rule2?.conditions[i]?.source
-					|| condition.operator !== rule2?.conditions[i]?.operator
-					|| condition.value !== rule2?.conditions[i]?.value;
-			}) === true;
+	private static distinguish(
+		rule1: RuleItem | undefined,
+		rule2: RuleItem | undefined,
+	): boolean {
+		return (
+			(rule1 === undefined) !== (rule2 === undefined) ||
+			rule1?.enabled !== rule2?.enabled ||
+			rule1?.id !== rule2?.id ||
+			rule1?.name !== rule2?.name ||
+			rule1?.icon !== rule2?.icon ||
+			rule1?.color !== rule2?.color ||
+			rule1?.match !== rule2?.match ||
+			rule1?.conditions?.length !== rule2?.conditions?.length ||
+			rule1?.conditions?.some((condition, i) => {
+				return (
+					condition.source !== rule2?.conditions[i]?.source ||
+					condition.operator !== rule2?.conditions[i]?.operator ||
+					condition.value !== rule2?.conditions[i]?.value
+				);
+			}) === true
+		);
 	}
 
 	/**
@@ -523,19 +632,22 @@ export default class RuleManager {
 	 */
 	triggerRulings(page: Category, ...triggers: RuleTrigger[]): boolean {
 		switch (page) {
-			case 'file': for (const trigger of triggers) {
-				if (this.fileTriggers.has(trigger)) {
-					return this.updateRulings(page);
+			case 'file':
+				for (const trigger of triggers) {
+					if (this.fileTriggers.has(trigger)) {
+						return this.updateRulings(page);
+					}
 				}
-			}
-			break;
-			case 'folder': for (const trigger of triggers) {
-				if (this.folderTriggers.has(trigger)) {
-					return this.updateRulings(page);
+				break;
+			case 'folder':
+				for (const trigger of triggers) {
+					if (this.folderTriggers.has(trigger)) {
+						return this.updateRulings(page);
+					}
 				}
-			}
-			break;
-			default: return false;
+				break;
+			default:
+				return false;
 		}
 		return false;
 	}
@@ -545,7 +657,7 @@ export default class RuleManager {
 	 * @param ignoreEnabled Ignore whether the rule is enabled.
 	 */
 	judgeFiles(rule: RuleItem, now: Date, ignoreEnabled?: true): FileItem[] {
-		const files = this.plugin.getFileItems().filter(file => !file.items);
+		const files = this.plugin.getFileItems().filter((file) => !file.items);
 		const matches: FileItem[] = [];
 		for (const file of files) {
 			if (this.judgeFile(file, rule, now, ignoreEnabled)) {
@@ -560,7 +672,7 @@ export default class RuleManager {
 	 * @param ignoreEnabled Ignore whether the rule is enabled.
 	 */
 	judgeFolders(rule: RuleItem, now: Date, ignoreEnabled?: true): FileItem[] {
-		const folders = this.plugin.getFileItems().filter(file => file.items);
+		const folders = this.plugin.getFileItems().filter((file) => file.items);
 		const matches: FileItem[] = [];
 		for (const folder of folders) {
 			if (this.judgeFile(folder, rule, now, ignoreEnabled)) {
@@ -574,21 +686,41 @@ export default class RuleManager {
 	 * Judge whether a given file matches a given rule.
 	 * @param ignoreEnabled Ignore whether the rule is enabled.
 	 */
-	judgeFile(file: FileItem, rule: RuleItem, now: Date, ignoreEnabled?: true): boolean {
+	judgeFile(
+		file: FileItem,
+		rule: RuleItem,
+		now: Date,
+		ignoreEnabled?: true,
+	): boolean {
 		if (!file.id || rule.conditions.length === 0) return false;
 		if (!rule.enabled && !ignoreEnabled) return false;
-		const { basename, filename, extension, path, tree } = this.plugin.splitFilePath(file.id);
+		const { basename, filename, extension, path, tree } =
+			this.plugin.splitFilePath(file.id);
 		const tAbstractFile = this.plugin.app.vault.getAbstractFileByPath(path);
 		if (!tAbstractFile) return false;
-		const metadata = tAbstractFile instanceof TFile
-			? this.plugin.app.metadataCache.getFileCache(tAbstractFile)
-			: null;
+		const metadata =
+			tAbstractFile instanceof TFile
+				? this.plugin.app.metadataCache.getFileCache(tAbstractFile)
+				: null;
 
 		for (const condition of rule.conditions) {
 			const isNegated = condition.operator.startsWith('!');
 			const operator = condition.operator.replace('!', '');
-			const source = RuleManager.resolveConditionSource(condition, operator, file, metadata, tAbstractFile, { basename, filename, extension, path, tree }, now);
-			let isConditionMatched = RuleManager.evaluateOperator(operator, source, condition.value, now);
+			const source = RuleManager.resolveConditionSource(
+				condition,
+				operator,
+				file,
+				metadata,
+				tAbstractFile,
+				{ basename, filename, extension, path, tree },
+				now,
+			);
+			let isConditionMatched = RuleManager.evaluateOperator(
+				operator,
+				source,
+				condition.value,
+				now,
+			);
 
 			// Flip negated operators
 			isConditionMatched = isConditionMatched !== isNegated;
@@ -611,52 +743,110 @@ export default class RuleManager {
 	 * Resolve the value a condition compares against, from the file, its metadata,
 	 * or the current time. Reaches Obsidian internals via the augmentation types.
 	 */
-	private static resolveConditionSource(condition: ConditionItem, operator: string, file: FileItem, metadata: CachedMetadata | null, tAbstractFile: TAbstractFile, pathParts: { basename: string; filename: string; extension: string; path: string; tree: string }, now: Date): ConditionSource {
+	private static resolveConditionSource(
+		condition: ConditionItem,
+		operator: string,
+		file: FileItem,
+		metadata: CachedMetadata | null,
+		tAbstractFile: TAbstractFile,
+		pathParts: {
+			basename: string;
+			filename: string;
+			extension: string;
+			path: string;
+			tree: string;
+		},
+		now: Date,
+	): ConditionSource {
 		const { basename, filename, extension, path, tree } = pathParts;
 		let source: ConditionSource = undefined;
 		// Resolve the source
 		if (condition.source.startsWith('property:')) {
 			const propId = condition.source.replace('property:', '');
 			if (metadata?.frontmatter) {
-				const frontmatter = metadata.frontmatter as Record<string, unknown>;
+				const frontmatter = metadata.frontmatter as Record<
+					string,
+					unknown
+				>;
 				const fmProps = Object.entries(frontmatter);
-				const fmProp = fmProps.find(([fmPropId]) => fmPropId.toLowerCase() === propId.toLowerCase());
-				if (Array.isArray(fmProp)) source = RuleManager.normalizeConditionSource(fmProp[1]);
+				const fmProp = fmProps.find(
+					([fmPropId]) =>
+						fmPropId.toLowerCase() === propId.toLowerCase(),
+				);
+				if (Array.isArray(fmProp))
+					source = RuleManager.normalizeConditionSource(fmProp[1]);
 			}
-		} else switch (condition.source) {
-			case 'icon': {
-				if (!file.icon || operator === 'iconIs' || operator === 'hasValue') {
-					source = file.icon;
-				} else if (ICONS.has(file.icon)) {
-					source = ICONS.get(file.icon) ?? null;
-				} else if (EMOJIS.get(file.icon)) {
-					source = EMOJIS.get(file.icon) ?? null;
+		} else
+			switch (condition.source) {
+				case 'icon': {
+					if (
+						!file.icon ||
+						operator === 'iconIs' ||
+						operator === 'hasValue'
+					) {
+						source = file.icon;
+					} else if (ICONS.has(file.icon)) {
+						source = ICONS.get(file.icon) ?? null;
+					} else if (EMOJIS.get(file.icon)) {
+						source = EMOJIS.get(file.icon) ?? null;
+					}
+					break;
 				}
-				break;
-			}
-			case 'color': source = file.color; break;
-			case 'name': source = basename; break;
-			case 'filename': source = filename; break;
-			case 'extension': source = extension; break;
-			case 'tree': source = tree; break;
-			case 'path': source = path; break;
-			case 'headings': source = metadata?.headings?.map(heading => heading.heading) ?? []; break;
-			case 'links': source = metadata?.links?.map(link => link.link) ?? []; break;
-			case 'embeds': source = metadata?.embeds?.map(embed => embed.link) ?? []; break;
-			case 'tags': {
-				source = [];
-				const frontmatterTags: unknown = metadata?.frontmatter?.tags;
-				const propTags = RuleManager.toStringArray(frontmatterTags);
-				const inlineTags = metadata?.tags?.map(tag => tag.tag.replace('#', '')) ?? [];
-				for (const tag of [...propTags, ...inlineTags]) {
-					if (!source.includes(tag)) source.push(tag);
+				case 'color':
+					source = file.color;
+					break;
+				case 'name':
+					source = basename;
+					break;
+				case 'filename':
+					source = filename;
+					break;
+				case 'extension':
+					source = extension;
+					break;
+				case 'tree':
+					source = tree;
+					break;
+				case 'path':
+					source = path;
+					break;
+				case 'headings':
+					source =
+						metadata?.headings?.map((heading) => heading.heading) ??
+						[];
+					break;
+				case 'links':
+					source = metadata?.links?.map((link) => link.link) ?? [];
+					break;
+				case 'embeds':
+					source = metadata?.embeds?.map((embed) => embed.link) ?? [];
+					break;
+				case 'tags': {
+					source = [];
+					const frontmatterTags: unknown =
+						metadata?.frontmatter?.tags;
+					const propTags = RuleManager.toStringArray(frontmatterTags);
+					const inlineTags =
+						metadata?.tags?.map((tag) =>
+							tag.tag.replace('#', ''),
+						) ?? [];
+					for (const tag of [...propTags, ...inlineTags]) {
+						if (!source.includes(tag)) source.push(tag);
+					}
+					break;
 				}
-				break;
+				case 'created':
+					if (tAbstractFile instanceof TFile)
+						source = tAbstractFile.stat.ctime;
+					break;
+				case 'modified':
+					if (tAbstractFile instanceof TFile)
+						source = tAbstractFile.stat.mtime;
+					break;
+				case 'clock':
+					source = now.getTime();
+					break;
 			}
-			case 'created': if (tAbstractFile instanceof TFile) source = tAbstractFile.stat.ctime; break;
-			case 'modified': if (tAbstractFile instanceof TFile) source = tAbstractFile.stat.mtime; break;
-			case 'clock': source = now.getTime(); break;
-		}
 		return source;
 	}
 
@@ -665,10 +855,17 @@ export default class RuleManager {
 	 * depends only on the operator, the source, the comparison value, and `now`,
 	 * which makes each operator unit-testable in isolation.
 	 */
-	private static evaluateOperator(operator: string, source: ConditionSource, value: string, now: Date): boolean {
+	private static evaluateOperator(
+		operator: string,
+		source: ConditionSource,
+		value: string,
+		now: Date,
+	): boolean {
 		// Prepare case-insensitive strings
 		const sourceLower = String.isString(source) ? source.toLowerCase() : '';
-		const sourceLowers = Array.isArray(source) ? source.map(item => String(item).toLowerCase()) : [];
+		const sourceLowers = Array.isArray(source)
+			? source.map((item) => String(item).toLowerCase())
+			: [];
 		const valueLower = String.isString(value) ? value.toLowerCase() : '';
 
 		let isConditionMatched = false;
@@ -677,120 +874,639 @@ export default class RuleManager {
 			isConditionMatched = source !== null && source !== undefined;
 		} else if (operator === 'hasProperty') {
 			isConditionMatched = source !== undefined;
-		} else if (isBoolean(source)) switch (operator) {
-			case 'isTrue': isConditionMatched = source === true; break;
-			case 'isFalse': isConditionMatched = source === false; break;
-		} else if (String.isString(source)) switch (operator) {
-			case 'is': isConditionMatched = sourceLower === valueLower; break;
-			case 'contains': isConditionMatched = valueLower !== '' && sourceLower.includes(valueLower); break;
-			case 'startsWith': isConditionMatched = valueLower !== '' && sourceLower.startsWith(valueLower); break;
-			case 'endsWith': isConditionMatched = valueLower !== '' && sourceLower.endsWith(valueLower); break;
-			case 'matches': {
-				try {
-					isConditionMatched = value !== '' && RuleManager.unwrapRegex(value).test(source);
-				} catch { /* Catch invalid regex */ };
-				break;
+		} else if (isBoolean(source))
+			switch (operator) {
+				case 'isTrue':
+					isConditionMatched = source === true;
+					break;
+				case 'isFalse':
+					isConditionMatched = source === false;
+					break;
 			}
-			case 'datetimeIs': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-			case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-			case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-			case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
-			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', now); break;
-			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', now); break;
-			case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-			case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-			case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-			case 'timeIsNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIs', now); break;
-			case 'timeIsBeforeNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIsBefore', now); break;
-			case 'timeIsAfterNow': isConditionMatched = RuleManager.compareTimes(source, 'timeIsAfter', now); break;
-			case 'dateIs': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-			case 'dateIsBefore': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-			case 'dateIsAfter': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-			case 'isToday': isConditionMatched = RuleManager.compareDates(source, 'dateIs', now); break;
-			case 'isBeforeToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsBefore', now); break;
-			case 'isAfterToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsAfter', now); break;
-			case 'isLessDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-			case 'isLessDaysAway': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-			case 'isMoreDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-			case 'isMoreDaysAway': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-			case 'weekdayIs': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-			case 'weekdayIsBefore': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-			case 'weekdayIsAfter': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-			case 'monthdayIs': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-			case 'monthdayIsBefore': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-			case 'monthdayIsAfter': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-			case 'monthIs': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-			case 'monthIsBefore': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-			case 'monthIsAfter': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-			case 'yearIs': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-			case 'yearIsBefore': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-			case 'yearIsAfter': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-			case 'iconIs': isConditionMatched = sourceLower === valueLower; break;
-			case 'nameIs': isConditionMatched = sourceLower === valueLower; break;
-			case 'nameContains': isConditionMatched = valueLower !== '' && sourceLower.includes(valueLower); break;
-			case 'nameStartsWith': isConditionMatched = valueLower !== '' && sourceLower.startsWith(valueLower); break;
-			case 'nameEndsWith': isConditionMatched = valueLower !== '' && sourceLower.endsWith(valueLower); break;
-			case 'nameMatches': {
-				try {
-					isConditionMatched = value !== '' && RuleManager.unwrapRegex(value).test(source);
-				} catch { /* Catch invalid regex */ };
-				break;
+		else if (String.isString(source))
+			switch (operator) {
+				case 'is':
+					isConditionMatched = sourceLower === valueLower;
+					break;
+				case 'contains':
+					isConditionMatched =
+						valueLower !== '' && sourceLower.includes(valueLower);
+					break;
+				case 'startsWith':
+					isConditionMatched =
+						valueLower !== '' && sourceLower.startsWith(valueLower);
+					break;
+				case 'endsWith':
+					isConditionMatched =
+						valueLower !== '' && sourceLower.endsWith(valueLower);
+					break;
+				case 'nameMatches':
+				case 'matches': {
+					try {
+						isConditionMatched =
+							value !== '' &&
+							RuleManager.unwrapRegex(value).test(source);
+					} catch {
+						/* Catch invalid regex */
+					}
+					break;
+				}
+				case 'datetimeIs':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'datetimeIsBefore':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'datetimeIsAfter':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'isNow':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						'datetimeIs',
+						now,
+					);
+					break;
+				case 'isBeforeNow':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						'datetimeIsBefore',
+						now,
+					);
+					break;
+				case 'isAfterNow':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						'datetimeIsAfter',
+						now,
+					);
+					break;
+				case 'timeIs':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'timeIsBefore':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'timeIsAfter':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'timeIsNow':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						'timeIs',
+						now,
+					);
+					break;
+				case 'timeIsBeforeNow':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						'timeIsBefore',
+						now,
+					);
+					break;
+				case 'timeIsAfterNow':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						'timeIsAfter',
+						now,
+					);
+					break;
+				case 'dateIs':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'dateIsBefore':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'dateIsAfter':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'isToday':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						'dateIs',
+						now,
+					);
+					break;
+				case 'isBeforeToday':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						'dateIsBefore',
+						now,
+					);
+					break;
+				case 'isAfterToday':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						'dateIsAfter',
+						now,
+					);
+					break;
+				case 'isLessDaysAgo':
+					isConditionMatched = RuleManager.compareRelativeDates(
+						source,
+						operator,
+						value,
+						now,
+					);
+					break;
+				case 'isLessDaysAway':
+					isConditionMatched = RuleManager.compareRelativeDates(
+						source,
+						operator,
+						value,
+						now,
+					);
+					break;
+				case 'isMoreDaysAgo':
+					isConditionMatched = RuleManager.compareRelativeDates(
+						source,
+						operator,
+						value,
+						now,
+					);
+					break;
+				case 'isMoreDaysAway':
+					isConditionMatched = RuleManager.compareRelativeDates(
+						source,
+						operator,
+						value,
+						now,
+					);
+					break;
+				case 'weekdayIs':
+					isConditionMatched = RuleManager.compareWeekdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'weekdayIsBefore':
+					isConditionMatched = RuleManager.compareWeekdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'weekdayIsAfter':
+					isConditionMatched = RuleManager.compareWeekdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthdayIs':
+					isConditionMatched = RuleManager.compareMonthdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthdayIsBefore':
+					isConditionMatched = RuleManager.compareMonthdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthdayIsAfter':
+					isConditionMatched = RuleManager.compareMonthdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthIs':
+					isConditionMatched = RuleManager.compareMonths(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthIsBefore':
+					isConditionMatched = RuleManager.compareMonths(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthIsAfter':
+					isConditionMatched = RuleManager.compareMonths(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'yearIs':
+					isConditionMatched = RuleManager.compareYears(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'yearIsBefore':
+					isConditionMatched = RuleManager.compareYears(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'yearIsAfter':
+					isConditionMatched = RuleManager.compareYears(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'iconIs':
+					isConditionMatched = sourceLower === valueLower;
+					break;
+				case 'nameIs':
+					isConditionMatched = sourceLower === valueLower;
+					break;
+				case 'nameContains':
+					isConditionMatched =
+						valueLower !== '' && sourceLower.includes(valueLower);
+					break;
+				case 'nameStartsWith':
+					isConditionMatched =
+						valueLower !== '' && sourceLower.startsWith(valueLower);
+					break;
+				case 'nameEndsWith':
+					isConditionMatched =
+						valueLower !== '' && sourceLower.endsWith(valueLower);
+					break;
+				case 'colorIs':
+					isConditionMatched = sourceLower === valueLower;
+					break;
+				case 'hexIs':
+					isConditionMatched = sourceLower === valueLower;
+					break;
 			}
-			case 'colorIs': isConditionMatched = sourceLower === valueLower; break;
-			case 'hexIs': isConditionMatched = sourceLower === valueLower; break;
-		} else if (Number.isNumber(source)) switch (operator) {
-			case 'equals': isConditionMatched = source === Number(value); break;
-			case 'isLess': isConditionMatched = source < Number(value); break;
-			case 'isMore': isConditionMatched = source > Number(value); break;
-			case 'isDivisible': isConditionMatched = source / Number(value) % 1 === 0; break;
-			case 'datetimeIs': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-			case 'datetimeIsBefore': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-			case 'datetimeIsAfter': isConditionMatched = RuleManager.compareDatetimes(source, operator, value); break;
-			case 'isNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIs', now); break;
-			case 'isBeforeNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsBefore', now); break;
-			case 'isAfterNow': isConditionMatched = RuleManager.compareDatetimes(source, 'datetimeIsAfter', now); break;
-			case 'timeIs': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-			case 'timeIsBefore': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-			case 'timeIsAfter': isConditionMatched = RuleManager.compareTimes(source, operator, value); break;
-			case 'dateIs': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-			case 'dateIsBefore': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-			case 'dateIsAfter': isConditionMatched = RuleManager.compareDates(source, operator, value); break;
-			case 'isToday': isConditionMatched = RuleManager.compareDates(source, 'dateIs', now); break;
-			case 'isBeforeToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsBefore', now); break;
-			case 'isAfterToday': isConditionMatched = RuleManager.compareDates(source, 'dateIsAfter', now); break;
-			case 'isLessDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-			case 'isMoreDaysAgo': isConditionMatched = RuleManager.compareRelativeDates(source, operator, value, now); break;
-			case 'weekdayIs': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-			case 'weekdayIsBefore': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-			case 'weekdayIsAfter': isConditionMatched = RuleManager.compareWeekdays(source, operator, value); break;
-			case 'monthdayIs': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-			case 'monthdayIsBefore': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-			case 'monthdayIsAfter': isConditionMatched = RuleManager.compareMonthdays(source, operator, value); break;
-			case 'monthIs': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-			case 'monthIsBefore': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-			case 'monthIsAfter': isConditionMatched = RuleManager.compareMonths(source, operator, value); break;
-			case 'yearIs': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-			case 'yearIsBefore': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-			case 'yearIsAfter': isConditionMatched = RuleManager.compareYears(source, operator, value); break;
-		} else if (Array.isArray(source)) switch (operator) {
-			case 'includes': isConditionMatched = sourceLowers.includes(valueLower); break;
-			case 'allAre': isConditionMatched = RuleManager.all(sourceLowers, 'are', valueLower); break;
-			case 'allContain': isConditionMatched = RuleManager.all(sourceLowers, 'contain', valueLower); break;
-			case 'allStartWith': isConditionMatched = RuleManager.all(sourceLowers, 'startWith', valueLower); break;
-			case 'allEndWith': isConditionMatched = RuleManager.all(sourceLowers, 'endWith', valueLower); break;
-			case 'allMatch': isConditionMatched = RuleManager.all(source, 'match', value); break;
-			case 'anyContain': isConditionMatched = RuleManager.any(sourceLowers, 'contain', valueLower); break;
-			case 'anyStartWith': isConditionMatched = RuleManager.any(sourceLowers, 'startWith', valueLower); break;
-			case 'anyEndWith': isConditionMatched = RuleManager.any(sourceLowers, 'endWith', valueLower); break;
-			case 'anyMatch': isConditionMatched = RuleManager.any(source, 'match', value); break;
-			case 'noneContain': isConditionMatched = RuleManager.none(sourceLowers, 'contain', valueLower); break;
-			case 'noneStartWith': isConditionMatched = RuleManager.none(sourceLowers, 'startWith', valueLower); break;
-			case 'noneEndWith': isConditionMatched = RuleManager.none(sourceLowers, 'endWith', valueLower); break;
-			case 'noneMatch': isConditionMatched = RuleManager.none(source, 'match', value); break;
-			case 'countIs': isConditionMatched = value !== '' && source.length === Number(value); break;
-			case 'countIsLess': isConditionMatched = value !== '' && source.length < Number(value); break;
-			case 'countIsMore': isConditionMatched = value !== '' && source.length > Number(value); break;
-		}
+		else if (Number.isNumber(source))
+			switch (operator) {
+				case 'equals':
+					isConditionMatched = source === Number(value);
+					break;
+				case 'isLess':
+					isConditionMatched = source < Number(value);
+					break;
+				case 'isMore':
+					isConditionMatched = source > Number(value);
+					break;
+				case 'isDivisible':
+					isConditionMatched = (source / Number(value)) % 1 === 0;
+					break;
+				case 'datetimeIs':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'datetimeIsBefore':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'datetimeIsAfter':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'isNow':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						'datetimeIs',
+						now,
+					);
+					break;
+				case 'isBeforeNow':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						'datetimeIsBefore',
+						now,
+					);
+					break;
+				case 'isAfterNow':
+					isConditionMatched = RuleManager.compareDatetimes(
+						source,
+						'datetimeIsAfter',
+						now,
+					);
+					break;
+				case 'timeIs':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'timeIsBefore':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'timeIsAfter':
+					isConditionMatched = RuleManager.compareTimes(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'dateIs':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'dateIsBefore':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'dateIsAfter':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'isToday':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						'dateIs',
+						now,
+					);
+					break;
+				case 'isBeforeToday':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						'dateIsBefore',
+						now,
+					);
+					break;
+				case 'isAfterToday':
+					isConditionMatched = RuleManager.compareDates(
+						source,
+						'dateIsAfter',
+						now,
+					);
+					break;
+				case 'isLessDaysAgo':
+					isConditionMatched = RuleManager.compareRelativeDates(
+						source,
+						operator,
+						value,
+						now,
+					);
+					break;
+				case 'isMoreDaysAgo':
+					isConditionMatched = RuleManager.compareRelativeDates(
+						source,
+						operator,
+						value,
+						now,
+					);
+					break;
+				case 'weekdayIs':
+					isConditionMatched = RuleManager.compareWeekdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'weekdayIsBefore':
+					isConditionMatched = RuleManager.compareWeekdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'weekdayIsAfter':
+					isConditionMatched = RuleManager.compareWeekdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthdayIs':
+					isConditionMatched = RuleManager.compareMonthdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthdayIsBefore':
+					isConditionMatched = RuleManager.compareMonthdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthdayIsAfter':
+					isConditionMatched = RuleManager.compareMonthdays(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthIs':
+					isConditionMatched = RuleManager.compareMonths(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthIsBefore':
+					isConditionMatched = RuleManager.compareMonths(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'monthIsAfter':
+					isConditionMatched = RuleManager.compareMonths(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'yearIs':
+					isConditionMatched = RuleManager.compareYears(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'yearIsBefore':
+					isConditionMatched = RuleManager.compareYears(
+						source,
+						operator,
+						value,
+					);
+					break;
+				case 'yearIsAfter':
+					isConditionMatched = RuleManager.compareYears(
+						source,
+						operator,
+						value,
+					);
+					break;
+			}
+		else if (Array.isArray(source))
+			switch (operator) {
+				case 'includes':
+					isConditionMatched = sourceLowers.includes(valueLower);
+					break;
+				case 'allAre':
+					isConditionMatched = RuleManager.all(
+						sourceLowers,
+						'are',
+						valueLower,
+					);
+					break;
+				case 'allContain':
+					isConditionMatched = RuleManager.all(
+						sourceLowers,
+						'contain',
+						valueLower,
+					);
+					break;
+				case 'allStartWith':
+					isConditionMatched = RuleManager.all(
+						sourceLowers,
+						'startWith',
+						valueLower,
+					);
+					break;
+				case 'allEndWith':
+					isConditionMatched = RuleManager.all(
+						sourceLowers,
+						'endWith',
+						valueLower,
+					);
+					break;
+				case 'allMatch':
+					isConditionMatched = RuleManager.all(
+						source,
+						'match',
+						value,
+					);
+					break;
+				case 'anyContain':
+					isConditionMatched = RuleManager.any(
+						sourceLowers,
+						'contain',
+						valueLower,
+					);
+					break;
+				case 'anyStartWith':
+					isConditionMatched = RuleManager.any(
+						sourceLowers,
+						'startWith',
+						valueLower,
+					);
+					break;
+				case 'anyEndWith':
+					isConditionMatched = RuleManager.any(
+						sourceLowers,
+						'endWith',
+						valueLower,
+					);
+					break;
+				case 'anyMatch':
+					isConditionMatched = RuleManager.any(
+						source,
+						'match',
+						value,
+					);
+					break;
+				case 'noneContain':
+					isConditionMatched = RuleManager.none(
+						sourceLowers,
+						'contain',
+						valueLower,
+					);
+					break;
+				case 'noneStartWith':
+					isConditionMatched = RuleManager.none(
+						sourceLowers,
+						'startWith',
+						valueLower,
+					);
+					break;
+				case 'noneEndWith':
+					isConditionMatched = RuleManager.none(
+						sourceLowers,
+						'endWith',
+						valueLower,
+					);
+					break;
+				case 'noneMatch':
+					isConditionMatched = RuleManager.none(
+						source,
+						'match',
+						value,
+					);
+					break;
+				case 'countIs':
+					isConditionMatched =
+						value !== '' && source.length === Number(value);
+					break;
+				case 'countIsLess':
+					isConditionMatched =
+						value !== '' && source.length < Number(value);
+					break;
+				case 'countIsMore':
+					isConditionMatched =
+						value !== '' && source.length > Number(value);
+					break;
+			}
 		return isConditionMatched;
 	}
 
@@ -806,7 +1522,11 @@ export default class RuleManager {
 	/**
 	 * Compare the date & time of two timestamps.
 	 */
-	private static compareDatetimes(source: string | number, operator: 'datetimeIs' | 'datetimeIsBefore' | 'datetimeIsAfter', value: string | Date): boolean {
+	private static compareDatetimes(
+		source: string | number,
+		operator: 'datetimeIs' | 'datetimeIsBefore' | 'datetimeIsAfter',
+		value: string | Date,
+	): boolean {
 		if (value === '') return false;
 		const srcDate = new Date(source);
 		const valDate = new Date(value);
@@ -817,19 +1537,28 @@ export default class RuleManager {
 		valDate.setMilliseconds(0);
 
 		switch (operator) {
-			case 'datetimeIs': return srcDate.getTime() === valDate.getTime();
-			case 'datetimeIsBefore': return srcDate < valDate;
-			case 'datetimeIsAfter': return srcDate > valDate;
+			case 'datetimeIs':
+				return srcDate.getTime() === valDate.getTime();
+			case 'datetimeIsBefore':
+				return srcDate < valDate;
+			case 'datetimeIsAfter':
+				return srcDate > valDate;
 		}
 	}
 
 	/**
 	 * Compare the times of two timestamps.
 	 */
-	private static compareTimes(source: string | number, operator: 'timeIs' | 'timeIsBefore' | 'timeIsAfter', value: string | Date): boolean {
+	private static compareTimes(
+		source: string | number,
+		operator: 'timeIs' | 'timeIsBefore' | 'timeIsAfter',
+		value: string | Date,
+	): boolean {
 		if (value === '') return false;
 		const srcDate = new Date(source);
-		const valDate = String.isString(value) ? new Date('1970T' + value) : new Date(value);
+		const valDate = String.isString(value)
+			? new Date('1970T' + value)
+			: new Date(value);
 
 		srcDate.setFullYear(1970, 0, 1);
 		valDate.setFullYear(1970, 0, 1);
@@ -839,16 +1568,23 @@ export default class RuleManager {
 		valDate.setMilliseconds(0);
 
 		switch (operator) {
-			case 'timeIs': return srcDate.getTime() === valDate.getTime();
-			case 'timeIsBefore': return srcDate < valDate;
-			case 'timeIsAfter': return srcDate > valDate;
+			case 'timeIs':
+				return srcDate.getTime() === valDate.getTime();
+			case 'timeIsBefore':
+				return srcDate < valDate;
+			case 'timeIsAfter':
+				return srcDate > valDate;
 		}
 	}
 
 	/**
 	 * Compare the dates of two timestamps.
 	 */
-	private static compareDates(source: string | number, operator: 'dateIs' | 'dateIsBefore' | 'dateIsAfter', value: string | Date): boolean {
+	private static compareDates(
+		source: string | number,
+		operator: 'dateIs' | 'dateIsBefore' | 'dateIsAfter',
+		value: string | Date,
+	): boolean {
 		if (value === '') return false;
 		const srcDate = new Date(source);
 		const valDate = new Date(value);
@@ -857,29 +1593,46 @@ export default class RuleManager {
 		valDate.setHours(0, 0, 0, 0);
 
 		switch (operator) {
-			case 'dateIs': return srcDate.getTime() === valDate.getTime();
-			case 'dateIsBefore': return srcDate < valDate;
-			case 'dateIsAfter': return srcDate > valDate;
+			case 'dateIs':
+				return srcDate.getTime() === valDate.getTime();
+			case 'dateIsBefore':
+				return srcDate < valDate;
+			case 'dateIsAfter':
+				return srcDate > valDate;
 		}
 	}
 
-	private static compareRelativeDates(source: string | number, operator: 'isLessDaysAgo' | 'isLessDaysAway' | 'isMoreDaysAgo' | 'isMoreDaysAway', value: string, now: Date): boolean {
+	private static compareRelativeDates(
+		source: string | number,
+		operator:
+			| 'isLessDaysAgo'
+			| 'isLessDaysAway'
+			| 'isMoreDaysAgo'
+			| 'isMoreDaysAway',
+		value: string,
+		now: Date,
+	): boolean {
 		if (value === '') return false;
 		const srcDate = new Date(source);
 		const valDate = new Date(now);
 
 		srcDate.setHours(0, 0, 0, 0);
 		valDate.setHours(0, 0, 0, 0);
-		valDate.setDate(operator === 'isLessDaysAgo' || operator === 'isMoreDaysAgo'
-			? valDate.getDate() - Number(value)
-			: valDate.getDate() + Number(value)
+		valDate.setDate(
+			operator === 'isLessDaysAgo' || operator === 'isMoreDaysAgo'
+				? valDate.getDate() - Number(value)
+				: valDate.getDate() + Number(value),
 		);
 
 		switch (operator) {
-			case 'isLessDaysAgo': return srcDate > valDate;
-			case 'isLessDaysAway': return srcDate < valDate;
-			case 'isMoreDaysAgo': return srcDate < valDate;
-			case 'isMoreDaysAway': return srcDate > valDate;
+			case 'isLessDaysAgo':
+				return srcDate > valDate;
+			case 'isLessDaysAway':
+				return srcDate < valDate;
+			case 'isMoreDaysAgo':
+				return srcDate < valDate;
+			case 'isMoreDaysAway':
+				return srcDate > valDate;
 		}
 	}
 
@@ -887,31 +1640,45 @@ export default class RuleManager {
 	 * Compare a timestamp source against a day-of-week value.
 	 * Converts srcWeekday to ISO 8601 (1 = Monday ... 7 = Sunday).
 	 */
-	private static compareWeekdays(source: string | number, operator: 'weekdayIs' | 'weekdayIsBefore' | 'weekdayIsAfter', value: string): boolean {
+	private static compareWeekdays(
+		source: string | number,
+		operator: 'weekdayIs' | 'weekdayIsBefore' | 'weekdayIsAfter',
+		value: string,
+	): boolean {
 		if (value === '') return false;
 		const srcDate = new Date(source);
 		const srcWeekday = srcDate.getDay() !== 0 ? srcDate.getDay() : 7;
 		const valWeekday = Number(value);
 
 		switch (operator) {
-			case 'weekdayIs': return srcWeekday === valWeekday;
-			case 'weekdayIsBefore': return srcWeekday < valWeekday;
-			case 'weekdayIsAfter': return srcWeekday > valWeekday;
+			case 'weekdayIs':
+				return srcWeekday === valWeekday;
+			case 'weekdayIsBefore':
+				return srcWeekday < valWeekday;
+			case 'weekdayIsAfter':
+				return srcWeekday > valWeekday;
 		}
 	}
 
 	/**
 	 * Compare a timestamp source against a day-of-month value.
 	 */
-	private static compareMonthdays(source: string | number, operator: 'monthdayIs' | 'monthdayIsBefore' | 'monthdayIsAfter', value: string): boolean {
+	private static compareMonthdays(
+		source: string | number,
+		operator: 'monthdayIs' | 'monthdayIsBefore' | 'monthdayIsAfter',
+		value: string,
+	): boolean {
 		if (value === '') return false;
 		const srcMonthday = new Date(source).getDate();
 		const valMonthday = Number(value);
 
 		switch (operator) {
-			case 'monthdayIs': return srcMonthday === valMonthday;
-			case 'monthdayIsBefore': return srcMonthday < valMonthday;
-			case 'monthdayIsAfter': return srcMonthday > valMonthday;
+			case 'monthdayIs':
+				return srcMonthday === valMonthday;
+			case 'monthdayIsBefore':
+				return srcMonthday < valMonthday;
+			case 'monthdayIsAfter':
+				return srcMonthday > valMonthday;
 		}
 	}
 
@@ -919,51 +1686,82 @@ export default class RuleManager {
 	 * Compare a timestamp source against a month value.
 	 * Converts srcMonth to ISO 8601 (1 = January ... 12 = December).
 	 */
-	private static compareMonths(source: string | number, operator: 'monthIs' | 'monthIsBefore' | 'monthIsAfter', value: string): boolean {
+	private static compareMonths(
+		source: string | number,
+		operator: 'monthIs' | 'monthIsBefore' | 'monthIsAfter',
+		value: string,
+	): boolean {
 		if (value === '') return false;
 		const srcMonth = new Date(source).getMonth() + 1;
 		const valMonth = Number(value);
 
 		switch (operator) {
-			case 'monthIs': return srcMonth === valMonth;
-			case 'monthIsBefore': return srcMonth < valMonth;
-			case 'monthIsAfter': return srcMonth > valMonth;
+			case 'monthIs':
+				return srcMonth === valMonth;
+			case 'monthIsBefore':
+				return srcMonth < valMonth;
+			case 'monthIsAfter':
+				return srcMonth > valMonth;
 		}
 	}
 
 	/**
 	 * Compare a timestamp source against a year value.
 	 */
-	private static compareYears(source: string | number, operator: 'yearIs' | 'yearIsBefore' | 'yearIsAfter', value: string): boolean {
+	private static compareYears(
+		source: string | number,
+		operator: 'yearIs' | 'yearIsBefore' | 'yearIsAfter',
+		value: string,
+	): boolean {
 		if (value === '') return false;
 		const srcYear = new Date(source).getFullYear();
 		const valYear = Number(value);
 
 		switch (operator) {
-			case 'yearIs': return srcYear === valYear;
-			case 'yearIsBefore': return srcYear < valYear;
-			case 'yearIsAfter': return srcYear > valYear;
+			case 'yearIs':
+				return srcYear === valYear;
+			case 'yearIsBefore':
+				return srcYear < valYear;
+			case 'yearIsAfter':
+				return srcYear > valYear;
 		}
 	}
 
 	/**
 	 * Check whether all items match a given operator & value.
 	 */
-	private static all(items: (string | null)[], operator: 'are' | 'contain' | 'startWith' | 'endWith' | 'match', value: string): boolean {
+	private static all(
+		items: (string | null)[],
+		operator: 'are' | 'contain' | 'startWith' | 'endWith' | 'match',
+		value: string,
+	): boolean {
 		if (items.length === 0 || value === '') return false;
 
 		switch (operator) {
-			case 'are': for (const item of items) if (item !== value) return false; break;
-			case 'contain': for (const item of items) if (!String(item).includes(value)) return false; break;
-			case 'startWith': for (const item of items) if (!String(item).startsWith(value)) return false; break;
-			case 'endWith': for (const item of items) if (!String(item).endsWith(value)) return false; break;
+			case 'are':
+				for (const item of items) if (item !== value) return false;
+				break;
+			case 'contain':
+				for (const item of items)
+					if (!String(item).includes(value)) return false;
+				break;
+			case 'startWith':
+				for (const item of items)
+					if (!String(item).startsWith(value)) return false;
+				break;
+			case 'endWith':
+				for (const item of items)
+					if (!String(item).endsWith(value)) return false;
+				break;
 			case 'match': {
 				try {
 					const regex = RuleManager.unwrapRegex(value);
 					for (const item of items) {
 						if (!regex.test(String(item))) return false;
 					}
-				} catch { /* Catch invalid regex */ };
+				} catch {
+					/* Catch invalid regex */
+				}
 				break;
 			}
 		}
@@ -972,8 +1770,16 @@ export default class RuleManager {
 
 	private static normalizeConditionSource(value: unknown): ConditionSource {
 		if (value === null || value === undefined) return value;
-		if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return value;
-		if (Array.isArray(value)) return value.map(item => item === null ? null : RuleManager.stringifyScalar(item));
+		if (
+			typeof value === 'boolean' ||
+			typeof value === 'number' ||
+			typeof value === 'string'
+		)
+			return value;
+		if (Array.isArray(value))
+			return value.map((item) =>
+				item === null ? null : RuleManager.stringifyScalar(item),
+			);
 		return RuleManager.stringifyScalar(value);
 	}
 
@@ -982,9 +1788,19 @@ export default class RuleManager {
 	 */
 	private static stringifyScalar(value: unknown): string {
 		if (value === undefined || value === null) return '';
-		if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return String(value);
+		if (
+			typeof value === 'boolean' ||
+			typeof value === 'number' ||
+			typeof value === 'string'
+		)
+			return String(value);
 		if (value instanceof Date) return value.toString();
-		if (typeof value === 'symbol' || typeof value === 'function' || typeof value === 'bigint') return value.toString();
+		if (
+			typeof value === 'symbol' ||
+			typeof value === 'function' ||
+			typeof value === 'bigint'
+		)
+			return value.toString();
 		// Remaining values are plain objects; serialize defensively so cycles never throw.
 		try {
 			return JSON.stringify(value);
@@ -994,7 +1810,7 @@ export default class RuleManager {
 	}
 
 	private static toStringArray(value: unknown): string[] {
-		if (Array.isArray(value)) return value.map(item => String(item));
+		if (Array.isArray(value)) return value.map((item) => String(item));
 		if (typeof value === 'string') return [value];
 		return [];
 	}
@@ -1002,21 +1818,38 @@ export default class RuleManager {
 	/**
 	 * Check whether any items match a given operator & value.
 	 */
-	private static any(items: (string | null)[], operator: 'are' | 'contain' | 'startWith' | 'endWith' | 'match', value: string): boolean {
+	private static any(
+		items: (string | null)[],
+		operator: 'are' | 'contain' | 'startWith' | 'endWith' | 'match',
+		value: string,
+	): boolean {
 		if (value === '') return false;
 
 		switch (operator) {
-			case 'are': for (const item of items) if (item === value) return true; break;
-			case 'contain': for (const item of items) if (String(item).includes(value)) return true; break;
-			case 'startWith': for (const item of items) if (String(item).startsWith(value)) return true; break;
-			case 'endWith': for (const item of items) if (String(item).endsWith(value)) return true; break;
+			case 'are':
+				for (const item of items) if (item === value) return true;
+				break;
+			case 'contain':
+				for (const item of items)
+					if (String(item).includes(value)) return true;
+				break;
+			case 'startWith':
+				for (const item of items)
+					if (String(item).startsWith(value)) return true;
+				break;
+			case 'endWith':
+				for (const item of items)
+					if (String(item).endsWith(value)) return true;
+				break;
 			case 'match': {
 				try {
 					const regex = RuleManager.unwrapRegex(value);
 					for (const item of items) {
 						if (regex.test(String(item))) return true;
 					}
-				} catch { /* Catch invalid regex */ };
+				} catch {
+					/* Catch invalid regex */
+				}
 				break;
 			}
 		}
@@ -1026,21 +1859,38 @@ export default class RuleManager {
 	/**
 	 * Check whether no items match a given operator & value.
 	 */
-	private static none(items: (string | null)[], operator: 'are' | 'contain' | 'startWith' | 'endWith' | 'match', value: string): boolean {
+	private static none(
+		items: (string | null)[],
+		operator: 'are' | 'contain' | 'startWith' | 'endWith' | 'match',
+		value: string,
+	): boolean {
 		if (value === '') return false;
 
 		switch (operator) {
-			case 'are': for (const item of items) if (item === value) return false; break;
-			case 'contain': for (const item of items) if (String(item).includes(value)) return false; break;
-			case 'startWith': for (const item of items) if (String(item).startsWith(value)) return false; break;
-			case 'endWith': for (const item of items) if (String(item).endsWith(value)) return false; break;
+			case 'are':
+				for (const item of items) if (item === value) return false;
+				break;
+			case 'contain':
+				for (const item of items)
+					if (String(item).includes(value)) return false;
+				break;
+			case 'startWith':
+				for (const item of items)
+					if (String(item).startsWith(value)) return false;
+				break;
+			case 'endWith':
+				for (const item of items)
+					if (String(item).endsWith(value)) return false;
+				break;
 			case 'match': {
 				try {
 					const regex = RuleManager.unwrapRegex(value);
 					for (const item of items) {
 						if (regex.test(String(item))) return false;
 					}
-				} catch { /* Catch invalid regex */ };
+				} catch {
+					/* Catch invalid regex */
+				}
 				break;
 			}
 		}

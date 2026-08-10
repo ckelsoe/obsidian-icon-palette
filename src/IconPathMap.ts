@@ -20,7 +20,11 @@ export default class IconPathMap {
 	 *
 	 * @returns whether the map changed, so the caller saves settings only when needed.
 	 */
-	static rekeyDescendants<T>(map: Record<string, T>, oldPath: string, newPath: string): boolean {
+	static rekeyDescendants<T>(
+		map: Record<string, T>,
+		oldPath: string,
+		newPath: string,
+	): boolean {
 		const prefix = oldPath + '/';
 		// Remove each matching source as it is found, buffering its target, then
 		// write the targets. Sources and targets are disjoint, so no target can

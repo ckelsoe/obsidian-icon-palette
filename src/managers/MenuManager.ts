@@ -4,12 +4,18 @@ interface MenuItemWithSection extends MenuItem {
 	section?: string;
 }
 
-type ShowAtPositionMethod = (this: Menu, position: MenuPositionDef, doc?: Document) => Menu;
+type ShowAtPositionMethod = (
+	this: Menu,
+	position: MenuPositionDef,
+	doc?: Document,
+) => Menu;
 
 function getMenuItems(menu: Menu): MenuItemWithSection[] {
 	const items: unknown = Reflect.get(menu, 'items');
 	return Array.isArray(items)
-		? items.filter((item): item is MenuItemWithSection => item instanceof MenuItem)
+		? items.filter(
+				(item): item is MenuItemWithSection => item instanceof MenuItem,
+			)
 		: [];
 }
 
@@ -32,17 +38,24 @@ export default class MenuManager {
 
 		// Store original method. Use Reflect.get to avoid capturing a method through
 		// property access; the proxy still receives the concrete Menu instance.
-		this.showAtPositionOriginal = Reflect.get(menuPrototype, 'showAtPosition');
+		this.showAtPositionOriginal = Reflect.get(
+			menuPrototype,
+			'showAtPosition',
+		);
 
 		// Catch menus as they open
 		this.showAtPositionProxy = new Proxy(this.showAtPositionOriginal, {
-			apply: (showAtPosition, menu: Menu, args: [position: MenuPositionDef, doc?: Document]) => {
+			apply: (
+				showAtPosition,
+				menu: Menu,
+				args: [position: MenuPositionDef, doc?: Document],
+			) => {
 				this.menu = menu;
 				if (this.queuedActions.length > 0) {
 					this.runQueuedActions(); // Menu is unhappy with your customer service
 				}
 				return Reflect.apply(showAtPosition, menu, args);
-			}
+			},
 		});
 
 		// Replace original method
@@ -73,7 +86,10 @@ export default class MenuManager {
 	/**
 	 * Add a menu item after the given sections, prioritized by array order.
 	 */
-	addItemAfter(preSections: string | string[], callback: (item: MenuItem) => void): this {
+	addItemAfter(
+		preSections: string | string[],
+		callback: (item: MenuItem) => void,
+	): this {
 		if (this.menu) {
 			if (typeof preSections === 'string') preSections = [preSections];
 
@@ -93,7 +109,9 @@ export default class MenuManager {
 				sections.splice(index, 0, section);
 			});
 		} else {
-			this.queuedActions.push(() => this.addItemAfter(preSections, callback));
+			this.queuedActions.push(() =>
+				this.addItemAfter(preSections, callback),
+			);
 		}
 		return this;
 	}
@@ -113,9 +131,14 @@ export default class MenuManager {
 	/**
 	 * Iterate menu items of a given section.
 	 */
-	forSection(section: string, callback: (item: MenuItem, index: number) => void): this {
+	forSection(
+		section: string,
+		callback: (item: MenuItem, index: number) => void,
+	): this {
 		if (this.menu) {
-			const items = getMenuItems(this.menu).filter(item => item.section === section);
+			const items = getMenuItems(this.menu).filter(
+				(item) => item.section === section,
+			);
 			items.forEach((item, i) => callback(item, i));
 		} else {
 			this.queuedActions.push(() => this.forSection(section, callback));

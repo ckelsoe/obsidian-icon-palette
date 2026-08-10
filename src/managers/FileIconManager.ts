@@ -1,7 +1,10 @@
 import { Menu, MenuItem, WorkspaceLeaf } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem, IconColorCombo } from 'src/types.js';
-import type { MenuItemWithIconElement, MenuItemWithSubmenu } from 'src/obsidian-internals.js';
+import type {
+	MenuItemWithIconElement,
+	MenuItemWithSubmenu,
+} from 'src/obsidian-internals.js';
 import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 import FavoritesStore from 'src/FavoritesStore.js';
 import IconManager from 'src/managers/IconManager.js';
@@ -20,7 +23,9 @@ const PINNED_MENU_CAP = 3;
  * Checked once so the submenu entry is omitted entirely on a build without it,
  * rather than adding a dead menu item that has no submenu and does nothing.
  */
-const MENU_ITEM_SUPPORTS_SUBMENU = typeof (MenuItem.prototype as unknown as MenuItemWithSubmenu).setSubmenu === 'function';
+const MENU_ITEM_SUPPORTS_SUBMENU =
+	typeof (MenuItem.prototype as unknown as MenuItemWithSubmenu).setSubmenu ===
+	'function';
 
 /**
  * Handles icons in the Files pane.
@@ -34,21 +39,29 @@ export default class FileIconManager extends IconManager {
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
-		this.plugin.registerEvent(this.app.workspace.on('file-menu', (menu, tFile) => {
-			if (this.plugin.settings.showMenuActions) {
-				this.onContextMenu(tFile.path);
-			}
-		}));
-		this.plugin.registerEvent(this.app.workspace.on('files-menu', (menu, tFiles) => {
-			if (this.plugin.settings.showMenuActions) {
-				this.onContextMenu(...tFiles.map(tFile => tFile.path));
-			}
-		}));
-		this.plugin.registerEvent(this.app.workspace.on('layout-change', () => {
-			if (activeDocument.contains(this.containerEl)) return;
-			this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
-		}));
-		this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
+		this.plugin.registerEvent(
+			this.app.workspace.on('file-menu', (menu, tFile) => {
+				if (this.plugin.settings.showMenuActions) {
+					this.onContextMenu(tFile.path);
+				}
+			}),
+		);
+		this.plugin.registerEvent(
+			this.app.workspace.on('files-menu', (menu, tFiles) => {
+				if (this.plugin.settings.showMenuActions) {
+					this.onContextMenu(...tFiles.map((tFile) => tFile.path));
+				}
+			}),
+		);
+		this.plugin.registerEvent(
+			this.app.workspace.on('layout-change', () => {
+				if (activeDocument.contains(this.containerEl)) return;
+				this.app.workspace.iterateAllLeaves((leaf) =>
+					this.manageLeaf(leaf),
+				);
+			}),
+		);
+		this.app.workspace.iterateAllLeaves((leaf) => this.manageLeaf(leaf));
 	}
 
 	/**
@@ -58,24 +71,34 @@ export default class FileIconManager extends IconManager {
 		if (leaf.getViewState().type !== 'file-explorer') return;
 
 		this.stopMutationObserver(this.containerEl);
-		this.containerEl = leaf.view.containerEl.find(':scope > .nav-files-container > div');
-		this.setMutationsObserver(this.containerEl, {
-			subtree: true,
-			childList: true,
-			attributeFilter: ['data-path'],
-		}, mutations => {
-			for (const mutation of mutations) {
-				if (mutation.attributeName === 'data-path') {
-					this.refreshIcons();
-					return;
-				} else for (const addedNode of mutation.addedNodes) {
-					if (addedNode.instanceOf(HTMLElement) && addedNode.hasClass('tree-item')) {
+		this.containerEl = leaf.view.containerEl.find(
+			':scope > .nav-files-container > div',
+		);
+		this.setMutationsObserver(
+			this.containerEl,
+			{
+				subtree: true,
+				childList: true,
+				attributeFilter: ['data-path'],
+			},
+			(mutations) => {
+				for (const mutation of mutations) {
+					if (mutation.attributeName === 'data-path') {
 						this.refreshIcons();
 						return;
-					}
+					} else
+						for (const addedNode of mutation.addedNodes) {
+							if (
+								addedNode.instanceOf(HTMLElement) &&
+								addedNode.hasClass('tree-item')
+							) {
+								this.refreshIcons();
+								return;
+							}
+						}
 				}
-			}
-		});
+			},
+		);
 		this.refreshIcons();
 	}
 
@@ -91,7 +114,10 @@ export default class FileIconManager extends IconManager {
 	/**
 	 * Refresh an array of visible file icons, including any expanded subitems.
 	 */
-	private refreshChildIcons(itemEls: HTMLElement[], unloading?: boolean): void {
+	private refreshChildIcons(
+		itemEls: HTMLElement[],
+		unloading?: boolean,
+	): void {
 		for (const itemEl of itemEls) {
 			itemEl.addClass('icon-palette-item');
 
@@ -102,61 +128,82 @@ export default class FileIconManager extends IconManager {
 
 			// Check for an icon ruling
 			const page = file.category === 'folder' ? 'folder' : 'file';
-			const rule = this.plugin.ruleManager?.checkRuling(page, file.id, unloading) ?? file;
+			const rule =
+				this.plugin.ruleManager?.checkRuling(
+					page,
+					file.id,
+					unloading,
+				) ?? file;
 
 			if (file.category === 'folder') {
 				// Refresh children immediately if folder is expanded
 				if (!itemEl.hasClass('is-collapsed')) {
-					const childItemEls = itemEl.findAll(':scope > .tree-item-children > .tree-item');
-					if (childItemEls) this.refreshChildIcons(childItemEls, unloading);
+					const childItemEls = itemEl.findAll(
+						':scope > .tree-item-children > .tree-item',
+					);
+					if (childItemEls)
+						this.refreshChildIcons(childItemEls, unloading);
 				}
 
 				// Set up mutation observer with performance optimizations:
 				// 1. Only refresh children on expand (not collapse) to reduce unnecessary updates
 				// 2. Use debouncing to prevent multiple rapid refreshes
-				this.setMutationsObserver(itemEl, {
-					subtree: true,
-					attributeFilter: ['class', 'data-path'],
-					attributeOldValue: true,
-				}, mutations => {
-					let shouldRefreshChildren = false;
-					let shouldRefreshSelf = false;
+				this.setMutationsObserver(
+					itemEl,
+					{
+						subtree: true,
+						attributeFilter: ['class', 'data-path'],
+						attributeOldValue: true,
+					},
+					(mutations) => {
+						let shouldRefreshChildren = false;
+						let shouldRefreshSelf = false;
 
-					for (const mutation of mutations) {
-						if (mutation.attributeName === 'data-path') {
-							shouldRefreshSelf = true;
-							break;
-						}
-
-						// Refresh on folder collapse/expand
-						if (mutation.attributeName === 'class' && mutation.target.instanceOf(HTMLElement)) {
-							const wasCollapsed = mutation.oldValue?.includes('is-collapsed');
-							const isCollapsed = mutation.target.hasClass('is-collapsed');
-
-							// Only refresh children if expanding, not collapsing
-							if (wasCollapsed && !isCollapsed) {
-								shouldRefreshChildren = true;
+						for (const mutation of mutations) {
+							if (mutation.attributeName === 'data-path') {
 								shouldRefreshSelf = true;
-							} else if (!wasCollapsed && isCollapsed) {
-								shouldRefreshSelf = true;
+								break;
+							}
+
+							// Refresh on folder collapse/expand
+							if (
+								mutation.attributeName === 'class' &&
+								mutation.target.instanceOf(HTMLElement)
+							) {
+								const wasCollapsed =
+									mutation.oldValue?.includes('is-collapsed');
+								const isCollapsed =
+									mutation.target.hasClass('is-collapsed');
+
+								// Only refresh children if expanding, not collapsing
+								if (wasCollapsed && !isCollapsed) {
+									shouldRefreshChildren = true;
+									shouldRefreshSelf = true;
+								} else if (!wasCollapsed && isCollapsed) {
+									shouldRefreshSelf = true;
+								}
 							}
 						}
-					}
 
-					if (shouldRefreshSelf) {
-						this.refreshChildIcons([itemEl]);
-					}
-					if (shouldRefreshChildren) {
-						const childItemEls = itemEl.findAll(':scope > .tree-item-children > .tree-item');
-						if (childItemEls) {
-							this.debouncedRefresh(childItemEls);
+						if (shouldRefreshSelf) {
+							this.refreshChildIcons([itemEl]);
 						}
-					}
-				});
+						if (shouldRefreshChildren) {
+							const childItemEls = itemEl.findAll(
+								':scope > .tree-item-children > .tree-item',
+							);
+							if (childItemEls) {
+								this.debouncedRefresh(childItemEls);
+							}
+						}
+					},
+				);
 			}
 
 			// Ensure icon element positioned before filename
-			let iconEl = selfEl.find(':scope > .tree-item-icon') ?? selfEl.createDiv({ cls: 'tree-item-icon' });
+			let iconEl =
+				selfEl.find(':scope > .tree-item-icon') ??
+				selfEl.createDiv({ cls: 'tree-item-icon' });
 			const innerEl = selfEl.find('.tree-item-inner');
 			if (iconEl !== innerEl?.previousElementSibling) {
 				innerEl?.insertAdjacentElement('beforebegin', iconEl);
@@ -164,32 +211,51 @@ export default class FileIconManager extends IconManager {
 
 			if (file.category === 'folder') {
 				// Toggle default icon based on expand/collapse state
-				if (rule.iconDefault) rule.iconDefault = iconEl.hasClass('is-collapsed')
-					? 'lucide-folder-closed'
-					: 'lucide-folder-open';
+				if (rule.iconDefault)
+					rule.iconDefault = iconEl.hasClass('is-collapsed')
+						? 'lucide-folder-closed'
+						: 'lucide-folder-open';
 			}
 
-			let folderIconEl = selfEl.find(':scope > .icon-palette-sidekick:not(.tree-item-icon)');
-			if (this.plugin.settings.minimalFolderIcons || !this.plugin.settings.showAllFolderIcons && !rule.icon && !rule.iconDefault) {
+			let folderIconEl = selfEl.find(
+				':scope > .icon-palette-sidekick:not(.tree-item-icon)',
+			);
+			if (
+				this.plugin.settings.minimalFolderIcons ||
+				(!this.plugin.settings.showAllFolderIcons &&
+					!rule.icon &&
+					!rule.iconDefault)
+			) {
 				folderIconEl?.remove();
 			} else {
-				const arrowColor = rule.icon || rule.iconDefault ? null : rule.color;
+				const arrowColor =
+					rule.icon || rule.iconDefault ? null : rule.color;
 				this.refreshIcon({ icon: null, color: arrowColor }, iconEl);
-				folderIconEl = folderIconEl ?? selfEl.createDiv({ cls: 'icon-palette-sidekick' });
+				folderIconEl =
+					folderIconEl ??
+					selfEl.createDiv({ cls: 'icon-palette-sidekick' });
 				if (iconEl.nextElementSibling !== folderIconEl) {
 					iconEl.insertAdjacentElement('afterend', folderIconEl);
 				}
 				iconEl = folderIconEl;
 			}
 
-			if (iconEl.hasClass('collapse-icon') && !rule.icon && !rule.iconDefault) {
+			if (
+				iconEl.hasClass('collapse-icon') &&
+				!rule.icon &&
+				!rule.iconDefault
+			) {
 				this.refreshIcon(rule, iconEl); // Skip click listener if icon will be a collapse arrow
 			} else if (this.plugin.isSettingEnabled('clickableIcons')) {
-				this.refreshIcon(rule, iconEl, event => {
-					IconPicker.openSingle(this.plugin, file, (newIcon, newColor) => {
-						this.plugin.saveFileIcon(file, newIcon, newColor);
-						this.plugin.refreshManagers('file', 'folder');
-					});
+				this.refreshIcon(rule, iconEl, (event) => {
+					IconPicker.openSingle(
+						this.plugin,
+						file,
+						(newIcon, newColor) => {
+							this.plugin.saveFileIcon(file, newIcon, newColor);
+							this.plugin.refreshManagers('file', 'folder');
+						},
+					);
 					event.stopPropagation();
 				});
 			} else {
@@ -199,13 +265,19 @@ export default class FileIconManager extends IconManager {
 			// Update ghost icon when dragging
 			this.setEventListener(selfEl, 'dragstart', () => {
 				if (rule.icon || rule.iconDefault || rule.color) {
-					const ghostEl = selfEl.doc.body.find(':scope > .drag-ghost > .drag-ghost-self');
+					const ghostEl = selfEl.doc.body.find(
+						':scope > .drag-ghost > .drag-ghost-self',
+					);
 					if (ghostEl) {
 						const spanEl = ghostEl.find('span');
-						const ghostIcon = (file.category === 'folder' && rule.icon === null)
-							? 'lucide-folder-open'
-							: rule.icon || rule.iconDefault;
-						this.refreshIcon({ icon: ghostIcon, color: rule.color }, ghostEl);
+						const ghostIcon =
+							file.category === 'folder' && rule.icon === null
+								? 'lucide-folder-open'
+								: rule.icon || rule.iconDefault;
+						this.refreshIcon(
+							{ icon: ghostIcon, color: rule.color },
+							ghostEl,
+						);
 						ghostEl.appendChild(spanEl);
 					}
 				}
@@ -236,79 +308,133 @@ export default class FileIconManager extends IconManager {
 		const firstFile = files.first();
 
 		// Change icon(s)
-		const changeTitle = files.length === 1
-			? STRINGS.menu.changeIcon
-			: STRINGS.menu.changeIcons.replace('{#}', files.length.toString());
-		this.plugin.menuManager?.addItemAfter(['action-primary', 'close', 'open'], item => item
-			.setTitle(changeTitle)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => {
-				if (files.length === 1 && firstFile) {
-					IconPicker.openSingle(this.plugin, firstFile, (newIcon, newColor) => {
-						this.plugin.saveFileIcon(firstFile, newIcon, newColor);
-						this.plugin.refreshManagers('file', 'folder');
-					});
-				} else {
-					IconPicker.openMulti(this.plugin, files, (newIcon, newColor) => {
-						this.plugin.saveFileIcons(files, newIcon, newColor);
-						this.plugin.refreshManagers('file', 'folder');
-					});
-				}
-			})
+		const changeTitle =
+			files.length === 1
+				? STRINGS.menu.changeIcon
+				: STRINGS.menu.changeIcons.replace(
+						'{#}',
+						files.length.toString(),
+					);
+		this.plugin.menuManager?.addItemAfter(
+			['action-primary', 'close', 'open'],
+			(item) =>
+				item
+					.setTitle(changeTitle)
+					.setIcon('lucide-image-plus')
+					.setSection('icon')
+					.onClick(() => {
+						if (files.length === 1 && firstFile) {
+							IconPicker.openSingle(
+								this.plugin,
+								firstFile,
+								(newIcon, newColor) => {
+									this.plugin.saveFileIcon(
+										firstFile,
+										newIcon,
+										newColor,
+									);
+									this.plugin.refreshManagers(
+										'file',
+										'folder',
+									);
+								},
+							);
+						} else {
+							IconPicker.openMulti(
+								this.plugin,
+								files,
+								(newIcon, newColor) => {
+									this.plugin.saveFileIcons(
+										files,
+										newIcon,
+										newColor,
+									);
+									this.plugin.refreshManagers(
+										'file',
+										'folder',
+									);
+								},
+							);
+						}
+					}),
 		);
 
 		// Pinned & recent combos, one click to apply
 		this.addPinnedMenu(files);
 
 		// Remove icon(s) / Reset color(s)
-		const anyIcons = files.some(file => file.icon);
-		const anyColors = files.some(file => file.color);
+		const anyIcons = files.some((file) => file.icon);
+		const anyColors = files.some((file) => file.color);
 		let removalTitle: string;
 		if (files.length === 1 && firstFile) {
 			removalTitle = firstFile.icon
 				? STRINGS.menu.removeIcon
-				: STRINGS.menu.resetColor
+				: STRINGS.menu.resetColor;
 		} else {
 			removalTitle = anyIcons
-				? STRINGS.menu.removeIcons.replace('{#}', files.length.toString())
-				: STRINGS.menu.resetColors.replace('{#}', files.length.toString());
+				? STRINGS.menu.removeIcons.replace(
+						'{#}',
+						files.length.toString(),
+					)
+				: STRINGS.menu.resetColors.replace(
+						'{#}',
+						files.length.toString(),
+					);
 		}
-		const removalIcon = anyIcons ? 'lucide-image-minus' : 'lucide-rotate-ccw';
+		const removalIcon = anyIcons
+			? 'lucide-image-minus'
+			: 'lucide-rotate-ccw';
 		if (anyIcons || anyColors) {
-			this.plugin.menuManager?.addItem(item => item
-				.setTitle(removalTitle)
-				.setIcon(removalIcon)
-				.setSection('icon')
-				.onClick(() => {
-					if (files.length === 1 && firstFile) {
-						this.plugin.saveFileIcon(firstFile, null, null);
-					} else {
-						this.plugin.saveFileIcons(files, null, null);
-					}
-					this.plugin.refreshManagers('file', 'folder');
-				})
+			this.plugin.menuManager?.addItem((item) =>
+				item
+					.setTitle(removalTitle)
+					.setIcon(removalIcon)
+					.setSection('icon')
+					.onClick(() => {
+						if (files.length === 1 && firstFile) {
+							this.plugin.saveFileIcon(firstFile, null, null);
+						} else {
+							this.plugin.saveFileIcons(files, null, null);
+						}
+						this.plugin.refreshManagers('file', 'folder');
+					}),
 			);
 		}
 
 		// Edit rule
 		if (files.length === 1 && firstFile) {
 			const page = firstFile.items ? 'folder' : 'file';
-			const rule = this.plugin.ruleManager?.checkRuling(page, firstFile.id);
+			const rule = this.plugin.ruleManager?.checkRuling(
+				page,
+				firstFile.id,
+			);
 			if (rule) {
-				this.plugin.menuManager?.addItem(item => { item
-					.setTitle(STRINGS.menu.editRule)
-					.setIcon('lucide-image-play')
-					.setSection('icon')
-					.onClick(() => RuleEditor.open(this.plugin, page, rule, newRule => {
-						const isRulingChanged = newRule
-							? this.plugin.ruleManager?.saveRule(page, newRule)
-							: this.plugin.ruleManager?.deleteRule(page, rule.id);
-						if (isRulingChanged) {
-							this.refreshIcons();
-							this.plugin.refreshManagers(page);
-						}
-					}));
+				this.plugin.menuManager?.addItem((item) => {
+					item.setTitle(STRINGS.menu.editRule)
+						.setIcon('lucide-image-play')
+						.setSection('icon')
+						.onClick(() =>
+							RuleEditor.open(
+								this.plugin,
+								page,
+								rule,
+								(newRule) => {
+									const isRulingChanged = newRule
+										? this.plugin.ruleManager?.saveRule(
+												page,
+												newRule,
+											)
+										: this.plugin.ruleManager?.deleteRule(
+												page,
+												rule.id,
+											);
+									if (isRulingChanged) {
+										this.refreshIcons();
+										this.plugin.refreshManagers(page);
+									}
+								},
+							),
+						);
 				});
 			}
 		}
@@ -322,18 +448,32 @@ export default class FileIconManager extends IconManager {
 	 */
 	private addPinnedMenu(files: FileItem[]): void {
 		if (!MENU_ITEM_SUPPORTS_SUBMENU) return;
-		const { pinned, recent } = FavoritesStore.menuCombos(this.plugin.settings.favorites, PINNED_MENU_CAP);
+		const { pinned, recent } = FavoritesStore.menuCombos(
+			this.plugin.settings.favorites,
+			PINNED_MENU_CAP,
+		);
 		if (pinned.length === 0 && recent.length === 0) return;
 
-		this.plugin.menuManager?.addItem(item => {
-			item
-				.setTitle(STRINGS.menu.pinnedAndRecent)
+		this.plugin.menuManager?.addItem((item) => {
+			item.setTitle(STRINGS.menu.pinnedAndRecent)
 				.setIcon('lucide-pin')
 				.setSection('icon');
-			const submenu = (item as typeof item & MenuItemWithSubmenu).setSubmenu?.();
+			const submenu = (
+				item as typeof item & MenuItemWithSubmenu
+			).setSubmenu?.();
 			if (!submenu) return;
-			this.addComboSection(submenu, STRINGS.menu.pinnedHeading, pinned, files);
-			this.addComboSection(submenu, STRINGS.menu.recentHeading, recent, files);
+			this.addComboSection(
+				submenu,
+				STRINGS.menu.pinnedHeading,
+				pinned,
+				files,
+			);
+			this.addComboSection(
+				submenu,
+				STRINGS.menu.recentHeading,
+				recent,
+				files,
+			);
 		});
 	}
 
@@ -342,16 +482,28 @@ export default class FileIconManager extends IconManager {
 	 * its own color, the same way the picker's color menu paints its swatches. No
 	 * items and no heading are added for an empty group.
 	 */
-	private addComboSection(menu: Menu, heading: string, combos: IconColorCombo[], files: FileItem[]): void {
+	private addComboSection(
+		menu: Menu,
+		heading: string,
+		combos: IconColorCombo[],
+		files: FileItem[],
+	): void {
 		if (combos.length === 0) return;
-		menu.addItem(item => item.setTitle(heading).setIsLabel(true));
+		menu.addItem((item) => item.setTitle(heading).setIsLabel(true));
 		for (const combo of combos) {
-			menu.addItem(item => {
-				item
-					.setTitle(ICONS.get(combo.icon) ?? EMOJIS.get(combo.icon) ?? combo.icon)
-					.onClick(() => this.applyCombo(files, combo));
-				const iconEl = (item as typeof item & MenuItemWithIconElement).iconEl;
-				if (iconEl) this.refreshIcon({ icon: combo.icon, color: combo.color }, iconEl);
+			menu.addItem((item) => {
+				item.setTitle(
+					ICONS.get(combo.icon) ??
+						EMOJIS.get(combo.icon) ??
+						combo.icon,
+				).onClick(() => this.applyCombo(files, combo));
+				const iconEl = (item as typeof item & MenuItemWithIconElement)
+					.iconEl;
+				if (iconEl)
+					this.refreshIcon(
+						{ icon: combo.icon, color: combo.color },
+						iconEl,
+					);
 			});
 		}
 	}
@@ -369,7 +521,13 @@ export default class FileIconManager extends IconManager {
 		}
 		// Applying from the menu counts as usage, same as applying from the picker,
 		// so promote the combo in the recent list. A no-op for a pinned combo.
-		if (FavoritesStore.recordRecent(this.plugin.settings.favorites, combo, FavoritesStore.RECENT_CAP)) {
+		if (
+			FavoritesStore.recordRecent(
+				this.plugin.settings.favorites,
+				combo,
+				FavoritesStore.RECENT_CAP,
+			)
+		) {
 			void this.plugin.saveSettings();
 		}
 		this.plugin.refreshManagers('file', 'folder');

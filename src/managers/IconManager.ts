@@ -10,11 +10,20 @@ import ColorUtils from 'src/ColorUtils.js';
 export default abstract class IconManager {
 	protected readonly app: App;
 	protected readonly plugin: IconPalettePlugin;
-	private readonly eventListeners = new Map<string, Map<HTMLElement, {
-		listener: EventListener,
-		options?: boolean | AddEventListenerOptions,
-	}>>();
-	private readonly mutationObservers = new Map<HTMLElement, MutationObserver>();
+	private readonly eventListeners = new Map<
+		string,
+		Map<
+			HTMLElement,
+			{
+				listener: EventListener;
+				options?: boolean | AddEventListenerOptions;
+			}
+		>
+	>();
+	private readonly mutationObservers = new Map<
+		HTMLElement,
+		MutationObserver
+	>();
 
 	constructor(plugin: IconPalettePlugin) {
 		this.app = plugin.app;
@@ -31,7 +40,11 @@ export default abstract class IconManager {
 	/**
 	 * Refresh icon inside a given element.
 	 */
-	protected refreshIcon(item: Item | Icon, iconEl: HTMLElement, onClick?: (event: MouseEvent) => void): void {
+	protected refreshIcon(
+		item: Item | Icon,
+		iconEl: HTMLElement,
+		onClick?: (event: MouseEvent) => void,
+	): void {
 		iconEl.addClass('icon-palette-icon');
 
 		if (item.icon) {
@@ -39,14 +52,21 @@ export default abstract class IconManager {
 				setIcon(iconEl, item.icon);
 			} else if (EMOJIS.has(item.icon)) {
 				iconEl.empty();
-				const emojiEl = iconEl.createDiv({ cls: 'icon-palette-emoji', text: item.icon });
+				const emojiEl = iconEl.createDiv({
+					cls: 'icon-palette-emoji',
+					text: item.icon,
+				});
 				if (item.color) IconManager.colorFilter(emojiEl, item.color);
 			} else {
 				setIcon(iconEl, 'lucide-help-circle');
 			}
 			iconEl.show();
 		} else if (iconEl.hasClass('collapse-icon')) {
-			if (this.plugin.settings.showAllFolderIcons && 'iconDefault' in item && item.iconDefault) {
+			if (
+				this.plugin.settings.showAllFolderIcons &&
+				'iconDefault' in item &&
+				item.iconDefault
+			) {
 				setIcon(iconEl, item.iconDefault);
 			} else {
 				setIcon(iconEl, 'right-triangle');
@@ -89,7 +109,12 @@ export default abstract class IconManager {
 	 * Set an event listener which will be removed when plugin unloads.
 	 * Replaces any listener (of the same element & type) set by this {@link IconManager}.
 	 */
-	protected setEventListener<K extends keyof HTMLElementEventMap>(element: HTMLElement, type: K, listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void, options?: boolean | AddEventListenerOptions): void {
+	protected setEventListener<K extends keyof HTMLElementEventMap>(
+		element: HTMLElement,
+		type: K,
+		listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions,
+	): void {
 		if (!this.eventListeners.has(type)) {
 			this.eventListeners.set(type, new Map());
 		}
@@ -105,7 +130,10 @@ export default abstract class IconManager {
 	/**
 	 * Stop an event listener (of the given element & type) set by this {@link IconManager}.
 	 */
-	protected stopEventListener(element: HTMLElement | null, type: keyof HTMLElementEventMap): void {
+	protected stopEventListener(
+		element: HTMLElement | null,
+		type: keyof HTMLElementEventMap,
+	): void {
 		if (!element) return;
 		const listenerMap = this.eventListeners.get(type);
 		if (listenerMap?.has(element)) {
@@ -130,11 +158,15 @@ export default abstract class IconManager {
 	/**
 	 * Set a mutation observer which will be removed when plugin unloads.
 	 * Replaces any observer (of the same element) set by this {@link IconManager}.
-	 * 
+	 *
 	 * Callback runs once per mutation.
 	 */
-	protected setMutationObserver(element: HTMLElement | null, options: MutationObserverInit, callback: (mutation: MutationRecord) => void): void {
-		this.setMutationsObserver(element, options, mutations => {
+	protected setMutationObserver(
+		element: HTMLElement | null,
+		options: MutationObserverInit,
+		callback: (mutation: MutationRecord) => void,
+	): void {
+		this.setMutationsObserver(element, options, (mutations) => {
 			for (const mutation of mutations) callback(mutation);
 		});
 	}
@@ -142,10 +174,14 @@ export default abstract class IconManager {
 	/**
 	 * Set a mutation observer which will be removed when plugin unloads.
 	 * Replaces any observer (of the same element) set by this {@link IconManager}.
-	 * 
+	 *
 	 * Callback runs once per batch of mutations.
 	 */
-	protected setMutationsObserver(element: HTMLElement | null, options: MutationObserverInit, callback: MutationCallback): void {
+	protected setMutationsObserver(
+		element: HTMLElement | null,
+		options: MutationObserverInit,
+		callback: MutationCallback,
+	): void {
 		if (!element) return;
 		const observer = new MutationObserver(callback);
 		if (this.mutationObservers.has(element)) {

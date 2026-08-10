@@ -173,7 +173,8 @@ const CSS_COLORS = new Map<string, string>([
 ]);
 
 const RGB_FALLBACK = 'rgb(128, 128, 128)';
-const REGEX_COLOR_MIX = /color-mix\(in srgb, rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)(?: (\d+)%)?, rgba?\((\d+), (\d+), ([\d.]+)(?:, ([\d.]+))?\)(?: ([\d.]+)%)?\)/;
+const REGEX_COLOR_MIX =
+	/color-mix\(in srgb, rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)(?: (\d+)%)?, rgba?\((\d+), (\d+), ([\d.]+)(?:, ([\d.]+))?\)(?: ([\d.]+)%)?\)/;
 
 /**
  * Shared utility functions for setting icon colors.
@@ -189,10 +190,14 @@ export default class ColorUtils {
 		let cssVar = '--icon-color';
 		let cssColor = RGB_FALLBACK;
 		if (!color) {
-			cssColor = activeWindow.getComputedStyle(activeDocument.body).getPropertyValue(cssVar);
+			cssColor = activeWindow
+				.getComputedStyle(activeDocument.body)
+				.getPropertyValue(cssVar);
 		} else if (COLORS.has(color)) {
 			cssVar = COLORS.get(color) ?? cssVar;
-			cssColor = activeWindow.getComputedStyle(activeDocument.body).getPropertyValue(cssVar);
+			cssColor = activeWindow
+				.getComputedStyle(activeDocument.body)
+				.getPropertyValue(cssVar);
 		} else if (CSS_COLORS.has(color)) {
 			cssColor = CSS_COLORS.get(color) ?? cssColor;
 		} else if (CSS.supports('color', color)) {
@@ -232,7 +237,9 @@ export default class ColorUtils {
 	 * @param color a color name, or a specific CSS color
 	 * @see {@link https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB}
 	 */
-	static toHslArray(color: string | null | undefined): [h: number, s: number, l: number] {
+	static toHslArray(
+		color: string | null | undefined,
+	): [h: number, s: number, l: number] {
 		let [r = 128, g = 128, b = 128] = this.toRgb(color)
 			.replaceAll(/[^\d.,]/g, '')
 			.split(',')
@@ -249,11 +256,18 @@ export default class ColorUtils {
 		const s = Number.isInteger(l) ? 0 : (max - l) / Math.min(l, 1 - l);
 		let h = 0;
 
-		if (chroma > 0) switch (max) {
-			case r: h = (g - b) / chroma % 6; break;
-			case g: h = (b - r) / chroma + 2; break;
-			case b: h = (r - g) / chroma + 4; break;
-		}
+		if (chroma > 0)
+			switch (max) {
+				case r:
+					h = ((g - b) / chroma) % 6;
+					break;
+				case g:
+					h = (b - r) / chroma + 2;
+					break;
+				case b:
+					h = (r - g) / chroma + 4;
+					break;
+			}
 
 		return [Math.round(h * 60), Math.round(s * 100), Math.round(l * 100)];
 	}
@@ -266,9 +280,18 @@ export default class ColorUtils {
 		const matches = colorMix.match(REGEX_COLOR_MIX);
 		if (!matches) return 'rgb(0, 0, 0)';
 
-		let [,
-			r1 = 128, g1 = 128, b1 = 128, a1 = 255, p1 = 50,
-			r2 = 128, g2 = 128, b2 = 128, a2 = 255, p2 = 50
+		let [
+			,
+			r1 = 128,
+			g1 = 128,
+			b1 = 128,
+			a1 = 255,
+			p1 = 50,
+			r2 = 128,
+			g2 = 128,
+			b2 = 128,
+			a2 = 255,
+			p2 = 50,
 		] = matches.map(Number);
 
 		// Normalize any missing percentages

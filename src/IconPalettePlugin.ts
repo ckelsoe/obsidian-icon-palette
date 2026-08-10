@@ -1,7 +1,28 @@
-import { Command, Hotkey, Notice, Platform, Plugin, Scope, TAbstractFile, TFile, TFolder, View, WorkspaceFloating, WorkspaceLeaf, WorkspaceRoot, getIconIds, getLanguage, normalizePath } from 'obsidian';
+import {
+	Command,
+	Hotkey,
+	Notice,
+	Platform,
+	Plugin,
+	Scope,
+	TAbstractFile,
+	TFile,
+	TFolder,
+	View,
+	WorkspaceFloating,
+	WorkspaceLeaf,
+	WorkspaceRoot,
+	getIconIds,
+	getLanguage,
+	normalizePath,
+} from 'obsidian';
 import IconPaletteSettingTab from 'src/IconPaletteSettingTab.js';
 import CustomColorsStore from 'src/CustomColorsStore.js';
-import { registerIconLibraries, populateLibraryIcons, isLibraryIcon } from 'src/IconLibraries.js';
+import {
+	registerIconLibraries,
+	populateLibraryIcons,
+	isLibraryIcon,
+} from 'src/IconLibraries.js';
 import MenuManager from 'src/managers/MenuManager.js';
 import RuleManager, { RuleTrigger } from 'src/managers/RuleManager.js';
 import IconPathMap from 'src/IconPathMap.js';
@@ -18,12 +39,57 @@ import SuggestionIconManager from 'src/managers/SuggestionIconManager.js';
 import SuggestionDialogIconManager from 'src/managers/SuggestionDialogIconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
 import RulePicker from 'src/dialogs/RulePicker.js';
-import type { Category, IconLibraryFilter, AppItemId, AppItem, TabItem, FileItem, BookmarkItem, TagItem, PropertyItem, RibbonItem, RuleBase, FavoritesState } from 'src/types.js';
+import type {
+	Category,
+	IconLibraryFilter,
+	AppItemId,
+	AppItem,
+	TabItem,
+	FileItem,
+	BookmarkItem,
+	TagItem,
+	PropertyItem,
+	RibbonItem,
+	RuleBase,
+	FavoritesState,
+} from 'src/types.js';
 import { ICONS, STRINGS, PLUGIN_TAB_TYPES } from 'src/registry.js';
-import type { BookmarkBase, PropertyBase, RibbonItemBase, TagBase, AppWithInternalPlugins, AppWithMetadataTypes, WorkspaceWithRibbon, AppWithHotkeys, AppWithCustomCss, AppWithPlugins, MetadataCacheWithTags, WorkspaceLeafWithElements, WorkspaceWithMobileSplits } from 'src/obsidian-internals.js';
+import type {
+	BookmarkBase,
+	PropertyBase,
+	RibbonItemBase,
+	TagBase,
+	AppWithInternalPlugins,
+	AppWithMetadataTypes,
+	WorkspaceWithRibbon,
+	AppWithHotkeys,
+	AppWithCustomCss,
+	AppWithPlugins,
+	MetadataCacheWithTags,
+	WorkspaceLeafWithElements,
+	WorkspaceWithMobileSplits,
+} from 'src/obsidian-internals.js';
 
-const IMAGE_EXTENSIONS = ['bmp', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'avif'];
-const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', '3gp', 'flac', 'ogg', 'oga', 'opus'];
+const IMAGE_EXTENSIONS = [
+	'bmp',
+	'png',
+	'jpg',
+	'jpeg',
+	'gif',
+	'svg',
+	'webp',
+	'avif',
+];
+const AUDIO_EXTENSIONS = [
+	'mp3',
+	'wav',
+	'm4a',
+	'3gp',
+	'flac',
+	'ogg',
+	'oga',
+	'opus',
+];
 
 const HOUR = 1000 * 60 * 60; // 1 hour in millis
 const MINUTE = 1000 * 60; // 1 minute in millis
@@ -42,8 +108,8 @@ type IconSettingMap = Record<string, IconSetting>;
 interface IconPaletteSettings {
 	biggerIcons: string;
 	clickableIcons: string;
-	showAllFileIcons: boolean,
-	showAllFolderIcons: boolean,
+	showAllFileIcons: boolean;
+	showAllFolderIcons: boolean;
 	minimalFolderIcons: boolean;
 	showMarkdownTabIcons: boolean;
 	showTitleIcons: boolean;
@@ -67,7 +133,7 @@ interface IconPaletteSettings {
 		emojiMode: boolean;
 		iconLibrary: IconLibraryFilter;
 		rulePage: Category;
-	},
+	};
 	appIcons: IconSettingMap;
 	tabIcons: IconSettingMap;
 	fileIcons: IconSettingMap;
@@ -123,7 +189,7 @@ const DEFAULT_SETTINGS: IconPaletteSettings = {
 	favorites: { pinned: [], recent: [] },
 	customColors: [],
 	customColorNames: {},
-}
+};
 
 /**
  * Loads, unloads, and manages storage for the plugin.
@@ -177,10 +243,12 @@ export default class IconPalettePlugin extends Plugin {
 			this.registerVaultEvents();
 		});
 
-		this.registerEvent(this.app.workspace.on('css-change', () => {
-			this.refreshManagers();
-			this.refreshBody();
-		}));
+		this.registerEvent(
+			this.app.workspace.on('css-change', () => {
+				this.refreshManagers();
+				this.refreshBody();
+			}),
+		);
 	}
 
 	/**
@@ -188,123 +256,227 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	private buildIconNames(): void {
 		// Generate icon names from available icon IDs
-		getIconIds().map(id => {
-			switch (id) {
-				default: {
-					const tidyName = id.replace(/^lucide-/, '').replaceAll('-', ' ');
-					const capitalizedName = (tidyName[0]?.toUpperCase() + tidyName.slice(1));
-					return [id, capitalizedName];
+		getIconIds()
+			.map((id) => {
+				switch (id) {
+					default: {
+						const tidyName = id
+							.replace(/^lucide-/, '')
+							.replaceAll('-', ' ');
+						const capitalizedName =
+							tidyName[0]?.toUpperCase() + tidyName.slice(1);
+						return [id, capitalizedName];
+					}
+					case 'lucide-app-window-mac':
+						return [id, 'App window Mac'];
+					case 'lucide-archive-x':
+						return [id, 'Archive X'];
+					case 'lucide-arrow-down-az':
+						return [id, 'Arrow down AZ'];
+					case 'lucide-arrow-down-za':
+						return [id, 'Arrow down ZA'];
+					case 'lucide-arrow-up-az':
+						return [id, 'Arrow up AZ'];
+					case 'lucide-arrow-up-za':
+						return [id, 'Arrow up ZA'];
+					case 'lucide-axis-3d':
+						return [id, 'Axis 3D'];
+					case 'lucide-badge-indian-rupee':
+						return [id, 'Badge Indian rupee'];
+					case 'lucide-badge-japanese-yen':
+						return [id, 'Badge Japanese yen'];
+					case 'lucide-badge-russian-ruble':
+						return [id, 'Badge Russian ruble'];
+					case 'lucide-badge-swiss-franc':
+						return [id, 'Badge Swiss franc'];
+					case 'lucide-badge-x':
+						return [id, 'Badge X'];
+					case 'lucide-book-a':
+						return [id, 'Book A'];
+					case 'lucide-book-x':
+						return [id, 'Book X'];
+					case 'lucide-calendar-x':
+						return [id, 'Calendar X'];
+					case 'lucide-calendar-x2':
+						return [id, 'Calendar X 2'];
+					case 'lucide-cctv':
+						return [id, 'CCTV'];
+					case 'lucide-chart-gantt':
+						return [id, 'Chart Gantt'];
+					case 'lucide-chart-no-axes-gantt':
+						return [id, 'Chart no axes Gantt'];
+					case 'lucide-circle-x':
+						return [id, 'Circle X'];
+					case 'lucide-clipboard-x':
+						return [id, 'Clipboard X'];
+					case 'lucide-code-xml':
+						return [id, 'Code XML'];
+					case 'lucide-copy-x':
+						return [id, 'Copy X'];
+					case 'lucide-cpu':
+						return [id, 'CPU'];
+					case 'lucide-creative-commons':
+						return [id, 'Creative Commons'];
+					case 'lucide-dna':
+						return [id, 'DNA'];
+					case 'lucide-dna-off':
+						return [id, 'DNA off'];
+					case 'lucide-file-axis-3d':
+						return [id, 'File axis 3D'];
+					case 'lucide-file-json':
+						return [id, 'File JSON'];
+					case 'lucide-file-json-2':
+						return [id, 'File JSON 2'];
+					case 'lucide-file-x':
+						return [id, 'File X'];
+					case 'lucide-file-x2':
+						return [id, 'File X 2'];
+					case 'lucide-filter-x':
+						return [id, 'Filter X'];
+					case 'lucide-folder-git':
+						return [id, 'Folder Git'];
+					case 'lucide-folder-git-2':
+						return [id, 'Folder Git 2'];
+					case 'lucide-folder-x':
+						return [id, 'Folder X'];
+					case 'lucide-github':
+						return [id, 'GitHub'];
+					case 'lucide-gitlab':
+						return [id, 'GitLab'];
+					case 'lucide-grid-2x-2':
+						return [id, 'Grid 2x2'];
+					case 'lucide-grid-2x-2check':
+						return [id, 'Grid 2x2 check'];
+					case 'lucide-grid-2x-2plus':
+						return [id, 'Grid 2x2 plus'];
+					case 'lucide-grid-2x-2x':
+						return [id, 'Grid 2x2 X'];
+					case 'lucide-grid-3x-3':
+						return [id, 'Grid 3x3'];
+					case 'lucide-hdmi-port':
+						return [id, 'HDMI port'];
+					case 'lucide-id-card':
+						return [id, 'ID card'];
+					case 'lucide-iteration-ccw':
+						return [id, 'Iteration CCW'];
+					case 'lucide-iteration-cw':
+						return [id, 'Iteration CW'];
+					case 'lucide-linkedin':
+						return [id, 'LinkedIn'];
+					case 'lucide-list-x':
+						return [id, 'List X'];
+					case 'lucide-mail-x':
+						return [id, 'Mail X'];
+					case 'lucide-map-pin-x':
+						return [id, 'Map pin X'];
+					case 'lucide-map-pin-xinside':
+						return [id, 'Map pin X inside'];
+					case 'lucide-message-circle-x':
+						return [id, 'Message circle X'];
+					case 'lucide-message-square-x':
+						return [id, 'Message square X'];
+					case 'lucide-monitor-x':
+						return [id, 'Monitor X'];
+					case 'lucide-move-3d':
+						return [id, 'Move 3D'];
+					case 'lucide-navigation-2off':
+						return [id, 'Navigation 2 off'];
+					case 'lucide-nfc':
+						return [id, 'NFC'];
+					case 'lucide-octagon-x':
+						return [id, 'Octagon X'];
+					case 'lucide-package-x':
+						return [id, 'Package X'];
+					case 'lucide-pc-case':
+						return [id, 'PC case'];
+					case 'lucide-qr-code':
+						return [id, 'QR code'];
+					case 'lucide-receipt-indian-rupee':
+						return [id, 'Receipt Indian rupee'];
+					case 'lucide-receipt-japanese-yen':
+						return [id, 'Receipt Japanese yen'];
+					case 'lucide-receipt-russian-ruble':
+						return [id, 'Receipt Russian ruble'];
+					case 'lucide-receipt-swiss-franc':
+						return [id, 'Receipt Swiss franc'];
+					case 'lucide-refresh-ccw':
+						return [id, 'Refresh CCW'];
+					case 'lucide-refresh-ccw-dot':
+						return [id, 'Refresh CCW dot'];
+					case 'lucide-refresh-cw':
+						return [id, 'Refresh CW'];
+					case 'lucide-refresh-cw-off':
+						return [id, 'Refresh CW off'];
+					case 'lucide-square-chart-gantt':
+						return [id, 'Square chart Gantt'];
+					case 'lucide-square-gantt-chart':
+						return [id, 'Square Gantt chart'];
+					case 'lucide-square-m':
+						return [id, 'Square M'];
+					case 'lucide-square-x':
+						return [id, 'Square X'];
+					case 'lucide-ticket-x':
+						return [id, 'Ticket X'];
+					case 'lucide-rotate-3d':
+						return [id, 'Rotate 3D'];
+					case 'lucide-rotate-ccw':
+						return [id, 'Rotate CCW'];
+					case 'lucide-rotate-ccw-square':
+						return [id, 'Rotate CCW square'];
+					case 'lucide-rotate-cw':
+						return [id, 'Rotate CW'];
+					case 'lucide-rotate-cw-square':
+						return [id, 'Rotate CW square'];
+					case 'lucide-tv':
+						return [id, 'TV'];
+					case 'lucide-tv-2':
+						return [id, 'TV 2'];
+					case 'lucide-tv-minimal':
+						return [id, 'TV minimal'];
+					case 'lucide-tv-minimal-play':
+						return [id, 'TV minimal play'];
+					case 'lucide-rss':
+						return [id, 'RSS'];
+					case 'lucide-scale-3d':
+						return [id, 'Scale 3D'];
+					case 'lucide-scan-qr-code':
+						return [id, 'Scan QR code'];
+					case 'lucide-search-x':
+						return [id, 'Search X'];
+					case 'lucide-shield-x':
+						return [id, 'Shield X'];
+					case 'lucide-smartphone-nfc':
+						return [id, 'Smartphone NFC'];
+					case 'lucide-user-x':
+						return [id, 'User X'];
+					case 'lucide-user-x2':
+						return [id, 'User X 2'];
+					case 'lucide-user-round-x':
+						return [id, 'User round X'];
+					case 'lucide-wifi':
+						return [id, 'WiFi'];
+					case 'lucide-wifi-high':
+						return [id, 'WiFi high'];
+					case 'lucide-wifi-low':
+						return [id, 'WiFi low'];
+					case 'lucide-wifi-off':
+						return [id, 'WiFi off'];
+					case 'lucide-wifi-zero':
+						return [id, 'WiFi zero'];
+					case 'refresh-cw-off':
+						return [id, 'Refresh CW off'];
+					case 'uppercase-lowercase-a':
+						return [id, 'Uppercase lowercase A'];
 				}
-				case 'lucide-app-window-mac': return [id, 'App window Mac'];
-				case 'lucide-archive-x': return [id, 'Archive X'];
-				case 'lucide-arrow-down-az': return [id, 'Arrow down AZ'];
-				case 'lucide-arrow-down-za': return [id, 'Arrow down ZA'];
-				case 'lucide-arrow-up-az': return [id, 'Arrow up AZ'];
-				case 'lucide-arrow-up-za': return [id, 'Arrow up ZA'];
-				case 'lucide-axis-3d': return [id, 'Axis 3D'];
-				case 'lucide-badge-indian-rupee': return [id, 'Badge Indian rupee'];
-				case 'lucide-badge-japanese-yen': return [id, 'Badge Japanese yen'];
-				case 'lucide-badge-russian-ruble': return [id, 'Badge Russian ruble'];
-				case 'lucide-badge-swiss-franc': return [id, 'Badge Swiss franc'];
-				case 'lucide-badge-x': return [id, 'Badge X'];
-				case 'lucide-book-a': return [id, 'Book A'];
-				case 'lucide-book-x': return [id, 'Book X'];
-				case 'lucide-calendar-x': return [id, 'Calendar X'];
-				case 'lucide-calendar-x2': return [id, 'Calendar X 2'];
-				case 'lucide-cctv': return [id, 'CCTV'];
-				case 'lucide-chart-gantt': return [id, 'Chart Gantt'];
-				case 'lucide-chart-no-axes-gantt': return [id, 'Chart no axes Gantt'];
-				case 'lucide-circle-x': return [id, 'Circle X'];
-				case 'lucide-clipboard-x': return [id, 'Clipboard X'];
-				case 'lucide-code-xml': return [id, 'Code XML'];
-				case 'lucide-copy-x': return [id, 'Copy X'];
-				case 'lucide-cpu': return [id, 'CPU'];
-				case 'lucide-creative-commons': return [id, 'Creative Commons'];
-				case 'lucide-dna': return [id, 'DNA'];
-				case 'lucide-dna-off': return [id, 'DNA off'];
-				case 'lucide-file-axis-3d': return [id, 'File axis 3D'];
-				case 'lucide-file-json': return [id, 'File JSON'];
-				case 'lucide-file-json-2': return [id, 'File JSON 2'];
-				case 'lucide-file-x': return [id, 'File X'];
-				case 'lucide-file-x2': return [id, 'File X 2'];
-				case 'lucide-filter-x': return [id, 'Filter X'];
-				case 'lucide-folder-git': return [id, 'Folder Git'];
-				case 'lucide-folder-git-2': return [id, 'Folder Git 2'];
-				case 'lucide-folder-x': return [id, 'Folder X'];
-				case 'lucide-github': return [id, 'GitHub'];
-				case 'lucide-gitlab': return [id, 'GitLab'];
-				case 'lucide-grid-2x-2': return [id, 'Grid 2x2'];
-				case 'lucide-grid-2x-2check': return [id, 'Grid 2x2 check'];
-				case 'lucide-grid-2x-2plus': return [id, 'Grid 2x2 plus'];
-				case 'lucide-grid-2x-2x': return [id, 'Grid 2x2 X'];
-				case 'lucide-grid-3x-3': return [id, 'Grid 3x3'];
-				case 'lucide-hdmi-port': return [id, 'HDMI port'];
-				case 'lucide-id-card': return [id, 'ID card'];
-				case 'lucide-iteration-ccw': return [id, 'Iteration CCW'];
-				case 'lucide-iteration-cw': return [id, 'Iteration CW'];
-				case 'lucide-linkedin': return [id, 'LinkedIn'];
-				case 'lucide-list-x': return [id, 'List X'];
-				case 'lucide-mail-x': return [id, 'Mail X'];
-				case 'lucide-map-pin-x': return [id, 'Map pin X'];
-				case 'lucide-map-pin-xinside': return [id, 'Map pin X inside'];
-				case 'lucide-message-circle-x': return [id, 'Message circle X'];
-				case 'lucide-message-square-x': return [id, 'Message square X'];
-				case 'lucide-monitor-x': return [id, 'Monitor X'];
-				case 'lucide-move-3d': return [id, 'Move 3D'];
-				case 'lucide-navigation-2off': return [id, 'Navigation 2 off'];
-				case 'lucide-nfc': return [id, 'NFC'];
-				case 'lucide-octagon-x': return [id, 'Octagon X'];
-				case 'lucide-package-x': return [id, 'Package X'];
-				case 'lucide-pc-case': return [id, 'PC case'];
-				case 'lucide-qr-code': return [id, 'QR code'];
-				case 'lucide-receipt-indian-rupee': return [id, 'Receipt Indian rupee'];
-				case 'lucide-receipt-japanese-yen': return [id, 'Receipt Japanese yen'];
-				case 'lucide-receipt-russian-ruble': return [id, 'Receipt Russian ruble'];
-				case 'lucide-receipt-swiss-franc': return [id, 'Receipt Swiss franc'];
-				case 'lucide-refresh-ccw': return [id, 'Refresh CCW'];
-				case 'lucide-refresh-ccw-dot': return [id, 'Refresh CCW dot'];
-				case 'lucide-refresh-cw': return [id, 'Refresh CW'];
-				case 'lucide-refresh-cw-off': return [id, 'Refresh CW off'];
-				case 'lucide-square-chart-gantt': return [id, 'Square chart Gantt'];
-				case 'lucide-square-gantt-chart': return [id, 'Square Gantt chart'];
-				case 'lucide-square-m': return [id, 'Square M'];
-				case 'lucide-square-x': return [id, 'Square X'];
-				case 'lucide-ticket-x': return [id, 'Ticket X'];
-				case 'lucide-rotate-3d': return [id, 'Rotate 3D'];
-				case 'lucide-rotate-ccw': return [id, 'Rotate CCW'];
-				case 'lucide-rotate-ccw-square': return [id, 'Rotate CCW square'];
-				case 'lucide-rotate-cw': return [id, 'Rotate CW'];
-				case 'lucide-rotate-cw-square': return [id, 'Rotate CW square'];
-				case 'lucide-tv': return [id, 'TV'];
-				case 'lucide-tv-2': return [id, 'TV 2'];
-				case 'lucide-tv-minimal': return [id, 'TV minimal'];
-				case 'lucide-tv-minimal-play': return [id, 'TV minimal play'];
-				case 'lucide-rss': return [id, 'RSS'];
-				case 'lucide-scale-3d': return [id, 'Scale 3D'];
-				case 'lucide-scan-qr-code': return [id, 'Scan QR code'];
-				case 'lucide-search-x': return [id, 'Search X'];
-				case 'lucide-shield-x': return [id, 'Shield X'];
-				case 'lucide-smartphone-nfc': return [id, 'Smartphone NFC'];
-				case 'lucide-user-x': return [id, 'User X'];
-				case 'lucide-user-x2': return [id, 'User X 2'];
-				case 'lucide-user-round-x': return [id, 'User round X'];
-				case 'lucide-wifi': return [id, 'WiFi'];
-				case 'lucide-wifi-high': return [id, 'WiFi high'];
-				case 'lucide-wifi-low': return [id, 'WiFi low'];
-				case 'lucide-wifi-off': return [id, 'WiFi off'];
-				case 'lucide-wifi-zero': return [id, 'WiFi zero'];
-				case 'refresh-cw-off': return [id, 'Refresh CW off'];
-				case 'uppercase-lowercase-a': return [id, 'Uppercase lowercase A'];
-			}
-		})
-		// Sort icon names alphabetically
-		.sort(([, aName], [, bName]) => {
-			return (aName && bName) ? aName.localeCompare(bName) : 0;
-		})
-		// Populate ICONS map (Lucide icons)
-		.forEach(([id, name]) => {
-			if (id && name) ICONS.set(id, name);
-		});
+			})
+			// Sort icon names alphabetically
+			.sort(([, aName], [, bName]) => {
+				return aName && bName ? aName.localeCompare(bName) : 0;
+			})
+			// Populate ICONS map (Lucide icons)
+			.forEach(([id, name]) => {
+				if (id && name) ICONS.set(id, name);
+			});
 	}
 
 	/**
@@ -312,53 +484,84 @@ export default class IconPalettePlugin extends Plugin {
 	 * change. Wired once the workspace layout is ready.
 	 */
 	private registerVaultEvents(): void {
-		this.registerEvent(this.app.vault.on('create', tAbstractFile => {
-			const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
-			// If a created file/folder triggers a new ruling, refresh icons
-			if (this.ruleManager?.triggerRulings(page, 'rename', 'move', 'modify')) {
-				this.refreshManagers(page);
-			}
-		}));
+		this.registerEvent(
+			this.app.vault.on('create', (tAbstractFile) => {
+				const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
+				// If a created file/folder triggers a new ruling, refresh icons
+				if (
+					this.ruleManager?.triggerRulings(
+						page,
+						'rename',
+						'move',
+						'modify',
+					)
+				) {
+					this.refreshManagers(page);
+				}
+			}),
+		);
 
-		this.registerEvent(this.app.vault.on('rename', (tAbstractFile, oldPath) => {
-			const { path } = tAbstractFile;
-			// A folder rename fires one event for the folder itself; re-key its
-			// own entry and every descendant so child icons follow the move.
-			if (IconPathMap.rekeyDescendants(this.settings.fileIcons, oldPath, path)) {
-				void this.saveSettings();
-			}
-			const { filename, tree } = this.splitFilePath(path);
-			const { filename: oldFilename, tree: oldTree } = this.splitFilePath(oldPath);
-			const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
-			// If a renamed file/folder triggers a new ruling, refresh icons
-			if (filename !== oldFilename && this.ruleManager?.triggerRulings(page, 'rename')) {
-				this.refreshManagers(page);
-			// If a moved file/folder triggers a new ruling, refresh icons
-			} else if (tree !== oldTree && this.ruleManager?.triggerRulings(page, 'move')) {
-				this.refreshManagers(page);
-			}
-		}));
+		this.registerEvent(
+			this.app.vault.on('rename', (tAbstractFile, oldPath) => {
+				const { path } = tAbstractFile;
+				// A folder rename fires one event for the folder itself; re-key its
+				// own entry and every descendant so child icons follow the move.
+				if (
+					IconPathMap.rekeyDescendants(
+						this.settings.fileIcons,
+						oldPath,
+						path,
+					)
+				) {
+					void this.saveSettings();
+				}
+				const { filename, tree } = this.splitFilePath(path);
+				const { filename: oldFilename, tree: oldTree } =
+					this.splitFilePath(oldPath);
+				const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
+				// If a renamed or moved file/folder triggers a new ruling, refresh
+				// icons. Both checks have side effects (triggerRulings), so keep them
+				// in one short-circuiting expression: rename first, move only if
+				// rename did not fire.
+				if (
+					(filename !== oldFilename &&
+						this.ruleManager?.triggerRulings(page, 'rename')) ||
+					(tree !== oldTree &&
+						this.ruleManager?.triggerRulings(page, 'move'))
+				) {
+					this.refreshManagers(page);
+				}
+			}),
+		);
 
-		this.registerEvent(this.app.vault.on('modify', tAbstractFile => {
-			this.onFileModify(tAbstractFile);
-		}));
-		this.registerEvent(this.app.metadataCache.on('changed', tAbstractFile => {
-			this.onFileModify(tAbstractFile);
-		}));
+		this.registerEvent(
+			this.app.vault.on('modify', (tAbstractFile) => {
+				this.onFileModify(tAbstractFile);
+			}),
+		);
+		this.registerEvent(
+			this.app.metadataCache.on('changed', (tAbstractFile) => {
+				this.onFileModify(tAbstractFile);
+			}),
+		);
 
-		this.registerEvent(this.app.vault.on('delete', (tAbstractFile) => {
-			const { path } = tAbstractFile;
-			// A folder delete fires one event for the folder itself; prune its own
-			// entry and every descendant so child icons do not leak into settings.
-			if (IconPathMap.pruneDescendants(this.settings.fileIcons, path)) {
-				void this.saveSettings();
-			}
-			// If a deleted file/folder was associated with a ruling, update rulings
-			const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
-			if (this.ruleManager?.checkRuling(page, path)) {
-				this.ruleManager.updateRulings(page);
-			}
-		}));
+		this.registerEvent(
+			this.app.vault.on('delete', (tAbstractFile) => {
+				const { path } = tAbstractFile;
+				// A folder delete fires one event for the folder itself; prune its own
+				// entry and every descendant so child icons do not leak into settings.
+				if (
+					IconPathMap.pruneDescendants(this.settings.fileIcons, path)
+				) {
+					void this.saveSettings();
+				}
+				// If a deleted file/folder was associated with a ruling, update rulings
+				const page = tAbstractFile instanceof TFile ? 'file' : 'folder';
+				if (this.ruleManager?.checkRuling(page, path)) {
+					this.ruleManager.updateRulings(page);
+				}
+			}),
+		);
 	}
 
 	/**
@@ -380,112 +583,150 @@ export default class IconPalettePlugin extends Plugin {
 		});
 
 		// COMMAND: Toggle bigger icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-bigger-icons',
-			name: STRINGS.commands.toggleBiggerIcons,
-			callback: () => {
-				if (Platform.isDesktop) {
-					if (this.settings.biggerIcons === 'on') this.settings.biggerIcons = 'mobile';
-					else if (this.settings.biggerIcons === 'desktop') this.settings.biggerIcons = 'off';
-					else if (this.settings.biggerIcons === 'mobile') this.settings.biggerIcons = 'on';
-					else if (this.settings.biggerIcons === 'off') this.settings.biggerIcons = 'desktop';
-				} else {
-					if (this.settings.biggerIcons === 'on') this.settings.biggerIcons = 'desktop';
-					else if (this.settings.biggerIcons === 'desktop') this.settings.biggerIcons = 'on';
-					else if (this.settings.biggerIcons === 'mobile') this.settings.biggerIcons = 'off';
-					else if (this.settings.biggerIcons === 'off') this.settings.biggerIcons = 'mobile';
-				}
-				void this.saveSettings();
-				this.refreshBody();
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-bigger-icons',
+				name: STRINGS.commands.toggleBiggerIcons,
+				callback: () => {
+					if (Platform.isDesktop) {
+						if (this.settings.biggerIcons === 'on')
+							this.settings.biggerIcons = 'mobile';
+						else if (this.settings.biggerIcons === 'desktop')
+							this.settings.biggerIcons = 'off';
+						else if (this.settings.biggerIcons === 'mobile')
+							this.settings.biggerIcons = 'on';
+						else if (this.settings.biggerIcons === 'off')
+							this.settings.biggerIcons = 'desktop';
+					} else {
+						if (this.settings.biggerIcons === 'on')
+							this.settings.biggerIcons = 'desktop';
+						else if (this.settings.biggerIcons === 'desktop')
+							this.settings.biggerIcons = 'on';
+						else if (this.settings.biggerIcons === 'mobile')
+							this.settings.biggerIcons = 'off';
+						else if (this.settings.biggerIcons === 'off')
+							this.settings.biggerIcons = 'mobile';
+					}
+					void this.saveSettings();
+					this.refreshBody();
+				},
+			}),
+		);
 
 		// COMMAND: Toggle clickable icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-clickable-icons',
-			name: Platform.isDesktop ? STRINGS.commands.toggleClickableIcons.desktop : STRINGS.commands.toggleClickableIcons.mobile,
-			callback: () => {
-				if (Platform.isDesktop) {
-					if (this.settings.clickableIcons === 'on') this.settings.clickableIcons = 'mobile';
-					else if (this.settings.clickableIcons === 'desktop') this.settings.clickableIcons = 'off';
-					else if (this.settings.clickableIcons === 'mobile') this.settings.clickableIcons = 'on';
-					else if (this.settings.clickableIcons === 'off') this.settings.clickableIcons = 'desktop';
-				} else {
-					if (this.settings.clickableIcons === 'on') this.settings.clickableIcons = 'desktop';
-					else if (this.settings.clickableIcons === 'desktop') this.settings.clickableIcons = 'on';
-					else if (this.settings.clickableIcons === 'mobile') this.settings.clickableIcons = 'off';
-					else if (this.settings.clickableIcons === 'off') this.settings.clickableIcons = 'mobile';
-				}
-				void this.saveSettings();
-				this.refreshManagers();
-				this.refreshBody();
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-clickable-icons',
+				name: Platform.isDesktop
+					? STRINGS.commands.toggleClickableIcons.desktop
+					: STRINGS.commands.toggleClickableIcons.mobile,
+				callback: () => {
+					if (Platform.isDesktop) {
+						if (this.settings.clickableIcons === 'on')
+							this.settings.clickableIcons = 'mobile';
+						else if (this.settings.clickableIcons === 'desktop')
+							this.settings.clickableIcons = 'off';
+						else if (this.settings.clickableIcons === 'mobile')
+							this.settings.clickableIcons = 'on';
+						else if (this.settings.clickableIcons === 'off')
+							this.settings.clickableIcons = 'desktop';
+					} else {
+						if (this.settings.clickableIcons === 'on')
+							this.settings.clickableIcons = 'desktop';
+						else if (this.settings.clickableIcons === 'desktop')
+							this.settings.clickableIcons = 'on';
+						else if (this.settings.clickableIcons === 'mobile')
+							this.settings.clickableIcons = 'off';
+						else if (this.settings.clickableIcons === 'off')
+							this.settings.clickableIcons = 'mobile';
+					}
+					void this.saveSettings();
+					this.refreshManagers();
+					this.refreshBody();
+				},
+			}),
+		);
 
 		// COMMAND: Toggle all file icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-all-file-icons',
-			name: STRINGS.commands.toggleAllFileIcons,
-			callback: () => {
-				this.settings.showAllFileIcons = !this.settings.showAllFileIcons;
-				void this.saveSettings();
-				this.refreshManagers('file');
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-all-file-icons',
+				name: STRINGS.commands.toggleAllFileIcons,
+				callback: () => {
+					this.settings.showAllFileIcons =
+						!this.settings.showAllFileIcons;
+					void this.saveSettings();
+					this.refreshManagers('file');
+				},
+			}),
+		);
 
 		// COMMAND: Toggle all folder icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-all-folder-icons',
-			name: STRINGS.commands.toggleAllFolderIcons,
-			callback: () => {
-				this.settings.showAllFolderIcons = !this.settings.showAllFolderIcons;
-				void this.saveSettings();
-				this.refreshManagers('file', 'tag');
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-all-folder-icons',
+				name: STRINGS.commands.toggleAllFolderIcons,
+				callback: () => {
+					this.settings.showAllFolderIcons =
+						!this.settings.showAllFolderIcons;
+					void this.saveSettings();
+					this.refreshManagers('file', 'tag');
+				},
+			}),
+		);
 
 		// COMMAND: Toggle minimal folder icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-minimal.folder-icons',
-			name: STRINGS.commands.toggleMinimalFolderIcons,
-			callback: () => {
-				this.settings.minimalFolderIcons = !this.settings.minimalFolderIcons;
-				void this.saveSettings();
-				this.refreshManagers('file', 'tag');
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-minimal.folder-icons',
+				name: STRINGS.commands.toggleMinimalFolderIcons,
+				callback: () => {
+					this.settings.minimalFolderIcons =
+						!this.settings.minimalFolderIcons;
+					void this.saveSettings();
+					this.refreshManagers('file', 'tag');
+				},
+			}),
+		);
 
 		// COMMAND: Toggle Markdown tab icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-markdown-tab-icons',
-			name: STRINGS.commands.toggleMarkdownTabIcons,
-			callback: () => {
-				this.settings.showMarkdownTabIcons = !this.settings.showMarkdownTabIcons;
-				void this.saveSettings();
-				this.refreshBody();
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-markdown-tab-icons',
+				name: STRINGS.commands.toggleMarkdownTabIcons,
+				callback: () => {
+					this.settings.showMarkdownTabIcons =
+						!this.settings.showMarkdownTabIcons;
+					void this.saveSettings();
+					this.refreshBody();
+				},
+			}),
+		);
 
 		// COMMAND: Toggle title icons
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-title-icons',
-			name: STRINGS.commands.toggleTitleIcons,
-			callback: () => {
-				this.settings.showTitleIcons = !this.settings.showTitleIcons;
-				void this.saveSettings();
-				this.refreshManagers('file');
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-title-icons',
+				name: STRINGS.commands.toggleTitleIcons,
+				callback: () => {
+					this.settings.showTitleIcons =
+						!this.settings.showTitleIcons;
+					void this.saveSettings();
+					this.refreshManagers('file');
+				},
+			}),
+		);
 
 		// COMMAND: Toggle tag pill icons
 		this.addCommand({
 			id: 'toggle-tag-pill-icons',
 			name: STRINGS.commands.toggleTagPillIcons,
 			callback: () => {
-				this.settings.showTagPillIcons = !this.settings.showTagPillIcons;
+				this.settings.showTagPillIcons =
+					!this.settings.showTagPillIcons;
 				void this.saveSettings();
 				this.refreshManagers('tag');
-			}
+			},
 		});
 
 		// COMMAND: Toggle menu actions
@@ -497,7 +738,7 @@ export default class IconPalettePlugin extends Plugin {
 				void this.saveSettings();
 				this.refreshManagers();
 				this.menuManager?.closeAndFlush();
-			}
+			},
 		});
 
 		// COMMAND: Toggle suggestion icons
@@ -505,9 +746,10 @@ export default class IconPalettePlugin extends Plugin {
 			id: 'toggle-suggestion-icons',
 			name: STRINGS.commands.toggleSuggestionIcons,
 			callback: () => {
-				this.settings.showSuggestionIcons = !this.settings.showSuggestionIcons;
+				this.settings.showSuggestionIcons =
+					!this.settings.showSuggestionIcons;
 				void this.saveSettings();
-			}
+			},
 		});
 
 		// COMMAND: Toggle quick switcher icons
@@ -515,9 +757,10 @@ export default class IconPalettePlugin extends Plugin {
 			id: 'toggle-quick-switcher-icons',
 			name: STRINGS.commands.toggleQuickSwitcherIcons,
 			callback: () => {
-				this.settings.showQuickSwitcherIcons = !this.settings.showQuickSwitcherIcons;
+				this.settings.showQuickSwitcherIcons =
+					!this.settings.showQuickSwitcherIcons;
 				void this.saveSettings();
-			}
+			},
 		});
 
 		// COMMAND: Toggle "Move file" icons
@@ -525,42 +768,56 @@ export default class IconPalettePlugin extends Plugin {
 			id: 'toggle-move-file-icons',
 			name: STRINGS.commands.toggleMoveFileIcons,
 			callback: () => {
-				this.settings.showMoveFileIcons = !this.settings.showMoveFileIcons;
+				this.settings.showMoveFileIcons =
+					!this.settings.showMoveFileIcons;
 				void this.saveSettings();
-			}
+			},
 		});
 
 		// COMMAND: Toggle bigger search results
-		this.dialogCommands.push(this.addCommand({
-			id: 'toggle-bigger-search-results',
-			name: STRINGS.commands.toggleBiggerSearchResults,
-			callback: () => {
-				if (Platform.isDesktop) {
-					if (this.settings.biggerSearchResults === 'on') this.settings.biggerSearchResults = 'mobile';
-					else if (this.settings.biggerSearchResults === 'desktop') this.settings.biggerSearchResults = 'off';
-					else if (this.settings.biggerSearchResults === 'mobile') this.settings.biggerSearchResults = 'on';
-					else if (this.settings.biggerSearchResults === 'off') this.settings.biggerSearchResults = 'desktop';
-				} else {
-					if (this.settings.biggerSearchResults === 'on') this.settings.biggerSearchResults = 'desktop';
-					else if (this.settings.biggerSearchResults === 'desktop') this.settings.biggerSearchResults = 'on';
-					else if (this.settings.biggerSearchResults === 'mobile') this.settings.biggerSearchResults = 'off';
-					else if (this.settings.biggerSearchResults === 'off') this.settings.biggerSearchResults = 'mobile';
-				}
-				void this.saveSettings();
-				this.refreshBody();
-			}
-		}));
+		this.dialogCommands.push(
+			this.addCommand({
+				id: 'toggle-bigger-search-results',
+				name: STRINGS.commands.toggleBiggerSearchResults,
+				callback: () => {
+					if (Platform.isDesktop) {
+						if (this.settings.biggerSearchResults === 'on')
+							this.settings.biggerSearchResults = 'mobile';
+						else if (
+							this.settings.biggerSearchResults === 'desktop'
+						)
+							this.settings.biggerSearchResults = 'off';
+						else if (this.settings.biggerSearchResults === 'mobile')
+							this.settings.biggerSearchResults = 'on';
+						else if (this.settings.biggerSearchResults === 'off')
+							this.settings.biggerSearchResults = 'desktop';
+					} else {
+						if (this.settings.biggerSearchResults === 'on')
+							this.settings.biggerSearchResults = 'desktop';
+						else if (
+							this.settings.biggerSearchResults === 'desktop'
+						)
+							this.settings.biggerSearchResults = 'on';
+						else if (this.settings.biggerSearchResults === 'mobile')
+							this.settings.biggerSearchResults = 'off';
+						else if (this.settings.biggerSearchResults === 'off')
+							this.settings.biggerSearchResults = 'mobile';
+					}
+					void this.saveSettings();
+					this.refreshBody();
+				},
+			}),
+		);
 
 		// COMMAND: Change icon of the current file
 		this.addCommand({
 			id: 'change-icon-current-file',
 			name: STRINGS.commands.changeIconCurrentFile,
-			checkCallback: checking => {
+			checkCallback: (checking) => {
 				const tFile = this.app.workspace.getActiveFile();
 				if (tFile === null) return false;
 
 				const file = this.getFileItem(tFile.path);
-				if (file === null) return false;
 
 				if (!checking) {
 					IconPicker.openSingle(this, file, (newIcon, newColor) => {
@@ -568,7 +825,7 @@ export default class IconPalettePlugin extends Plugin {
 						this.refreshManagers('file');
 					});
 				}
-				return true
+				return true;
 			},
 		});
 	}
@@ -599,16 +856,58 @@ export default class IconPalettePlugin extends Plugin {
 	private startManagers(): void {
 		this.menuManager = new MenuManager();
 		this.ruleManager = new RuleManager(this);
-		try { this.appIconManager = new AppIconManager(this) } catch (e) { console.error(e) }
-		try { this.tabIconManager = new TabIconManager(this) } catch (e) { console.error(e) }
-		try { this.fileIconManager = new FileIconManager(this) } catch (e) { console.error(e) }
-		try { this.tagIconManager = new TagIconManager(this) } catch (e) { console.error(e) }
-		try { this.bookmarkIconManager = new BookmarkIconManager(this) } catch (e) { console.error(e) }
-		try { this.propertyIconManager = new PropertyIconManager(this) } catch (e) { console.error(e) }
-		try { this.editorIconManager = new EditorIconManager(this) } catch (e) { console.error(e) }
-		try { this.ribbonIconManager = new RibbonIconManager(this) } catch (e) { console.error(e) }
-		try { this.suggestionIconManager = new SuggestionIconManager(this) } catch (e) { console.error(e) }
-		try { this.suggestionDialogIconManager = new SuggestionDialogIconManager(this) } catch (e) { console.error(e) }
+		try {
+			this.appIconManager = new AppIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.tabIconManager = new TabIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.fileIconManager = new FileIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.tagIconManager = new TagIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.bookmarkIconManager = new BookmarkIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.propertyIconManager = new PropertyIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.editorIconManager = new EditorIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.ribbonIconManager = new RibbonIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.suggestionIconManager = new SuggestionIconManager(this);
+		} catch (e) {
+			console.error(e);
+		}
+		try {
+			this.suggestionDialogIconManager = new SuggestionDialogIconManager(
+				this,
+			);
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	/**
@@ -616,7 +915,15 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	refreshManagers(...categories: Category[]): void {
 		if (categories.length === 0) {
-			categories = ['app', 'tab', 'file', 'folder', 'tag', 'property', 'ribbon'];
+			categories = [
+				'app',
+				'tab',
+				'file',
+				'folder',
+				'tag',
+				'property',
+				'ribbon',
+			];
 		}
 		const managers = new Set<IconManager | undefined>();
 
@@ -665,7 +972,8 @@ export default class IconPalettePlugin extends Plugin {
 	}
 
 	private getCommandHotkeys(commandId: string): Hotkey[] {
-		const hotkeyManager = (this.app as unknown as AppWithHotkeys).hotkeyManager;
+		const hotkeyManager = (this.app as unknown as AppWithHotkeys)
+			.hotkeyManager;
 		return hotkeyManager?.customKeys?.[commandId] ?? [];
 	}
 
@@ -676,22 +984,47 @@ export default class IconPalettePlugin extends Plugin {
 	refreshBody(unloading?: boolean): void {
 		// Check all open windows
 		const bodyEls = new Set<HTMLElement>();
-		this.app.workspace.iterateAllLeaves(leaf => {
-			const bodyEl = (leaf as WorkspaceLeafWithElements).containerEl?.doc.body;
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			const bodyEl = (leaf as WorkspaceLeafWithElements).containerEl?.doc
+				.body;
 			if (bodyEl?.instanceOf(HTMLElement)) bodyEls.add(bodyEl);
 		});
 
 		// Refresh classes and theme attribute
 		for (const bodyEl of bodyEls) {
-			bodyEl.toggleClass('icon-palette-bigger-icons', unloading ? false : this.isSettingEnabled('biggerIcons'));
-			bodyEl.toggleClass('icon-palette-clickable-icons', unloading ? false : this.isSettingEnabled('clickableIcons'));
-			bodyEl.toggleClass('icon-palette-markdown-tab-icons', unloading ? false : this.settings.showMarkdownTabIcons);
-			bodyEl.toggleClass('icon-palette-bigger-search-results', unloading ? false : this.isSettingEnabled('biggerSearchResults'));
-			bodyEl.toggleClass('icon-palette-uncolor-hover', unloading ? false : this.settings.uncolorHover);
-			bodyEl.toggleClass('icon-palette-uncolor-drag', unloading ? false : this.settings.uncolorDrag);
-			bodyEl.toggleClass('icon-palette-uncolor-select', unloading ? false : this.settings.uncolorSelect);
+			bodyEl.toggleClass(
+				'icon-palette-bigger-icons',
+				unloading ? false : this.isSettingEnabled('biggerIcons'),
+			);
+			bodyEl.toggleClass(
+				'icon-palette-clickable-icons',
+				unloading ? false : this.isSettingEnabled('clickableIcons'),
+			);
+			bodyEl.toggleClass(
+				'icon-palette-markdown-tab-icons',
+				unloading ? false : this.settings.showMarkdownTabIcons,
+			);
+			bodyEl.toggleClass(
+				'icon-palette-bigger-search-results',
+				unloading
+					? false
+					: this.isSettingEnabled('biggerSearchResults'),
+			);
+			bodyEl.toggleClass(
+				'icon-palette-uncolor-hover',
+				unloading ? false : this.settings.uncolorHover,
+			);
+			bodyEl.toggleClass(
+				'icon-palette-uncolor-drag',
+				unloading ? false : this.settings.uncolorDrag,
+			);
+			bodyEl.toggleClass(
+				'icon-palette-uncolor-select',
+				unloading ? false : this.settings.uncolorSelect,
+			);
 
-			const theme = (this.app as unknown as AppWithCustomCss).customCss?.theme;
+			const theme = (this.app as unknown as AppWithCustomCss).customCss
+				?.theme;
 			if (theme) {
 				bodyEl.setAttr('data-theme', theme);
 			} else {
@@ -705,14 +1038,21 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	isSettingEnabled(setting: keyof IconPaletteSettings): boolean {
 		const state = this.settings[setting];
-		return state === 'on' || Platform.isDesktop && state === 'desktop' || Platform.isMobile && state === 'mobile';
+		return (
+			state === 'on' ||
+			(Platform.isDesktop && state === 'desktop') ||
+			(Platform.isMobile && state === 'mobile')
+		);
 	}
 
 	/**
 	 * Check whether a community plugin is installed and enabled.
 	 */
 	isPluginEnabled(pluginId: string): boolean {
-		return Object.prototype.hasOwnProperty.call((this.app as unknown as AppWithPlugins).plugins?.plugins ?? {}, pluginId);
+		return Object.prototype.hasOwnProperty.call(
+			(this.app as unknown as AppWithPlugins).plugins?.plugins ?? {},
+			pluginId,
+		);
 	}
 
 	/**
@@ -747,19 +1087,27 @@ export default class IconPalettePlugin extends Plugin {
 				iconDefault = 'sidebar-toggle-button-icon';
 				break;
 			}
-			case 'minimize': name = STRINGS.appItems.minimize; break;
-			case 'maximize': name = STRINGS.appItems.maximize; break;
-			case 'unmaximize': name = STRINGS.appItems.unmaximize; break;
-			case 'close': name = STRINGS.appItems.close; break;
+			case 'minimize':
+				name = STRINGS.appItems.minimize;
+				break;
+			case 'maximize':
+				name = STRINGS.appItems.maximize;
+				break;
+			case 'unmaximize':
+				name = STRINGS.appItems.unmaximize;
+				break;
+			case 'close':
+				name = STRINGS.appItems.close;
+				break;
 		}
 		return {
 			id: appItemId,
 			name: name ?? '',
 			category: 'app',
 			iconDefault: iconDefault ?? null,
-			icon: unloading ? null : appIcon.icon ?? null,
-			color: unloading ? null : appIcon.color ?? null,
-		}
+			icon: unloading ? null : (appIcon.icon ?? null),
+			color: unloading ? null : (appIcon.color ?? null),
+		};
 	}
 
 	/**
@@ -767,7 +1115,7 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	getTabItems(unloading?: boolean): TabItem[] {
 		const tabIcons: TabItem[] = [];
-		this.app.workspace.iterateAllLeaves(leaf => {
+		this.app.workspace.iterateAllLeaves((leaf) => {
 			tabIcons.push(this.defineTabItem(leaf, unloading));
 		});
 		return tabIcons;
@@ -778,10 +1126,14 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	getTabItem(tabId: string, unloading?: boolean): TabItem | null {
 		let tab: TabItem | null = null;
-		this.app.workspace.iterateAllLeaves(leaf => {
+		this.app.workspace.iterateAllLeaves((leaf) => {
 			if (tab) return;
 			const tabType = leaf.view.getViewType();
-			if (tabType === tabId || leaf.view.getState().file === tabId && !PLUGIN_TAB_TYPES.includes(tabType)) {
+			if (
+				tabType === tabId ||
+				(leaf.view.getState().file === tabId &&
+					!PLUGIN_TAB_TYPES.includes(tabType))
+			) {
 				tab = this.defineTabItem(leaf, unloading);
 			}
 		});
@@ -793,19 +1145,31 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	private defineTabItem(leaf: WorkspaceLeaf, unloading?: boolean): TabItem {
 		const privateLeaf = leaf as WorkspaceLeafWithElements;
-		const mobileWorkspace = this.app.workspace as unknown as WorkspaceWithMobileSplits;
-		let iconEl: HTMLElement | null = privateLeaf.tabHeaderInnerIconEl ?? null;
+		const mobileWorkspace = this.app
+			.workspace as unknown as WorkspaceWithMobileSplits;
+		let iconEl: HTMLElement | null =
+			privateLeaf.tabHeaderInnerIconEl ?? null;
 		if (Platform.isMobile) {
-			if (privateLeaf.containerEl?.parentElement === mobileWorkspace.leftSplit?.activeTabContentEl) {
+			if (
+				privateLeaf.containerEl?.parentElement ===
+				mobileWorkspace.leftSplit?.activeTabContentEl
+			) {
 				iconEl = mobileWorkspace.leftSplit?.activeTabIconEl ?? null;
-			} else if (privateLeaf.containerEl?.parentElement === mobileWorkspace.rightSplit?.activeTabContentEl) {
+			} else if (
+				privateLeaf.containerEl?.parentElement ===
+				mobileWorkspace.rightSplit?.activeTabContentEl
+			) {
 				iconEl = mobileWorkspace.rightSplit?.activeTabIconEl ?? null;
 			}
 		}
 
 		const tabType = leaf.view.getViewType();
-		const isActive = leaf.view === this.app.workspace.getActiveViewOfType(View) || privateLeaf.tabHeaderEl?.hasClass('is-active') === true;
-		const isRoot = leaf.getRoot() instanceof WorkspaceRoot || leaf.getRoot() instanceof WorkspaceFloating;
+		const isActive =
+			leaf.view === this.app.workspace.getActiveViewOfType(View) ||
+			privateLeaf.tabHeaderEl?.hasClass('is-active') === true;
+		const isRoot =
+			leaf.getRoot() instanceof WorkspaceRoot ||
+			leaf.getRoot() instanceof WorkspaceFloating;
 
 		const isStacked = privateLeaf.parent?.isStacked === true;
 		const filePath = leaf.view.getState().file; // Used because view.file is undefined on deferred views
@@ -818,39 +1182,49 @@ export default class IconPalettePlugin extends Plugin {
 				id: fileId,
 				name: leaf.getDisplayText(),
 				category: 'file',
-				iconDefault: isRoot && isMarkdown && !isStacked && !fileIcon.color && !this.settings.showAllFileIcons
-					? null
-					: leaf.view.getIcon(),
-				icon: unloading ? null : fileIcon.icon ?? null,
-				color: unloading ? null : fileIcon.color ?? null,
+				iconDefault:
+					isRoot &&
+					isMarkdown &&
+					!isStacked &&
+					!fileIcon.color &&
+					!this.settings.showAllFileIcons
+						? null
+						: leaf.view.getIcon(),
+				icon: unloading ? null : (fileIcon.icon ?? null),
+				color: unloading ? null : (fileIcon.color ?? null),
 				isActive: isActive,
 				isRoot: isRoot,
 				isStacked: isStacked,
 				iconEl: iconEl ?? null,
 				tabEl: privateLeaf.tabHeaderEl ?? null,
-			}
+			};
 		} else {
 			const tabIcon = this.settings.tabIcons[tabType] ?? {};
 			let iconDefault;
 			switch (tabType) {
 				case 'empty':
-					iconDefault = !isRoot || isStacked || tabIcon.color ? leaf.view.getIcon() : null; break;
+					iconDefault =
+						!isRoot || isStacked || tabIcon.color
+							? leaf.view.getIcon()
+							: null;
+					break;
 				default:
-					iconDefault = leaf.view.getIcon(); break;
+					iconDefault = leaf.view.getIcon();
+					break;
 			}
 			return {
 				id: tabType,
 				name: leaf.getDisplayText(),
 				category: 'tab',
 				iconDefault: iconDefault,
-				icon: unloading ? null : tabIcon.icon ?? null,
-				color: unloading ? null : tabIcon.color ?? null,
+				icon: unloading ? null : (tabIcon.icon ?? null),
+				color: unloading ? null : (tabIcon.color ?? null),
 				isActive: isActive,
 				isRoot: isRoot,
 				isStacked: isStacked,
 				iconEl: iconEl ?? null,
 				tabEl: privateLeaf.tabHeaderEl ?? null,
-			}
+			};
 		}
 	}
 
@@ -859,15 +1233,21 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	getFileItems(unloading?: boolean): FileItem[] {
 		const tFiles = this.app.vault.getAllLoadedFiles();
-		const rootFolder = tFiles.find(tFile => tFile.path === '/');
+		const rootFolder = tFiles.find((tFile) => tFile.path === '/');
 		if (rootFolder) tFiles.remove(rootFolder);
-		return tFiles.map(tFile => this.defineFileItem(tFile, tFile.path, unloading));
+		return tFiles.map((tFile) =>
+			this.defineFileItem(tFile, tFile.path, unloading),
+		);
 	}
 
 	/**
 	 * Get file definition.
 	 */
-	getFileItem(fileId: string, unloading?: boolean, includeChildren = true): FileItem {
+	getFileItem(
+		fileId: string,
+		unloading?: boolean,
+		includeChildren = true,
+	): FileItem {
 		const { path } = this.splitFilePath(fileId); // Ignore subpath
 		const tFile = this.app.vault.getAbstractFileByPath(path);
 		return this.defineFileItem(tFile, fileId, unloading, includeChildren);
@@ -876,12 +1256,20 @@ export default class IconPalettePlugin extends Plugin {
 	/**
 	 * Create file definition.
 	 */
-	private defineFileItem(tFile: TAbstractFile | null, fileId: string, unloading?: boolean, includeChildren = true): FileItem {
+	private defineFileItem(
+		tFile: TAbstractFile | null,
+		fileId: string,
+		unloading?: boolean,
+		includeChildren = true,
+	): FileItem {
 		const { filename, basename, extension } = this.splitFilePath(fileId);
 		const fileIcon = this.settings.fileIcons[fileId] ?? {};
 		let iconDefault = null;
 
-		if (tFile instanceof TFile && (fileIcon.color || this.settings.showAllFileIcons)) {
+		if (
+			tFile instanceof TFile &&
+			(fileIcon.color || this.settings.showAllFileIcons)
+		) {
 			if (extension === 'canvas') {
 				iconDefault = 'lucide-layout-dashboard';
 			} else if (extension === 'pdf') {
@@ -893,7 +1281,11 @@ export default class IconPalettePlugin extends Plugin {
 			} else {
 				iconDefault = 'lucide-file';
 			}
-		} else if (tFile instanceof TFolder && (fileIcon.color && !this.settings.minimalFolderIcons || this.settings.showAllFolderIcons)) {
+		} else if (
+			tFile instanceof TFolder &&
+			((fileIcon.color && !this.settings.minimalFolderIcons) ||
+				this.settings.showAllFolderIcons)
+		) {
 			iconDefault = 'lucide-folder-closed';
 		}
 
@@ -902,37 +1294,60 @@ export default class IconPalettePlugin extends Plugin {
 			name: extension === 'md' ? basename : filename,
 			category: tFile instanceof TFolder ? 'folder' : 'file',
 			iconDefault: unloading ? null : iconDefault,
-			icon: unloading ? null : fileIcon.icon ?? null,
-			color: unloading ? null : fileIcon.color ?? null,
-			items: tFile instanceof TFolder && includeChildren
-				? tFile.children.map(tChild => this.defineFileItem(tChild, tChild.path, unloading, includeChildren))
-				: null,
-		}
+			icon: unloading ? null : (fileIcon.icon ?? null),
+			color: unloading ? null : (fileIcon.color ?? null),
+			items:
+				tFile instanceof TFolder && includeChildren
+					? tFile.children.map((tChild) =>
+							this.defineFileItem(
+								tChild,
+								tChild.path,
+								unloading,
+								includeChildren,
+							),
+						)
+					: null,
+		};
 	}
 
 	/**
 	 * Split a filepath into its hierarchical components.
 	 */
 	splitFilePath(fileId = ''): {
-		path: string      // Folder tree + Filename
-		tree: string      // Folder tree only
-		filename: string  // Name.Extension
-		basename: string  // Name only
-		extension: string // Extension only
-		subpath: string   // #Subpath after extension
+		path: string; // Folder tree + Filename
+		tree: string; // Folder tree only
+		filename: string; // Name.Extension
+		basename: string; // Name only
+		extension: string; // Extension only
+		subpath: string; // #Subpath after extension
 	} {
 		const subpathExts = ['md', 'base', 'pdf']; // Extensions with linkable subpaths
-		const subpathStart = Math.max(...subpathExts.map(ext => {
-			const index = fileId.lastIndexOf(`.${ext}#`);
-			return index > -1 ? (index + ext.length + 1) : -1;
-		}));
-		const subpath = subpathStart > -1 ? fileId.substring(subpathStart, fileId.length) : '';
-		const path = subpathStart > -1 ? fileId.substring(0, subpathStart) : fileId;
+		const subpathStart = Math.max(
+			...subpathExts.map((ext) => {
+				const index = fileId.lastIndexOf(`.${ext}#`);
+				return index > -1 ? index + ext.length + 1 : -1;
+			}),
+		);
+		const subpath =
+			subpathStart > -1
+				? fileId.substring(subpathStart, fileId.length)
+				: '';
+		const path =
+			subpathStart > -1 ? fileId.substring(0, subpathStart) : fileId;
 
-		const [, tree = '', filename = ''] = path.match(/^(.*\/)?(.*)$/s) ?? [];
+		const lastSlash = path.lastIndexOf('/');
+		const tree = lastSlash > -1 ? path.slice(0, lastSlash + 1) : '';
+		const filename = lastSlash > -1 ? path.slice(lastSlash + 1) : path;
 		const extensionStart = filename.lastIndexOf('.');
-		const extension = filename.substring(extensionStart > -1 ? extensionStart + 1 : filename.length) || '';
-		const basename = filename.substring(0, extensionStart > -1 ? extensionStart : filename.length) || '';
+		const extension =
+			filename.substring(
+				extensionStart > -1 ? extensionStart + 1 : filename.length,
+			) || '';
+		const basename =
+			filename.substring(
+				0,
+				extensionStart > -1 ? extensionStart : filename.length,
+			) || '';
 
 		return { path, tree, filename, basename, extension, subpath };
 	}
@@ -941,31 +1356,52 @@ export default class IconPalettePlugin extends Plugin {
 	 * Get array of bookmark definitions.
 	 */
 	getBookmarkItems(unloading?: boolean): BookmarkItem[] {
-		const bmarkBases = (this.app as unknown as AppWithInternalPlugins).internalPlugins?.plugins?.bookmarks?.instance?.items ?? [];
-		return bmarkBases.map(bmarkBase => this.defineBookmarkItem(bmarkBase, unloading));
+		const bmarkBases =
+			(this.app as unknown as AppWithInternalPlugins).internalPlugins
+				?.plugins?.bookmarks?.instance?.items ?? [];
+		return bmarkBases.map((bmarkBase) =>
+			this.defineBookmarkItem(bmarkBase, unloading),
+		);
 	}
 
 	/**
 	 * Get bookmark definition.
 	 */
-	getBookmarkItem(bmarkId: string, bmarkCategory: Category, unloading?: boolean): BookmarkItem {
-		const rootBookmarks = (this.app as unknown as AppWithInternalPlugins).internalPlugins?.plugins?.bookmarks?.instance?.items ?? [];
+	getBookmarkItem(
+		bmarkId: string,
+		bmarkCategory: Category,
+		unloading?: boolean,
+	): BookmarkItem {
+		const rootBookmarks =
+			(this.app as unknown as AppWithInternalPlugins).internalPlugins
+				?.plugins?.bookmarks?.instance?.items ?? [];
 		const bmarkBases = this.flattenBookmarks(rootBookmarks);
-		const bmarkBase = bmarkBases.find(bmarkBase => {
-			switch (bmarkCategory) {
-				case 'file': // Fallthrough
-				case 'folder': return bmarkBase.path + (bmarkBase.subpath ?? '') === bmarkId;
-				default: return bmarkBase.ctime === bmarkId;
-			}
-		}) ?? {};
+		const bmarkBase =
+			bmarkBases.find((bmarkBase) => {
+				switch (bmarkCategory) {
+					case 'file': // Fallthrough
+					case 'folder':
+						return (
+							bmarkBase.path + (bmarkBase.subpath ?? '') ===
+							bmarkId
+						);
+					default:
+						return bmarkBase.ctime === bmarkId;
+				}
+			}) ?? {};
 		return this.defineBookmarkItem(bmarkBase, unloading);
 	}
 
 	/**
 	 * Create bookmark definition.
 	 */
-	private defineBookmarkItem(bmarkBase: BookmarkBase, unloading?: boolean): BookmarkItem {
-		const { path, filename, basename, extension } = this.splitFilePath(bmarkBase.path);
+	private defineBookmarkItem(
+		bmarkBase: BookmarkBase,
+		unloading?: boolean,
+	): BookmarkItem {
+		const { path, filename, basename, extension } = this.splitFilePath(
+			bmarkBase.path,
+		);
 		const subpath = bmarkBase.subpath ?? '';
 		let id = '';
 		let name = '';
@@ -1008,7 +1444,10 @@ export default class IconPalettePlugin extends Plugin {
 				id = bmarkBase.ctime ?? '';
 				name = bmarkBase.title ?? '';
 				bmarkIcon = this.settings.bookmarkIcons[id] ?? {};
-				if (bmarkIcon.color && !this.settings.minimalFolderIcons || this.settings.showAllFolderIcons) {
+				if (
+					(bmarkIcon.color && !this.settings.minimalFolderIcons) ||
+					this.settings.showAllFolderIcons
+				) {
 					iconDefault = 'lucide-folder-closed';
 				}
 				break;
@@ -1040,10 +1479,13 @@ export default class IconPalettePlugin extends Plugin {
 			name: name,
 			category: bmarkBase.type ?? 'file',
 			iconDefault: iconDefault,
-			icon: unloading ? null : bmarkIcon?.icon ?? null,
-			color: unloading ? null : bmarkIcon?.color ?? null,
-			items: bmarkBase.items?.map(bmark => this.defineBookmarkItem(bmark, unloading)) ?? null,
-		}
+			icon: unloading ? null : (bmarkIcon?.icon ?? null),
+			color: unloading ? null : (bmarkIcon?.color ?? null),
+			items:
+				bmarkBase.items?.map((bmark) =>
+					this.defineBookmarkItem(bmark, unloading),
+				) ?? null,
+		};
 	}
 
 	/**
@@ -1053,7 +1495,8 @@ export default class IconPalettePlugin extends Plugin {
 		const flatArray: BookmarkBase[] = [];
 		for (const bmarkBase of bmarkBases) {
 			flatArray.push(bmarkBase);
-			if (bmarkBase.items) flatArray.push(...this.flattenBookmarks(bmarkBase.items));
+			if (bmarkBase.items)
+				flatArray.push(...this.flattenBookmarks(bmarkBase.items));
 		}
 		return flatArray;
 	}
@@ -1062,14 +1505,20 @@ export default class IconPalettePlugin extends Plugin {
 	 * Get array of tag definitions.
 	 */
 	getTagItems(unloading?: boolean): TagItem[] {
-		const tagHashes = Object.keys((this.app.metadataCache as unknown as MetadataCacheWithTags).getTags());
-		const tagBases = tagHashes.map(tagHash => {
+		const tagHashes = Object.keys(
+			(
+				this.app.metadataCache as unknown as MetadataCacheWithTags
+			).getTags(),
+		);
+		const tagBases = tagHashes.map((tagHash) => {
 			return {
 				id: tagHash.replace('#', ''),
 				name: tagHash,
-			}
+			};
 		});
-		return tagBases.map(tagBase => this.defineTagItem(tagBase, unloading));
+		return tagBases.map((tagBase) =>
+			this.defineTagItem(tagBase, unloading),
+		);
 	}
 
 	/**
@@ -1077,12 +1526,20 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	getTagItem(tagId: string, unloading?: boolean): TagItem | null {
 		const tagHash = '#' + tagId;
-		const tagHashes = Object.keys((this.app.metadataCache as unknown as MetadataCacheWithTags).getTags());
+		const tagHashes = Object.keys(
+			(
+				this.app.metadataCache as unknown as MetadataCacheWithTags
+			).getTags(),
+		);
 		return tagHashes.includes(tagHash)
-			? this.defineTagItem({
-				id: tagId,
-				name: tagHash,
-			}, unloading) : null;
+			? this.defineTagItem(
+					{
+						id: tagId,
+						name: tagHash,
+					},
+					unloading,
+				)
+			: null;
 	}
 
 	/**
@@ -1096,8 +1553,8 @@ export default class IconPalettePlugin extends Plugin {
 			name: tagBase.name,
 			category: 'tag',
 			iconDefault: null,
-			icon: unloading ? null : tagIcon.icon ?? null,
-			color: unloading ? null : tagIcon.color ?? null,
+			icon: unloading ? null : (tagIcon.icon ?? null),
+			color: unloading ? null : (tagIcon.color ?? null),
 		};
 	}
 
@@ -1105,9 +1562,13 @@ export default class IconPalettePlugin extends Plugin {
 	 * Get array of property definitions.
 	 */
 	getPropertyItems(unloading?: boolean): PropertyItem[] {
-		const properties = (this.app as unknown as AppWithMetadataTypes).metadataTypeManager?.properties ?? {};
+		const properties =
+			(this.app as unknown as AppWithMetadataTypes).metadataTypeManager
+				?.properties ?? {};
 		const propBases = Object.values(properties);
-		return propBases.map(propBase => this.definePropertyItem(propBase, unloading));
+		return propBases.map((propBase) =>
+			this.definePropertyItem(propBase, unloading),
+		);
 	}
 
 	/**
@@ -1115,19 +1576,30 @@ export default class IconPalettePlugin extends Plugin {
 	 * @param propId Case-insensitive
 	 */
 	getPropertyItem(propId: string, unloading?: boolean): PropertyItem {
-		const properties = (this.app as unknown as AppWithMetadataTypes).metadataTypeManager?.properties ?? {};
+		const properties =
+			(this.app as unknown as AppWithMetadataTypes).metadataTypeManager
+				?.properties ?? {};
 		const propBases = Object.values(properties);
-		const propBase = propBases.find(propBase => propBase.name?.toLowerCase() === propId.toLowerCase()) ?? {};
+		const propBase =
+			propBases.find(
+				(propBase) =>
+					propBase.name?.toLowerCase() === propId.toLowerCase(),
+			) ?? {};
 		return this.definePropertyItem(propBase, unloading);
 	}
 
 	/**
 	 * Create property definition.
 	 */
-	private definePropertyItem(propBase: PropertyBase, unloading?: boolean): PropertyItem {
+	private definePropertyItem(
+		propBase: PropertyBase,
+		unloading?: boolean,
+	): PropertyItem {
 		const propId = propBase.name ?? '';
 		const propIcon = this.settings.propertyIcons[propId] ?? {};
-		const widget = (this.app as unknown as AppWithMetadataTypes).metadataTypeManager?.getWidget?.(propBase.widget ?? '');
+		const widget = (
+			this.app as unknown as AppWithMetadataTypes
+		).metadataTypeManager?.getWidget?.(propBase.widget ?? '');
 		const iconDefault = widget?.icon ?? 'lucide-file-question';
 
 		return {
@@ -1135,33 +1607,41 @@ export default class IconPalettePlugin extends Plugin {
 			name: propId,
 			category: 'property',
 			iconDefault: iconDefault,
-			icon: unloading ? null : propIcon.icon ?? null,
-			color: unloading ? null : propIcon.color ?? null,
+			icon: unloading ? null : (propIcon.icon ?? null),
+			color: unloading ? null : (propIcon.color ?? null),
 			type: propBase.widget ?? null,
-		}
+		};
 	}
 
 	/**
 	 * Get array of ribbon command definitions.
 	 */
 	getRibbonItems(unloading?: boolean): RibbonItem[] {
-		const itemBases = (this.app.workspace as unknown as WorkspaceWithRibbon).leftRibbon?.items ?? [];
-		return itemBases.map(item => this.defineRibbonItem(item, unloading));
+		const itemBases =
+			(this.app.workspace as unknown as WorkspaceWithRibbon).leftRibbon
+				?.items ?? [];
+		return itemBases.map((item) => this.defineRibbonItem(item, unloading));
 	}
 
 	/**
 	 * Get ribbon command definition.
 	 */
 	getRibbonItem(itemId: string, unloading?: boolean): RibbonItem {
-		const itemBase = (this.app.workspace as unknown as WorkspaceWithRibbon).leftRibbon?.items
-			?.find(itemBase => itemBase.id === itemId) ?? {};
+		const itemBase =
+			(
+				this.app.workspace as unknown as WorkspaceWithRibbon
+			).leftRibbon?.items?.find((itemBase) => itemBase.id === itemId) ??
+			{};
 		return this.defineRibbonItem(itemBase, unloading);
 	}
 
 	/**
 	 * Create ribbon command definition.
 	 */
-	private defineRibbonItem(itemBase: RibbonItemBase, unloading?: boolean): RibbonItem {
+	private defineRibbonItem(
+		itemBase: RibbonItemBase,
+		unloading?: boolean,
+	): RibbonItem {
 		const itemId = itemBase.id ?? '';
 		const itemIcon = this.settings.ribbonIcons[itemId] ?? {};
 		return {
@@ -1169,17 +1649,21 @@ export default class IconPalettePlugin extends Plugin {
 			name: itemBase.title ?? '',
 			category: 'ribbon',
 			iconDefault: itemBase.icon ?? null,
-			icon: unloading ? null : itemIcon.icon ?? null,
-			color: unloading ? null : itemIcon.color ?? null,
+			icon: unloading ? null : (itemIcon.icon ?? null),
+			color: unloading ? null : (itemIcon.color ?? null),
 			isHidden: itemBase.hidden ?? false,
 			iconEl: itemBase.buttonEl ?? null,
-		}
+		};
 	}
 
 	/**
 	 * Save app icon changes to settings.
 	 */
-	saveAppIcon(appItem: AppItem, icon: string | null, color: string | null): void {
+	saveAppIcon(
+		appItem: AppItem,
+		icon: string | null,
+		color: string | null,
+	): void {
 		this.updateIconSetting(this.settings.appIcons, appItem.id, icon, color);
 		void this.saveSettings();
 	}
@@ -1195,7 +1679,11 @@ export default class IconPalettePlugin extends Plugin {
 	/**
 	 * Save file icon changes to settings.
 	 */
-	saveFileIcon(file: FileItem, icon: string | null, color: string | null): void {
+	saveFileIcon(
+		file: FileItem,
+		icon: string | null,
+		color: string | null,
+	): void {
 		const triggers: Set<RuleTrigger> = new Set();
 		const fileBase = this.settings.fileIcons[file.id];
 		if (icon !== fileBase?.icon) triggers.add('icon');
@@ -1210,7 +1698,11 @@ export default class IconPalettePlugin extends Plugin {
 	 * @param icon If undefined, leave icons unchanged
 	 * @param color If undefined, leave colors unchanged
 	 */
-	saveFileIcons(files: FileItem[], icon: string | null | undefined, color: string | null | undefined): void {
+	saveFileIcons(
+		files: FileItem[],
+		icon: string | null | undefined,
+		color: string | null | undefined,
+	): void {
 		const triggers: Set<RuleTrigger> = new Set();
 		for (const file of files) {
 			if (icon !== undefined) file.icon = icon;
@@ -1218,7 +1710,12 @@ export default class IconPalettePlugin extends Plugin {
 			const bmarkBase = this.settings.fileIcons[file.id];
 			if (icon !== bmarkBase?.icon) triggers.add('icon');
 			if (color !== bmarkBase?.color) triggers.add('color');
-			this.updateIconSetting(this.settings.fileIcons, file.id, file.icon, file.color);
+			this.updateIconSetting(
+				this.settings.fileIcons,
+				file.id,
+				file.icon,
+				file.color,
+			);
 		}
 		void this.saveSettings();
 		this.ruleManager?.triggerRulings('file', ...triggers);
@@ -1227,7 +1724,11 @@ export default class IconPalettePlugin extends Plugin {
 	/**
 	 * Save bookmark icon changes to settings.
 	 */
-	saveBookmarkIcon(bmark: BookmarkItem, icon: string | null, color: string | null): void {
+	saveBookmarkIcon(
+		bmark: BookmarkItem,
+		icon: string | null,
+		color: string | null,
+	): void {
 		const triggers: Set<RuleTrigger> = new Set();
 		switch (bmark.category) {
 			case 'file': // Fallthrough
@@ -1235,11 +1736,21 @@ export default class IconPalettePlugin extends Plugin {
 				const bmarkBase = this.settings.fileIcons[bmark.id];
 				if (icon !== bmarkBase?.icon) triggers.add('icon');
 				if (color !== bmarkBase?.color) triggers.add('color');
-				this.updateIconSetting(this.settings.fileIcons, bmark.id, icon, color);
+				this.updateIconSetting(
+					this.settings.fileIcons,
+					bmark.id,
+					icon,
+					color,
+				);
 				break;
 			}
 			default: {
-				this.updateIconSetting(this.settings.bookmarkIcons, bmark.id, icon, color);
+				this.updateIconSetting(
+					this.settings.bookmarkIcons,
+					bmark.id,
+					icon,
+					color,
+				);
 			}
 		}
 		void this.saveSettings();
@@ -1251,7 +1762,11 @@ export default class IconPalettePlugin extends Plugin {
 	 * @param icon If undefined, leave icons unchanged
 	 * @param color If undefined, leave colors unchanged
 	 */
-	saveBookmarkIcons(bmarks: BookmarkItem[], icon: string | null | undefined, color: string | null | undefined): void {
+	saveBookmarkIcons(
+		bmarks: BookmarkItem[],
+		icon: string | null | undefined,
+		color: string | null | undefined,
+	): void {
 		const triggers: Set<RuleTrigger> = new Set();
 		for (const bmark of bmarks) {
 			if (icon !== undefined) bmark.icon = icon;
@@ -1262,11 +1777,21 @@ export default class IconPalettePlugin extends Plugin {
 					const bmarkBase = this.settings.fileIcons[bmark.id];
 					if (icon !== bmarkBase?.icon) triggers.add('icon');
 					if (color !== bmarkBase?.color) triggers.add('color');
-					this.updateIconSetting(this.settings.fileIcons, bmark.id, bmark.icon, bmark.color);
+					this.updateIconSetting(
+						this.settings.fileIcons,
+						bmark.id,
+						bmark.icon,
+						bmark.color,
+					);
 					break;
 				}
 				default: {
-					this.updateIconSetting(this.settings.bookmarkIcons, bmark.id, bmark.icon, bmark.color);
+					this.updateIconSetting(
+						this.settings.bookmarkIcons,
+						bmark.id,
+						bmark.icon,
+						bmark.color,
+					);
 				}
 			}
 		}
@@ -1285,8 +1810,17 @@ export default class IconPalettePlugin extends Plugin {
 	/**
 	 * Save property icon changes to settings.
 	 */
-	savePropertyIcon(prop: PropertyItem, icon: string | null, color: string | null): void {
-		this.updateIconSetting(this.settings.propertyIcons, prop.id, icon, color);
+	savePropertyIcon(
+		prop: PropertyItem,
+		icon: string | null,
+		color: string | null,
+	): void {
+		this.updateIconSetting(
+			this.settings.propertyIcons,
+			prop.id,
+			icon,
+			color,
+		);
 		void this.saveSettings();
 	}
 
@@ -1295,11 +1829,20 @@ export default class IconPalettePlugin extends Plugin {
 	 * @param icon If undefined, leave icons unchanged
 	 * @param color If undefined, leave colors unchanged
 	 */
-	savePropertyIcons(props: PropertyItem[], icon: string | null | undefined, color: string | null | undefined): void {
+	savePropertyIcons(
+		props: PropertyItem[],
+		icon: string | null | undefined,
+		color: string | null | undefined,
+	): void {
 		for (const prop of props) {
 			if (icon !== undefined) prop.icon = icon;
 			if (color !== undefined) prop.color = color;
-			this.updateIconSetting(this.settings.propertyIcons, prop.id, prop.icon, prop.color);
+			this.updateIconSetting(
+				this.settings.propertyIcons,
+				prop.id,
+				prop.icon,
+				prop.color,
+			);
 		}
 		void this.saveSettings();
 	}
@@ -1307,8 +1850,17 @@ export default class IconPalettePlugin extends Plugin {
 	/**
 	 * Save ribbon icon changes to settings.
 	 */
-	saveRibbonIcon(ribbonItem: RibbonItem, icon: string | null, color: string | null): void {
-		this.updateIconSetting(this.settings.ribbonIcons, ribbonItem.id, icon, color);
+	saveRibbonIcon(
+		ribbonItem: RibbonItem,
+		icon: string | null,
+		color: string | null,
+	): void {
+		this.updateIconSetting(
+			this.settings.ribbonIcons,
+			ribbonItem.id,
+			icon,
+			color,
+		);
 		void this.saveSettings();
 	}
 
@@ -1327,16 +1879,23 @@ export default class IconPalettePlugin extends Plugin {
 			this.settings.propertyIcons,
 			this.settings.ribbonIcons,
 		]) {
-			for (const iconSetting of Object.values(iconMap)) collect(iconSetting.icon);
+			for (const iconSetting of Object.values(iconMap))
+				collect(iconSetting.icon);
 		}
-		for (const rule of [...this.settings.fileRules, ...this.settings.folderRules]) {
+		for (const rule of [
+			...this.settings.fileRules,
+			...this.settings.folderRules,
+		]) {
 			collect(rule.icon);
 		}
 		// Pinned and recent combos render in the file context menu before the
 		// picker is ever opened, so their library icons must be registered at
 		// startup too, otherwise a devicon/simple favorite not assigned anywhere
 		// else falls back to a help icon after a restart.
-		for (const combo of [...this.settings.favorites.pinned, ...this.settings.favorites.recent]) {
+		for (const combo of [
+			...this.settings.favorites.pinned,
+			...this.settings.favorites.recent,
+		]) {
 			collect(combo.icon);
 		}
 		return [...iconIds];
@@ -1345,7 +1904,12 @@ export default class IconPalettePlugin extends Plugin {
 	/**
 	 * Update icon in a given settings object.
 	 */
-	private updateIconSetting(settings: IconSettingMap, itemId: string, icon: string | null, color: string | null): void {
+	private updateIconSetting(
+		settings: IconSettingMap,
+		itemId: string,
+		icon: string | null,
+		color: string | null,
+	): void {
 		if (icon || color) {
 			if (!settings[itemId]) settings[itemId] = {};
 
@@ -1374,11 +1938,13 @@ export default class IconPalettePlugin extends Plugin {
 			if (await adapter.exists(dataPath)) {
 				const dataJson = await adapter.read(dataPath);
 				try {
-				const parsedData: unknown = JSON.parse(dataJson);
-				if (parsedData && typeof parsedData === 'object') {
-					dataObject = parsedData;
+					const parsedData: unknown = JSON.parse(dataJson);
+					if (parsedData && typeof parsedData === 'object') {
+						dataObject = parsedData;
+					}
+				} catch {
+					/* Ignore */
 				}
-			} catch { /* Ignore */ }
 			}
 
 			// If `data.json` is missing or corrupted, restore the backup
@@ -1389,23 +1955,34 @@ export default class IconPalettePlugin extends Plugin {
 
 		// Load `data.json`
 		const loadedData: unknown = await this.loadData();
-		const settingsPatch = loadedData && typeof loadedData === 'object'
-			? loadedData as Partial<IconPaletteSettings>
-			: {};
+		const settingsPatch =
+			loadedData && typeof loadedData === 'object'
+				? (loadedData as Partial<IconPaletteSettings>)
+				: {};
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, settingsPatch);
-		this.settings.dialogState = Object.assign({}, DEFAULT_SETTINGS.dialogState, settingsPatch.dialogState);
+		this.settings.dialogState = Object.assign(
+			{},
+			DEFAULT_SETTINGS.dialogState,
+			settingsPatch.dialogState,
+		);
 		// Build fresh, type-checked arrays: a shallow merge would share the
 		// module-level DEFAULT_SETTINGS arrays (recordRecent would then mutate the
 		// defaults), and a partial/corrupt data.json could pass a non-array
 		// through that later crashes FavoritesStore.
 		this.settings.favorites = {
-			pinned: Array.isArray(settingsPatch.favorites?.pinned) ? settingsPatch.favorites.pinned : [],
-			recent: Array.isArray(settingsPatch.favorites?.recent) ? settingsPatch.favorites.recent : [],
+			pinned: Array.isArray(settingsPatch.favorites?.pinned)
+				? settingsPatch.favorites.pinned
+				: [],
+			recent: Array.isArray(settingsPatch.favorites?.recent)
+				? settingsPatch.favorites.recent
+				: [],
 		};
 		// Same defense as favorites: a partial/corrupt data.json could pass a
 		// non-array or non-string members that later crash CustomColorsStore.
 		this.settings.customColors = Array.isArray(settingsPatch.customColors)
-			? settingsPatch.customColors.filter((color): color is string => typeof color === 'string')
+			? settingsPatch.customColors.filter(
+					(color): color is string => typeof color === 'string',
+				)
 			: [];
 		// The parallel names map (added after the color list shipped) is absent in
 		// older data.json. Rebuild it through the store so keys are normalized the
@@ -1413,9 +1990,16 @@ export default class IconPalettePlugin extends Plugin {
 		// and non-string names are dropped, then prune any name whose color is gone.
 		const rawNames: unknown = settingsPatch.customColorNames;
 		const names: Record<string, string> = {};
-		if (rawNames && typeof rawNames === 'object' && !Array.isArray(rawNames)) {
-			for (const [color, name] of Object.entries(rawNames as Record<string, unknown>)) {
-				if (typeof name === 'string') CustomColorsStore.setName(names, color, name);
+		if (
+			rawNames &&
+			typeof rawNames === 'object' &&
+			!Array.isArray(rawNames)
+		) {
+			for (const [color, name] of Object.entries(
+				rawNames as Record<string, unknown>,
+			)) {
+				if (typeof name === 'string')
+					CustomColorsStore.setName(names, color, name);
 			}
 		}
 		CustomColorsStore.pruneNames(this.settings.customColors, names);
@@ -1442,15 +2026,24 @@ export default class IconPalettePlugin extends Plugin {
 		const ago = Date.now() - backupStat.mtime;
 		let message = STRINGS.backups.backupNotice + '\n\n';
 		if (ago < 60 * SECOND) {
-			message += STRINGS.backups.backupSecondsAgo.replace('{#}', Math.round(ago / SECOND).toString());
+			message += STRINGS.backups.backupSecondsAgo.replace(
+				'{#}',
+				Math.round(ago / SECOND).toString(),
+			);
 		} else if (ago < 60 * MINUTE) {
-			message += STRINGS.backups.backupMinutesAgo.replace('{#}', Math.round(ago / MINUTE).toString());
+			message += STRINGS.backups.backupMinutesAgo.replace(
+				'{#}',
+				Math.round(ago / MINUTE).toString(),
+			);
 		} else if (ago < 24 * HOUR) {
-			message += STRINGS.backups.backupHoursAgo.replace('{#}', Math.round(ago / HOUR).toString());
+			message += STRINGS.backups.backupHoursAgo.replace(
+				'{#}',
+				Math.round(ago / HOUR).toString(),
+			);
 		} else {
 			const dateFormat = new Intl.DateTimeFormat(getLanguage(), {
 				dateStyle: 'long',
-				timeStyle: 'short'
+				timeStyle: 'short',
 			}).format(backupStat?.mtime);
 			message += STRINGS.backups.backupDate.replace('{#}', dateFormat);
 		}
@@ -1467,12 +2060,24 @@ export default class IconPalettePlugin extends Plugin {
 		this.isSaving = true;
 
 		// Sort item IDs for human-readability
-		this.settings.appIcons = Object.fromEntries(Object.entries(this.settings.appIcons).sort());
-		this.settings.tabIcons = Object.fromEntries(Object.entries(this.settings.tabIcons).sort());
-		this.settings.fileIcons = Object.fromEntries(Object.entries(this.settings.fileIcons).sort());
-		this.settings.bookmarkIcons = Object.fromEntries(Object.entries(this.settings.bookmarkIcons).sort());
-		this.settings.propertyIcons = Object.fromEntries(Object.entries(this.settings.propertyIcons).sort());
-		this.settings.ribbonIcons = Object.fromEntries(Object.entries(this.settings.ribbonIcons).sort());
+		this.settings.appIcons = Object.fromEntries(
+			Object.entries(this.settings.appIcons).sort(),
+		);
+		this.settings.tabIcons = Object.fromEntries(
+			Object.entries(this.settings.tabIcons).sort(),
+		);
+		this.settings.fileIcons = Object.fromEntries(
+			Object.entries(this.settings.fileIcons).sort(),
+		);
+		this.settings.bookmarkIcons = Object.fromEntries(
+			Object.entries(this.settings.bookmarkIcons).sort(),
+		);
+		this.settings.propertyIcons = Object.fromEntries(
+			Object.entries(this.settings.propertyIcons).sort(),
+		);
+		this.settings.ribbonIcons = Object.fromEntries(
+			Object.entries(this.settings.ribbonIcons).sort(),
+		);
 
 		// Pause before writing to storage, in case the current state cause an instant crash
 		await sleep(300);
@@ -1494,12 +2099,16 @@ export default class IconPalettePlugin extends Plugin {
 		// Determine if a new backup is due for creation
 		const backupStat = await adapter.stat(backupPath + 1);
 		const timeSinceLastBackup = Date.now() - (backupStat?.mtime ?? 0);
-		const isDueForBackup = this.settings.maxBackups > 0 && timeSinceLastBackup >= HOUR * 3;
+		const isDueForBackup =
+			this.settings.maxBackups > 0 && timeSinceLastBackup >= HOUR * 3;
 
 		// Loop through backup files
 		for (let i = 10; i--; i === 0) {
 			if (await adapter.exists(backupPath + i)) {
-				if (i > this.settings.maxBackups || isDueForBackup && i === this.settings.maxBackups) {
+				if (
+					i > this.settings.maxBackups ||
+					(isDueForBackup && i === this.settings.maxBackups)
+				) {
 					// Delete any backup numbered higher than the maximum, or due for replacement
 					await adapter.remove(backupPath + i);
 				} else if (isDueForBackup && i < this.settings.maxBackups) {

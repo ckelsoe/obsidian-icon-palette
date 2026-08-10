@@ -161,3 +161,21 @@ export interface MetadataCacheWithTags {
 export interface VaultWithConfig {
 	getConfig?: (key: string) => string | null;
 }
+
+// --- Electron desktop bridge (window.electron) ---
+//
+// Present only in the desktop app; the maximize-icon manager reads it to detect
+// the window's maximized state. Declared globally here (rather than inline in a
+// feature module) so `activeWindow.electron` resolves without a cast and the
+// internal-API surface stays auditable in one place.
+declare global {
+	interface Window {
+		electron?: {
+			remote?: {
+				getCurrentWindow?: () => {
+					isMaximized?: () => boolean;
+				};
+			};
+		};
+	}
+}

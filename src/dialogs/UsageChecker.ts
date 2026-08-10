@@ -34,7 +34,7 @@ export default class UsageChecker extends Modal {
 	/**
 	 * @override
 	 */
-	async onOpen(): Promise<void> {
+	onOpen(): void {
 		this.containerEl.addClass('mod-confirmation');
 		this.modalEl.addClass('icon-palette-rule-checker');
 		this.contentEl.addClass('icon-palette-highlight-tree');
@@ -42,62 +42,109 @@ export default class UsageChecker extends Modal {
 
 		// BUTTONS: Highlight
 		const buttons: ButtonComponent[] = [];
-		new Setting(this.contentEl).setName(STRINGS.ruleChecker.highlight)
-			.addButton(button => { button
-				.setButtonText(STRINGS.ruleEditor.source.tree)
-				.onClick(() => {
-					buttons.forEach(button => button.buttonEl.removeClass('icon-palette-button-selected'));
-					button.buttonEl.addClass('icon-palette-button-selected');
-					this.contentEl.addClass('icon-palette-highlight-tree');
-					this.contentEl.removeClasses(['icon-palette-highlight-name', 'icon-palette-highlight-extension']);
-				});
+		new Setting(this.contentEl)
+			.setName(STRINGS.ruleChecker.highlight)
+			.addButton((button) => {
+				button
+					.setButtonText(STRINGS.ruleEditor.source.tree)
+					.onClick(() => {
+						buttons.forEach((button) =>
+							button.buttonEl.removeClass(
+								'icon-palette-button-selected',
+							),
+						);
+						button.buttonEl.addClass(
+							'icon-palette-button-selected',
+						);
+						this.contentEl.addClass('icon-palette-highlight-tree');
+						this.contentEl.removeClasses([
+							'icon-palette-highlight-name',
+							'icon-palette-highlight-extension',
+						]);
+					});
 				button.buttonEl.addClass('icon-palette-button-selected');
 				buttons.push(button);
 			})
-			.addButton(button => { button
-				.setButtonText(STRINGS.ruleEditor.source.name)
-				.onClick(() => {
-					buttons.forEach(button => button.buttonEl.removeClass('icon-palette-button-selected'));
-					button.buttonEl.addClass('icon-palette-button-selected');
-					this.contentEl.removeClasses(['icon-palette-highlight-tree', 'icon-palette-highlight-extension']);
-					this.contentEl.addClass('icon-palette-highlight-name');
-				});
+			.addButton((button) => {
+				button
+					.setButtonText(STRINGS.ruleEditor.source.name)
+					.onClick(() => {
+						buttons.forEach((button) =>
+							button.buttonEl.removeClass(
+								'icon-palette-button-selected',
+							),
+						);
+						button.buttonEl.addClass(
+							'icon-palette-button-selected',
+						);
+						this.contentEl.removeClasses([
+							'icon-palette-highlight-tree',
+							'icon-palette-highlight-extension',
+						]);
+						this.contentEl.addClass('icon-palette-highlight-name');
+					});
 				buttons.push(button);
 			})
-			.addButton(button => { button
-				.setButtonText(STRINGS.ruleEditor.source.extension)
-				.onClick(() => {
-					buttons.forEach(button => button.buttonEl.removeClass('icon-palette-button-selected'));
-					button.buttonEl.addClass('icon-palette-button-selected');
-					this.contentEl.removeClasses(['icon-palette-highlight-tree', 'icon-palette-highlight-name']);
-					this.contentEl.addClass('icon-palette-highlight-extension');
-				});
+			.addButton((button) => {
+				button
+					.setButtonText(STRINGS.ruleEditor.source.extension)
+					.onClick(() => {
+						buttons.forEach((button) =>
+							button.buttonEl.removeClass(
+								'icon-palette-button-selected',
+							),
+						);
+						button.buttonEl.addClass(
+							'icon-palette-button-selected',
+						);
+						this.contentEl.removeClasses([
+							'icon-palette-highlight-tree',
+							'icon-palette-highlight-name',
+						]);
+						this.contentEl.addClass(
+							'icon-palette-highlight-extension',
+						);
+					});
 				buttons.push(button);
 			});
 
 		// LIST: Unused icons
 		this.pathList = new PathListComponent(this.contentEl);
 		for (const file of this.unusedIcons) {
-			const { tree, basename, extension } = this.plugin.splitFilePath(file.id);
-			this.pathList.addPath(path => path
-				.setIcon(file.icon ?? null)
-				.setIconColor(file.color ?? null)
-				.setIconTooltip(STRINGS.iconPicker.changeIcon)
-				.onIconClick(() => IconPicker.openSingle(this.plugin, file, (newIcon, newColor) => {
-					this.plugin.saveFileIcon(file, newIcon, newColor);
-					file.icon = newIcon;
-					file.color = newColor;
-					path.setIcon(newIcon);
-					path.setIconColor(newColor);
-				}))
-				.setPathText(tree, basename, extension)
-				.setRemoveTooltip(STRINGS.menu.removeIcon)
-				.onRemoveClick(() => {
-					this.plugin.saveFileIcon(file, null, null);
-					this.unusedIcons.delete(file);
-					path.pathEl.remove();
-					if (this.unusedIcons.size === 0) this.addPlaceholderItem();
-				})
+			const { tree, basename, extension } = this.plugin.splitFilePath(
+				file.id,
+			);
+			this.pathList.addPath((path) =>
+				path
+					.setIcon(file.icon ?? null)
+					.setIconColor(file.color ?? null)
+					.setIconTooltip(STRINGS.iconPicker.changeIcon)
+					.onIconClick(() =>
+						IconPicker.openSingle(
+							this.plugin,
+							file,
+							(newIcon, newColor) => {
+								this.plugin.saveFileIcon(
+									file,
+									newIcon,
+									newColor,
+								);
+								file.icon = newIcon;
+								file.color = newColor;
+								path.setIcon(newIcon);
+								path.setIconColor(newColor);
+							},
+						),
+					)
+					.setPathText(tree, basename, extension)
+					.setRemoveTooltip(STRINGS.menu.removeIcon)
+					.onRemoveClick(() => {
+						this.plugin.saveFileIcon(file, null, null);
+						this.unusedIcons.delete(file);
+						path.pathEl.remove();
+						if (this.unusedIcons.size === 0)
+							this.addPlaceholderItem();
+					}),
 			);
 		}
 
@@ -105,10 +152,11 @@ export default class UsageChecker extends Modal {
 	}
 
 	private addPlaceholderItem(): void {
-		this.pathList.addPath(path => path
-			.setIcon('lucide-check')
-			.setPathText('', STRINGS.usageChecker.noUnusedIconsFound)
-			.setClass('icon-palette-placeholder')
+		this.pathList.addPath((path) =>
+			path
+				.setIcon('lucide-check')
+				.setPathText('', STRINGS.usageChecker.noUnusedIconsFound)
+				.setClass('icon-palette-placeholder'),
 		);
 	}
 }

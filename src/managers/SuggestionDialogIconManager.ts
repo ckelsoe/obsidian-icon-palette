@@ -1,4 +1,11 @@
-import { Instruction, Plugin, SuggestModal, TFile, TFolder, WorkspaceLeaf } from 'obsidian';
+import {
+	Instruction,
+	Plugin,
+	SuggestModal,
+	TFile,
+	TFolder,
+	WorkspaceLeaf,
+} from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { Category } from 'src/types.js';
 import { PLUGIN_TAB_TYPES } from 'src/registry.js';
@@ -6,7 +13,10 @@ import IconManager from 'src/managers/IconManager.js';
 
 type UnknownSuggestModal = SuggestModal<unknown>;
 type OnOpenMethod = (this: UnknownSuggestModal) => void | Promise<void>;
-type SetInstructionsMethod = (this: UnknownSuggestModal, instructions: Instruction[]) => void;
+type SetInstructionsMethod = (
+	this: UnknownSuggestModal,
+	instructions: Instruction[],
+) => void;
 type RenderSuggestionMethod = (value: unknown, el: HTMLElement) => void;
 
 type PluginModal = UnknownSuggestModal & { plugin: Plugin };
@@ -48,7 +58,8 @@ export default class SuggestionDialogIconManager extends IconManager {
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
-		const suggestPrototype = SuggestModal.prototype as SuggestModalPrototype<unknown>;
+		const suggestPrototype =
+			SuggestModal.prototype as SuggestModalPrototype<unknown>;
 
 		// Store original methods
 		this.onOpenOriginal = suggestPrototype.onOpen;
@@ -67,9 +78,14 @@ export default class SuggestionDialogIconManager extends IconManager {
 				}
 
 				// Proxy renderSuggestion() for each instance
-				const renderSuggestionOriginal: RenderSuggestionMethod = modal.renderSuggestion.bind(modal);
+				const renderSuggestionOriginal: RenderSuggestionMethod =
+					modal.renderSuggestion.bind(modal);
 				modal.renderSuggestion = new Proxy(renderSuggestionOriginal, {
-					apply: (renderSuggestion, _renderModal, renderArgs: [unknown, HTMLElement]) => {
+					apply: (
+						renderSuggestion,
+						_renderModal,
+						renderArgs: [unknown, HTMLElement],
+					) => {
 						// Call base method first to pre-populate elements
 						renderSuggestion(...renderArgs);
 
@@ -90,16 +106,20 @@ export default class SuggestionDialogIconManager extends IconManager {
 								break;
 							}
 						}
-					}
+					},
 				});
 
 				return Reflect.apply(onOpen, modal, args);
-			}
+			},
 		});
 
 		// Catch Another Quick Switcher, which never calls super.onOpen()
 		this.setInstructionsProxy = new Proxy(this.setInstructionsOriginal, {
-			apply: (setInstructions, modal: UnknownSuggestModal, args: [Instruction[]]) => {
+			apply: (
+				setInstructions,
+				modal: UnknownSuggestModal,
+				args: [Instruction[]],
+			) => {
 				if (this.isDisabled()) {
 					return Reflect.apply(setInstructions, modal, args);
 				}
@@ -110,23 +130,30 @@ export default class SuggestionDialogIconManager extends IconManager {
 				}
 
 				// Proxy renderSuggestion() for every instance
-				const renderSuggestionOriginal: RenderSuggestionMethod = modal.renderSuggestion.bind(modal);
+				const renderSuggestionOriginal: RenderSuggestionMethod =
+					modal.renderSuggestion.bind(modal);
 				modal.renderSuggestion = new Proxy(renderSuggestionOriginal, {
-					apply: (renderSuggestion, _renderModal, renderArgs: [unknown, HTMLElement]) => {
+					apply: (
+						renderSuggestion,
+						_renderModal,
+						renderArgs: [unknown, HTMLElement],
+					) => {
 						if (this.isDisabled()) {
 							renderSuggestion(...renderArgs);
 							return;
 						}
 						// Call base method first to pre-populate elements
 						renderSuggestion(...renderArgs);
-						modal.modalEl.addClass('icon-palette-another-quick-switcher');
+						modal.modalEl.addClass(
+							'icon-palette-another-quick-switcher',
+						);
 						// Refresh suggestions
 						this.refreshSuggestionIconAQS(...renderArgs);
-					}
+					},
 				});
 
 				return Reflect.apply(setInstructions, modal, args);
-			}
+			},
 		});
 
 		// Replace original methods
@@ -144,7 +171,10 @@ export default class SuggestionDialogIconManager extends IconManager {
 		}
 
 		// Check for Quick Switcher++
-		if (isPluginModal(modal) && modal.plugin.manifest.id === 'darlal-switcher-plus') {
+		if (
+			isPluginModal(modal) &&
+			modal.plugin.manifest.id === 'darlal-switcher-plus'
+		) {
 			return QUICK_SWITCHER_PP;
 		}
 
@@ -171,9 +201,12 @@ export default class SuggestionDialogIconManager extends IconManager {
 			case 'file': {
 				if (value.file instanceof TFile) {
 					const file = this.plugin.getFileItem(value.file.path);
-					const rule = this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
+					const rule =
+						this.plugin.ruleManager?.checkRuling('file', file.id) ??
+						file;
 					if (rule.icon || rule.color) {
-						const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
+						const iconEl =
+							el.find('.icon-palette-icon') ?? el.createDiv();
 						el.prepend(iconEl);
 						this.refreshIcon(rule, iconEl);
 					}
@@ -184,9 +217,12 @@ export default class SuggestionDialogIconManager extends IconManager {
 				const bmarkBase = this.getBookmarkBase(value.item);
 				if (bmarkBase?.type === 'file' && bmarkBase.path) {
 					const file = this.plugin.getFileItem(bmarkBase.path);
-					const rule = this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
+					const rule =
+						this.plugin.ruleManager?.checkRuling('file', file.id) ??
+						file;
 					if (rule.icon || rule.color) {
-						const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
+						const iconEl =
+							el.find('.icon-palette-icon') ?? el.createDiv();
 						this.refreshIcon(rule, iconEl);
 					}
 				}
@@ -205,9 +241,12 @@ export default class SuggestionDialogIconManager extends IconManager {
 			case 'file': {
 				if (value.file instanceof TFile) {
 					const file = this.plugin.getFileItem(value.file.path);
-					const rule = this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
+					const rule =
+						this.plugin.ruleManager?.checkRuling('file', file.id) ??
+						file;
 					if (rule.icon || rule.color) {
-						const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
+						const iconEl =
+							el.find('.icon-palette-icon') ?? el.createDiv();
 						el.prepend(iconEl);
 						this.refreshIcon(rule, iconEl);
 					}
@@ -216,28 +255,44 @@ export default class SuggestionDialogIconManager extends IconManager {
 			}
 			case 'bookmark': {
 				const bmarkBase = this.getBookmarkBase(value.item);
-				if ((bmarkBase?.type === 'file' || bmarkBase?.type === 'folder') && bmarkBase.path) {
+				if (
+					(bmarkBase?.type === 'file' ||
+						bmarkBase?.type === 'folder') &&
+					bmarkBase.path
+				) {
 					const file = this.plugin.getFileItem(bmarkBase.path);
-					const rule = this.plugin.ruleManager?.checkRuling(bmarkBase.type, file.id) ?? file;
+					const rule =
+						this.plugin.ruleManager?.checkRuling(
+							bmarkBase.type,
+							file.id,
+						) ?? file;
 					if (rule.icon || rule.color) {
-						const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
+						const iconEl =
+							el.find('.icon-palette-icon') ?? el.createDiv();
 						el.prepend(iconEl);
 						this.refreshIcon(rule, iconEl);
 					}
 				}
 				break;
 			}
-			case 'editorList': { // Represents an open tab in Editor Mode
+			case 'editorList': {
+				// Represents an open tab in Editor Mode
 				if (!(value.item instanceof WorkspaceLeaf)) break;
 				const tabType = value.item.view.getViewType();
 				const iconDefault = value.item.view.getIcon();
 
 				// Distinguish between file tabs and plugin tabs
-				if (!PLUGIN_TAB_TYPES.includes(tabType) && value.file instanceof TFile) {
+				if (
+					!PLUGIN_TAB_TYPES.includes(tabType) &&
+					value.file instanceof TFile
+				) {
 					const file = this.plugin.getFileItem(value.file.path);
-					const rule = this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
+					const rule =
+						this.plugin.ruleManager?.checkRuling('file', file.id) ??
+						file;
 					if (rule.icon || rule.color) {
-						const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
+						const iconEl =
+							el.find('.icon-palette-icon') ?? el.createDiv();
 						el.prepend(iconEl);
 						this.refreshIcon(rule, iconEl);
 					}
@@ -245,7 +300,8 @@ export default class SuggestionDialogIconManager extends IconManager {
 					const tab = this.plugin.getTabItem(tabType);
 					if (tab) {
 						tab.iconDefault = iconDefault;
-						const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
+						const iconEl =
+							el.find('.icon-palette-icon') ?? el.createDiv();
 						el.prepend(iconEl);
 						this.refreshIcon(tab, iconEl);
 					}
@@ -265,10 +321,12 @@ export default class SuggestionDialogIconManager extends IconManager {
 
 		const itemEl = el.find('.another-quick-switcher__item');
 		const file = this.plugin.getFileItem(tFile.path);
-		const rule = this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
+		const rule =
+			this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
 
 		if (rule.icon || rule.color) {
-			const iconEl = itemEl.find('.icon-palette-icon') ?? itemEl.createDiv();
+			const iconEl =
+				itemEl.find('.icon-palette-icon') ?? itemEl.createDiv();
 			itemEl.prepend(iconEl);
 			this.refreshIcon(rule, iconEl);
 		}
@@ -284,7 +342,7 @@ export default class SuggestionDialogIconManager extends IconManager {
 
 		el.addClass('mod-complex');
 		const contentEl = el.createDiv({ cls: 'suggestion-content' });
-		const titleEl = contentEl.createDiv({ cls: 'suggestion-title '});
+		const titleEl = contentEl.createDiv({ cls: 'suggestion-title ' });
 
 		// Move text nodes and .suggestion-highlights into .suggestion-title
 		for (const node of [...el.childNodes]) {
@@ -292,7 +350,8 @@ export default class SuggestionDialogIconManager extends IconManager {
 		}
 
 		const folder = this.plugin.getFileItem(tFolder.path);
-		const rule = this.plugin.ruleManager?.checkRuling('folder', folder.id) ?? folder;
+		const rule =
+			this.plugin.ruleManager?.checkRuling('folder', folder.id) ?? folder;
 
 		if (rule.icon || rule.color) {
 			const iconEl = el.find('.icon-palette-icon') ?? el.createDiv();
@@ -301,7 +360,9 @@ export default class SuggestionDialogIconManager extends IconManager {
 		}
 	}
 
-	private isSuggestionDialogValue(value: unknown): value is SuggestionDialogValue {
+	private isSuggestionDialogValue(
+		value: unknown,
+	): value is SuggestionDialogValue {
 		return value !== null && typeof value === 'object';
 	}
 
@@ -309,7 +370,10 @@ export default class SuggestionDialogIconManager extends IconManager {
 		if (!item || typeof item !== 'object') return null;
 		const record = item as Record<string, unknown>;
 		return {
-			type: typeof record.type === 'string' ? record.type as Category : undefined,
+			type:
+				typeof record.type === 'string'
+					? (record.type as Category)
+					: undefined,
 			path: typeof record.path === 'string' ? record.path : undefined,
 		};
 	}
@@ -318,7 +382,10 @@ export default class SuggestionDialogIconManager extends IconManager {
 	 * Check whether user has disabled all suggestion dialog icons.
 	 */
 	private isDisabled(): boolean {
-		return !this.plugin.settings.showQuickSwitcherIcons && !this.plugin.settings.showMoveFileIcons;
+		return (
+			!this.plugin.settings.showQuickSwitcherIcons &&
+			!this.plugin.settings.showMoveFileIcons
+		);
 	}
 
 	/**
@@ -326,7 +393,8 @@ export default class SuggestionDialogIconManager extends IconManager {
 	 */
 	unload(): void {
 		super.unload();
-		const suggestPrototype = SuggestModal.prototype as SuggestModalPrototype<unknown>;
+		const suggestPrototype =
+			SuggestModal.prototype as SuggestModalPrototype<unknown>;
 		if (suggestPrototype.onOpen === this.onOpenProxy) {
 			suggestPrototype.onOpen = this.onOpenOriginal;
 		}

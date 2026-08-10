@@ -17,20 +17,26 @@ export default class BookmarkIconManager extends IconManager {
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
-		this.plugin.registerEvent(this.app.workspace.on('layout-change', () => {
-			if (activeDocument.contains(this.containerEl)) {
-				return;
-			} else {
-				this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
-			}
-		}));
+		this.plugin.registerEvent(
+			this.app.workspace.on('layout-change', () => {
+				if (activeDocument.contains(this.containerEl)) {
+					return;
+				} else {
+					this.app.workspace.iterateAllLeaves((leaf) =>
+						this.manageLeaf(leaf),
+					);
+				}
+			}),
+		);
 		// Compatibility with Iconize plugin
 		if (this.plugin.isPluginEnabled('obsidian-icon-folder')) {
-			this.plugin.registerEvent(this.app.workspace.on('active-leaf-change', () => {
-				this.refreshIcons();
-			}));
+			this.plugin.registerEvent(
+				this.app.workspace.on('active-leaf-change', () => {
+					this.refreshIcons();
+				}),
+			);
 		}
-		this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
+		this.app.workspace.iterateAllLeaves((leaf) => this.manageLeaf(leaf));
 	}
 
 	/**
@@ -40,30 +46,40 @@ export default class BookmarkIconManager extends IconManager {
 		if (leaf.getViewState().type !== 'bookmarks') return;
 
 		this.stopMutationObserver(this.containerEl);
-		this.containerEl = leaf.view.containerEl.find(':scope > .view-content > div');
-		this.setMutationObserver(this.containerEl, {
-			subtree: true,
-			childList: true,
-			attributeFilter: ['class'],
-			attributeOldValue: true
-		}, mutation => {
-			// Refresh when bookmarks are renamed
-			if (mutation.attributeName === 'class'
-				&& mutation.target.instanceOf(HTMLElement)
-				&& mutation.oldValue?.includes('is-being-renamed')
-				&& !mutation.target.hasClass('is-being-renamed')
-			) {
-				this.refreshIcons();
-				return;
-			}
-			// Refresh when bookmarks are added or moved
-			for (const addedNode of mutation.addedNodes) {
-				if (addedNode.instanceOf(HTMLElement) && addedNode.hasClass('tree-item')) {
+		this.containerEl = leaf.view.containerEl.find(
+			':scope > .view-content > div',
+		);
+		this.setMutationObserver(
+			this.containerEl,
+			{
+				subtree: true,
+				childList: true,
+				attributeFilter: ['class'],
+				attributeOldValue: true,
+			},
+			(mutation) => {
+				// Refresh when bookmarks are renamed
+				if (
+					mutation.attributeName === 'class' &&
+					mutation.target.instanceOf(HTMLElement) &&
+					mutation.oldValue?.includes('is-being-renamed') &&
+					!mutation.target.hasClass('is-being-renamed')
+				) {
 					this.refreshIcons();
 					return;
 				}
-			}
-		});
+				// Refresh when bookmarks are added or moved
+				for (const addedNode of mutation.addedNodes) {
+					if (
+						addedNode.instanceOf(HTMLElement) &&
+						addedNode.hasClass('tree-item')
+					) {
+						this.refreshIcons();
+						return;
+					}
+				}
+			},
+		);
 		this.refreshIcons();
 	}
 
@@ -83,7 +99,11 @@ export default class BookmarkIconManager extends IconManager {
 	/**
 	 * Refresh an array of bookmark icons, including any subitems.
 	 */
-	private refreshChildIcons(bmarks: BookmarkItem[], itemEls: HTMLElement[], unloading?: boolean) {
+	private refreshChildIcons(
+		bmarks: BookmarkItem[],
+		itemEls: HTMLElement[],
+		unloading?: boolean,
+	) {
 		for (const itemEl of itemEls) {
 			itemEl.addClass('icon-palette-item');
 
@@ -93,45 +113,84 @@ export default class BookmarkIconManager extends IconManager {
 			// Check for an icon ruling
 			let rule: RuleItem | BookmarkItem = bmark;
 			if (bmark.category === 'file' || bmark.category === 'folder') {
-				rule = this.plugin.ruleManager?.checkRuling(bmark.category, bmark.id, unloading) ?? bmark;
-				if (bmark.category === 'folder') rule.iconDefault = 'lucide-folder';
+				rule =
+					this.plugin.ruleManager?.checkRuling(
+						bmark.category,
+						bmark.id,
+						unloading,
+					) ?? bmark;
+				if (bmark.category === 'folder')
+					rule.iconDefault = 'lucide-folder';
 			}
 
 			if (bmark.items) {
 				if (!itemEl.hasClass('is-collapsed')) {
-					const childItemEls = itemEl.findAll(':scope > .tree-item-children > .tree-item');
-					if (childItemEls) this.refreshChildIcons(bmark.items, childItemEls, unloading);
+					const childItemEls = itemEl.findAll(
+						':scope > .tree-item-children > .tree-item',
+					);
+					if (childItemEls)
+						this.refreshChildIcons(
+							bmark.items,
+							childItemEls,
+							unloading,
+						);
 				}
 
 				// Refresh when folder expands/collapses
-				this.setMutationObserver(itemEl, {
-					attributeFilter: ['class'],
-					attributeOldValue: true
-				}, mutation => {
-					if (mutation.target.instanceOf(HTMLElement) && mutation.target.hasClass('is-collapsed') !== mutation.oldValue?.includes('is-collapsed')) {
-						const childItemEls = itemEl.findAll(':scope > .tree-item-children > .tree-item');
-						if (bmark.items && childItemEls) {
-							this.refreshChildIcons([bmark, ...bmark.items], [itemEl, ...childItemEls]);
+				this.setMutationObserver(
+					itemEl,
+					{
+						attributeFilter: ['class'],
+						attributeOldValue: true,
+					},
+					(mutation) => {
+						if (
+							mutation.target.instanceOf(HTMLElement) &&
+							mutation.target.hasClass('is-collapsed') !==
+								mutation.oldValue?.includes('is-collapsed')
+						) {
+							const childItemEls = itemEl.findAll(
+								':scope > .tree-item-children > .tree-item',
+							);
+							if (bmark.items && childItemEls) {
+								this.refreshChildIcons(
+									[bmark, ...bmark.items],
+									[itemEl, ...childItemEls],
+								);
+							}
 						}
-					}
-				});
+					},
+				);
 			}
 
 			const selfEl = itemEl.find(':scope > .tree-item-self');
-			let iconEl = selfEl.find(':scope > .tree-item-icon') ?? selfEl.createDiv({ cls: 'tree-item-icon' });
+			let iconEl =
+				selfEl.find(':scope > .tree-item-icon') ??
+				selfEl.createDiv({ cls: 'tree-item-icon' });
 
 			if (bmark.items) {
 				// Toggle default icon based on expand/collapse state
-				if (rule.iconDefault) rule.iconDefault = iconEl.hasClass('is-collapsed')
-					? 'lucide-folder-closed'
-					: 'lucide-folder-open';
-				let folderIconEl = selfEl.find(':scope > .icon-palette-sidekick:not(.tree-item-icon)');
-				if (this.plugin.settings.minimalFolderIcons || !this.plugin.settings.showAllFolderIcons && !rule.icon && !rule.iconDefault) {
+				if (rule.iconDefault)
+					rule.iconDefault = iconEl.hasClass('is-collapsed')
+						? 'lucide-folder-closed'
+						: 'lucide-folder-open';
+				let folderIconEl = selfEl.find(
+					':scope > .icon-palette-sidekick:not(.tree-item-icon)',
+				);
+				if (
+					this.plugin.settings.minimalFolderIcons ||
+					(!this.plugin.settings.showAllFolderIcons &&
+						!rule.icon &&
+						!rule.iconDefault)
+				) {
 					folderIconEl?.remove();
 				} else {
-					const arrowColor = rule.icon || rule.iconDefault ? null : rule.color;
+					const arrowColor =
+						rule.icon || rule.iconDefault ? null : rule.color;
 					this.refreshIcon({ icon: null, color: arrowColor }, iconEl);
-					folderIconEl = folderIconEl ?? selfEl.createDiv({ cls: 'icon-palette-sidekick' });
+					folderIconEl =
+						folderIconEl ??
+						selfEl.createDiv({ cls: 'icon-palette-sidekick' });
 					if (iconEl.nextElementSibling !== folderIconEl) {
 						iconEl.insertAdjacentElement('afterend', folderIconEl);
 					}
@@ -139,14 +198,26 @@ export default class BookmarkIconManager extends IconManager {
 				}
 			}
 
-			if (iconEl.hasClass('collapse-icon') && !rule.icon && !rule.iconDefault) {
+			if (
+				iconEl.hasClass('collapse-icon') &&
+				!rule.icon &&
+				!rule.iconDefault
+			) {
 				this.refreshIcon(bmark, iconEl); // Skip click listener if icon will be a collapse arrow
 			} else if (this.plugin.isSettingEnabled('clickableIcons')) {
-				this.refreshIcon(rule, iconEl, event => {
-					IconPicker.openSingle(this.plugin, bmark, (newIcon, newColor) => {
-						this.plugin.saveBookmarkIcon(bmark, newIcon, newColor);
-						this.plugin.refreshManagers('file', 'folder');
-					});
+				this.refreshIcon(rule, iconEl, (event) => {
+					IconPicker.openSingle(
+						this.plugin,
+						bmark,
+						(newIcon, newColor) => {
+							this.plugin.saveBookmarkIcon(
+								bmark,
+								newIcon,
+								newColor,
+							);
+							this.plugin.refreshManagers('file', 'folder');
+						},
+					);
 					event.stopPropagation();
 				});
 			} else {
@@ -155,17 +226,26 @@ export default class BookmarkIconManager extends IconManager {
 
 			if (selfEl) {
 				this.selectionLookup.set(selfEl, bmark);
-				this.setEventListener(selfEl, 'touchstart', () => this.isTouchActive = true);
+				this.setEventListener(
+					selfEl,
+					'touchstart',
+					() => (this.isTouchActive = true),
+				);
 
 				if (this.plugin.settings.showMenuActions) {
-					this.setEventListener(selfEl, 'contextmenu', () => {
-						// Mobile fires this event twice on bookmarks, so skip the mid-touch event
-						if (this.isTouchActive) {
-							this.isTouchActive = false;
-						} else {
-							this.onContextMenu(bmark.id, bmark.category);
-						}
-					}, { capture: true });
+					this.setEventListener(
+						selfEl,
+						'contextmenu',
+						() => {
+							// Mobile fires this event twice on bookmarks, so skip the mid-touch event
+							if (this.isTouchActive) {
+								this.isTouchActive = false;
+							} else {
+								this.onContextMenu(bmark.id, bmark.category);
+							}
+						},
+						{ capture: true },
+					);
 				} else {
 					this.stopEventListener(selfEl, 'contextmenu');
 				}
@@ -174,13 +254,19 @@ export default class BookmarkIconManager extends IconManager {
 			// Update ghost icon when dragging
 			this.setEventListener(selfEl, 'dragstart', () => {
 				if (rule.icon || rule.iconDefault || rule.color) {
-					const ghostEl = selfEl.doc.body.find(':scope > .drag-ghost > .drag-ghost-self');
+					const ghostEl = selfEl.doc.body.find(
+						':scope > .drag-ghost > .drag-ghost-self',
+					);
 					if (ghostEl) {
 						const spanEl = ghostEl.find('span');
-						const ghostIcon = (bmark.category === 'group' && rule.icon === null)
-							? 'lucide-bookmark'
-							: rule.icon || rule.iconDefault;
-						this.refreshIcon({ icon: ghostIcon, color: rule.color }, ghostEl);
+						const ghostIcon =
+							bmark.category === 'group' && rule.icon === null
+								? 'lucide-bookmark'
+								: rule.icon || rule.iconDefault;
+						this.refreshIcon(
+							{ icon: ghostIcon, color: rule.color },
+							ghostEl,
+						);
 						ghostEl.appendChild(spanEl);
 					}
 				}
@@ -193,89 +279,158 @@ export default class BookmarkIconManager extends IconManager {
 	 */
 	private onContextMenu(clickedId: string, clickedCategory: Category): void {
 		this.plugin.menuManager?.closeAndFlush();
-		const clickedBmark: BookmarkItem = this.plugin.getBookmarkItem(clickedId, clickedCategory);
+		const clickedBmark: BookmarkItem = this.plugin.getBookmarkItem(
+			clickedId,
+			clickedCategory,
+		);
 		const selectedBmarks: BookmarkItem[] = [];
 
 		for (const [selectableEl, bmark] of this.selectionLookup) {
 			if (selectableEl.hasClass('is-selected')) {
-				selectedBmarks.push(this.plugin.getBookmarkItem(bmark.id, bmark.category));
+				selectedBmarks.push(
+					this.plugin.getBookmarkItem(bmark.id, bmark.category),
+				);
 			}
 		}
 
 		// If clicked bookmark is not selected, ignore selected items
-		if (!selectedBmarks.some(selectedBmark => selectedBmark.id === clickedBmark.id)) {
+		if (
+			!selectedBmarks.some(
+				(selectedBmark) => selectedBmark.id === clickedBmark.id,
+			)
+		) {
 			selectedBmarks.length = 0;
 		}
 
 		// Change icon(s)
-		const changeTitle = selectedBmarks.length < 2
-			? STRINGS.menu.changeIcon
-			: STRINGS.menu.changeIcons.replace('{#}', selectedBmarks.length.toString());
-		this.plugin.menuManager?.addItemAfter('open', item => item
-			.setTitle(changeTitle)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => {
-				if (selectedBmarks.length < 2) {
-					IconPicker.openSingle(this.plugin, clickedBmark, (newIcon, newColor) => {
-						this.plugin.saveBookmarkIcon(clickedBmark, newIcon, newColor);
-						this.plugin.refreshManagers('file', 'folder');
-					});
-				} else {
-					IconPicker.openMulti(this.plugin, selectedBmarks, (newIcon, newColor) => {
-						this.plugin.saveBookmarkIcons(selectedBmarks, newIcon, newColor);
-						this.plugin.refreshManagers('file', 'folder');
-					});
-				}
-			})
-		);
-
-		// Remove icon(s) / Reset color(s)
-		const anyRemovable = selectedBmarks.some(bmark => bmark.icon || bmark.color);
-		const anyIcons = selectedBmarks.some(bmark => bmark.icon);
-		const removeTitle = selectedBmarks.length < 2
-			? clickedBmark.icon
-				? STRINGS.menu.removeIcon
-				: STRINGS.menu.resetColor
-			: anyIcons
-				? STRINGS.menu.removeIcons.replace('{#}', selectedBmarks.length.toString())
-				: STRINGS.menu.resetColors.replace('{#}', selectedBmarks.length.toString())
-		const removeIcon = clickedBmark.icon || anyIcons ? 'lucide-image-minus' : 'lucide-rotate-ccw';
-
-		if (clickedBmark.icon || clickedBmark.color || anyRemovable) {
-			this.plugin.menuManager?.addItem(item => item
-				.setTitle(removeTitle)
-				.setIcon(removeIcon)
+		const changeTitle =
+			selectedBmarks.length < 2
+				? STRINGS.menu.changeIcon
+				: STRINGS.menu.changeIcons.replace(
+						'{#}',
+						selectedBmarks.length.toString(),
+					);
+		this.plugin.menuManager?.addItemAfter('open', (item) =>
+			item
+				.setTitle(changeTitle)
+				.setIcon('lucide-image-plus')
 				.setSection('icon')
 				.onClick(() => {
 					if (selectedBmarks.length < 2) {
-						this.plugin.saveBookmarkIcon(clickedBmark, null, null);
+						IconPicker.openSingle(
+							this.plugin,
+							clickedBmark,
+							(newIcon, newColor) => {
+								this.plugin.saveBookmarkIcon(
+									clickedBmark,
+									newIcon,
+									newColor,
+								);
+								this.plugin.refreshManagers('file', 'folder');
+							},
+						);
 					} else {
-						this.plugin.saveBookmarkIcons(selectedBmarks, null, null);
+						IconPicker.openMulti(
+							this.plugin,
+							selectedBmarks,
+							(newIcon, newColor) => {
+								this.plugin.saveBookmarkIcons(
+									selectedBmarks,
+									newIcon,
+									newColor,
+								);
+								this.plugin.refreshManagers('file', 'folder');
+							},
+						);
 					}
-					this.plugin.refreshManagers('file', 'folder');
-				})
+				}),
+		);
+
+		// Remove icon(s) / Reset color(s)
+		const anyRemovable = selectedBmarks.some(
+			(bmark) => bmark.icon || bmark.color,
+		);
+		const anyIcons = selectedBmarks.some((bmark) => bmark.icon);
+		const removeTitle =
+			selectedBmarks.length < 2
+				? clickedBmark.icon
+					? STRINGS.menu.removeIcon
+					: STRINGS.menu.resetColor
+				: anyIcons
+					? STRINGS.menu.removeIcons.replace(
+							'{#}',
+							selectedBmarks.length.toString(),
+						)
+					: STRINGS.menu.resetColors.replace(
+							'{#}',
+							selectedBmarks.length.toString(),
+						);
+		const removeIcon =
+			clickedBmark.icon || anyIcons
+				? 'lucide-image-minus'
+				: 'lucide-rotate-ccw';
+
+		if (clickedBmark.icon || clickedBmark.color || anyRemovable) {
+			this.plugin.menuManager?.addItem((item) =>
+				item
+					.setTitle(removeTitle)
+					.setIcon(removeIcon)
+					.setSection('icon')
+					.onClick(() => {
+						if (selectedBmarks.length < 2) {
+							this.plugin.saveBookmarkIcon(
+								clickedBmark,
+								null,
+								null,
+							);
+						} else {
+							this.plugin.saveBookmarkIcons(
+								selectedBmarks,
+								null,
+								null,
+							);
+						}
+						this.plugin.refreshManagers('file', 'folder');
+					}),
 			);
 		}
 
 		// Edit rule
 		if (selectedBmarks.length < 2) {
-			const rule = clickedBmark.category === 'file' || clickedBmark.category === 'folder'
-				? this.plugin.ruleManager?.checkRuling(clickedBmark.category, clickedBmark.id)
-				: null;
+			const rule =
+				clickedBmark.category === 'file' ||
+				clickedBmark.category === 'folder'
+					? this.plugin.ruleManager?.checkRuling(
+							clickedBmark.category,
+							clickedBmark.id,
+						)
+					: null;
 			if (rule) {
-				this.plugin.menuManager?.addItem(item => { item
-					.setTitle(STRINGS.menu.editRule)
-					.setIcon('lucide-image-play')
-					.setSection('icon')
-					.onClick(() => RuleEditor.open(this.plugin, 'file', rule, newRule => {
-						const isRulingChanged = newRule
-							? this.plugin.ruleManager?.saveRule('file', newRule)
-							: this.plugin.ruleManager?.deleteRule('file', rule.id);
-						if (isRulingChanged) {
-							this.plugin.refreshManagers('file');
-						}
-					}));
+				this.plugin.menuManager?.addItem((item) => {
+					item.setTitle(STRINGS.menu.editRule)
+						.setIcon('lucide-image-play')
+						.setSection('icon')
+						.onClick(() =>
+							RuleEditor.open(
+								this.plugin,
+								'file',
+								rule,
+								(newRule) => {
+									const isRulingChanged = newRule
+										? this.plugin.ruleManager?.saveRule(
+												'file',
+												newRule,
+											)
+										: this.plugin.ruleManager?.deleteRule(
+												'file',
+												rule.id,
+											);
+									if (isRulingChanged) {
+										this.plugin.refreshManagers('file');
+									}
+								},
+							),
+						);
 				});
 			}
 		}
