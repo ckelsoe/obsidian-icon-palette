@@ -1,4 +1,9 @@
-import { AbstractInputSuggest, SearchMatches, TextComponent, prepareFuzzySearch } from 'obsidian';
+import {
+	AbstractInputSuggest,
+	SearchMatches,
+	TextComponent,
+	prepareFuzzySearch,
+} from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { Category } from 'src/types.js';
 
@@ -17,7 +22,11 @@ export default class RuleNameSuggest extends AbstractInputSuggest<RuleNameSugges
 	private readonly page: Category;
 	private readonly inputComponent: TextComponent;
 
-	constructor(plugin: IconPalettePlugin, page: Category, inputComponent: TextComponent) {
+	constructor(
+		plugin: IconPalettePlugin,
+		page: Category,
+		inputComponent: TextComponent,
+	) {
 		super(plugin.app, inputComponent.inputEl);
 		this.plugin = plugin;
 		this.page = page;
@@ -27,23 +36,26 @@ export default class RuleNameSuggest extends AbstractInputSuggest<RuleNameSugges
 	/**
 	 * @override
 	 */
-	protected getSuggestions(query: string): RuleNameSuggestion[] | Promise<RuleNameSuggestion[]> {
+	protected getSuggestions(
+		query: string,
+	): RuleNameSuggestion[] | Promise<RuleNameSuggestion[]> {
 		const currentName = this.inputComponent.getValue();
 		const suggestions: RuleNameSuggestion[] = [];
 		const fuzzySearch = prepareFuzzySearch(query);
 		const rules = this.plugin.ruleManager!.getRules(this.page);
-		const names = new Set(rules.map(rule => rule.name));
+		const names = new Set(rules.map((rule) => rule.name));
 
 		for (const name of names) {
 			// Skip suggestions that already match the current name
 			if (name === currentName) continue;
 			const result = fuzzySearch(name);
-			if (result) suggestions.push({
-				type: 'rule',
-				matches: result.matches,
-				score: result.score,
-				text: name,
-			});
+			if (result)
+				suggestions.push({
+					type: 'rule',
+					matches: result.matches,
+					score: result.score,
+					text: name,
+				});
 		}
 
 		// Sort by relevance, or else alphabetically

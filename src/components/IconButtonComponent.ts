@@ -31,7 +31,10 @@ export default class IconButtonComponent extends ExtraButtonComponent {
 		} else if (EMOJIS.has(iconId)) {
 			this.iconEl = null;
 			this.extraSettingsEl.empty();
-			this.emojiEl = this.extraSettingsEl.createDiv({ cls: 'icon-palette-emoji', text: iconId });
+			this.emojiEl = this.extraSettingsEl.createDiv({
+				cls: 'icon-palette-emoji',
+				text: iconId,
+			});
 		}
 		if (this.color) this.setColor(this.color);
 		return this;

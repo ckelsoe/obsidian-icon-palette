@@ -2,18 +2,31 @@ import { describe, it, expect } from '@jest/globals';
 import FavoritesStore from '../src/FavoritesStore.js';
 import type { FavoritesState, IconColorCombo } from '../src/types.js';
 
-const combo = (icon: string, color: string | null = null): IconColorCombo => ({ icon, color });
-const state = (pinned: IconColorCombo[] = [], recent: IconColorCombo[] = []): FavoritesState => ({ pinned, recent });
-const keys = (list: IconColorCombo[]): string[] => list.map(c => `${c.icon}:${c.color ?? ''}`);
+const combo = (icon: string, color: string | null = null): IconColorCombo => ({
+	icon,
+	color,
+});
+const state = (
+	pinned: IconColorCombo[] = [],
+	recent: IconColorCombo[] = [],
+): FavoritesState => ({ pinned, recent });
+const keys = (list: IconColorCombo[]): string[] =>
+	list.map((c) => `${c.icon}:${c.color ?? ''}`);
 
 describe('FavoritesStore.comboKey', () => {
 	it('treats null color and empty color as the same key', () => {
-		expect(FavoritesStore.comboKey(combo('star', null))).toBe(FavoritesStore.comboKey(combo('star', '')));
+		expect(FavoritesStore.comboKey(combo('star', null))).toBe(
+			FavoritesStore.comboKey(combo('star', '')),
+		);
 	});
 
 	it('distinguishes two colors of the same icon, and two icons', () => {
-		expect(FavoritesStore.comboKey(combo('star', 'red'))).not.toBe(FavoritesStore.comboKey(combo('star', 'blue')));
-		expect(FavoritesStore.comboKey(combo('star', 'red'))).not.toBe(FavoritesStore.comboKey(combo('heart', 'red')));
+		expect(FavoritesStore.comboKey(combo('star', 'red'))).not.toBe(
+			FavoritesStore.comboKey(combo('star', 'blue')),
+		);
+		expect(FavoritesStore.comboKey(combo('star', 'red'))).not.toBe(
+			FavoritesStore.comboKey(combo('heart', 'red')),
+		);
 	});
 });
 
@@ -45,13 +58,21 @@ describe('FavoritesStore.recordRecent', () => {
 	it('does not throw, trims to empty, and reports the change for a non-positive cap', () => {
 		const zero = state([], [combo('a')]);
 		let zeroChanged = false;
-		expect(() => { zeroChanged = FavoritesStore.recordRecent(zero, combo('b'), 0); }).not.toThrow();
+		expect(() => {
+			zeroChanged = FavoritesStore.recordRecent(zero, combo('b'), 0);
+		}).not.toThrow();
 		expect(zeroChanged).toBe(true);
 		expect(zero.recent).toEqual([]);
 
 		const negative = state([], [combo('a')]);
 		let negativeChanged = false;
-		expect(() => { negativeChanged = FavoritesStore.recordRecent(negative, combo('b'), -5); }).not.toThrow();
+		expect(() => {
+			negativeChanged = FavoritesStore.recordRecent(
+				negative,
+				combo('b'),
+				-5,
+			);
+		}).not.toThrow();
 		expect(negativeChanged).toBe(true);
 		expect(negative.recent).toEqual([]);
 	});
@@ -64,7 +85,9 @@ describe('FavoritesStore.recordRecent', () => {
 
 	it('distinguishes color variants of the same icon', () => {
 		const s = state([], [combo('star', 'red')]);
-		expect(FavoritesStore.recordRecent(s, combo('star', 'blue'), 20)).toBe(true);
+		expect(FavoritesStore.recordRecent(s, combo('star', 'blue'), 20)).toBe(
+			true,
+		);
 		expect(keys(s.recent)).toEqual(['star:blue', 'star:red']);
 	});
 });
@@ -143,7 +166,9 @@ describe('FavoritesStore.menuCombos', () => {
 	it('does not throw and yields empty lists for a non-positive cap', () => {
 		const s = state([combo('a')], [combo('b')]);
 		let result: ReturnType<typeof FavoritesStore.menuCombos> | undefined;
-		expect(() => { result = FavoritesStore.menuCombos(s, 0); }).not.toThrow();
+		expect(() => {
+			result = FavoritesStore.menuCombos(s, 0);
+		}).not.toThrow();
 		expect(result?.pinned).toEqual([]);
 		expect(result?.recent).toEqual([]);
 	});

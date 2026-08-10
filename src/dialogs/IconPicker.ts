@@ -1,9 +1,32 @@
-import { ButtonComponent, ColorComponent, DropdownComponent, ExtraButtonComponent, Menu, Modal, Platform, Setting, TextComponent, displayTooltip, prepareFuzzySearch, setTooltip } from 'obsidian';
+import {
+	ButtonComponent,
+	ColorComponent,
+	DropdownComponent,
+	ExtraButtonComponent,
+	Menu,
+	Modal,
+	Platform,
+	Setting,
+	TextComponent,
+	displayTooltip,
+	prepareFuzzySearch,
+	setTooltip,
+} from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
-import type { Category, Item, Icon, IconLibraryFilter, IconColorCombo } from 'src/types.js';
+import type {
+	Category,
+	Item,
+	Icon,
+	IconLibraryFilter,
+	IconColorCombo,
+} from 'src/types.js';
 import { ICONS, EMOJIS, STRINGS } from 'src/registry.js';
 import type { MenuItemWithIconElement } from 'src/obsidian-internals.js';
-import { isLibraryIcon, populateLibraryIcons, registerIconLibraries } from 'src/IconLibraries.js';
+import {
+	isLibraryIcon,
+	populateLibraryIcons,
+	registerIconLibraries,
+} from 'src/IconLibraries.js';
 import ColorUtils, { COLORS } from 'src/ColorUtils.js';
 import { RuleItem } from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
@@ -12,7 +35,12 @@ import FavoritesStore from 'src/FavoritesStore.js';
 import CustomColorsStore from 'src/CustomColorsStore.js';
 
 const COLOR_KEYS = [...COLORS.keys()];
-const ICON_LIBRARY_FILTERS: IconLibraryFilter[] = ['lucide', 'devicon', 'simple', 'emoji'];
+const ICON_LIBRARY_FILTERS: IconLibraryFilter[] = [
+	'lucide',
+	'devicon',
+	'simple',
+	'emoji',
+];
 
 function isHTMLElement(value: EventTarget | Node | null): value is HTMLElement {
 	return value instanceof Node && value.instanceOf(HTMLElement);
@@ -43,14 +71,23 @@ class IconPickerManager extends IconManager {
 	/**
 	 * @override
 	 */
-	refreshIcon(item: Item | Icon, iconEl: HTMLElement, onClick?: ((event: MouseEvent) => void)): void {
+	refreshIcon(
+		item: Item | Icon,
+		iconEl: HTMLElement,
+		onClick?: (event: MouseEvent) => void,
+	): void {
 		super.refreshIcon(item, iconEl, onClick);
 	}
 
 	/**
 	 * @override
 	 */
-	setEventListener<K extends keyof HTMLElementEventMap>(element: HTMLElement, type: K, listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void, options?: boolean | AddEventListenerOptions): void {
+	setEventListener<K extends keyof HTMLElementEventMap>(
+		element: HTMLElement,
+		type: K,
+		listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions,
+	): void {
 		super.setEventListener(element, type, listener, options);
 	}
 
@@ -64,7 +101,11 @@ class IconPickerManager extends IconManager {
 	/**
 	 * @override
 	 */
-	setMutationObserver(element: HTMLElement | null, options: MutationObserverInit, callback: (mutation: MutationRecord) => void): void {
+	setMutationObserver(
+		element: HTMLElement | null,
+		options: MutationObserverInit,
+		callback: (mutation: MutationRecord) => void,
+	): void {
 		super.setMutationObserver(element, options, callback);
 	}
 
@@ -120,27 +161,45 @@ export default class IconPicker extends Modal {
 		this.items = items;
 		const firstItem = this.items.first();
 		if (firstItem) {
-			this.icon = this.items.every(item => item.icon === firstItem.icon) ? firstItem.icon : undefined;
-			this.color = this.items.every(item => item.color === firstItem.color) ? firstItem.color : undefined;
+			this.icon = this.items.every((item) => item.icon === firstItem.icon)
+				? firstItem.icon
+				: undefined;
+			this.color = this.items.every(
+				(item) => item.color === firstItem.color,
+			)
+				? firstItem.color
+				: undefined;
 		}
 		this.callback = callback;
 		this.multiCallback = multiCallback;
 		const iconLibrary = this.plugin.settings.dialogState.iconLibrary;
-		this.selectedIconLibrary = ICON_LIBRARY_FILTERS.includes(iconLibrary) ? iconLibrary : 'lucide';
-		this.initialDialogStateJson = JSON.stringify(this.plugin.settings.dialogState);
+		this.selectedIconLibrary = ICON_LIBRARY_FILTERS.includes(iconLibrary)
+			? iconLibrary
+			: 'lucide';
+		this.initialDialogStateJson = JSON.stringify(
+			this.plugin.settings.dialogState,
+		);
 
 		// Allow hotkeys in dialog
 		this.plugin.registerDialogHotkeys(this.scope);
 
 		// Navigation hotkeys
-		this.scope.register(null, 'ArrowUp', event => this.nudgeFocus(event));
-		this.scope.register(null, 'ArrowDown', event => this.nudgeFocus(event));
-		this.scope.register(null, 'ArrowLeft', event => this.nudgeFocus(event));
-		this.scope.register(null, 'ArrowRight', event => this.nudgeFocus(event));
-		this.scope.register(null, 'Enter', event => this.confirmFocus(event));
-		this.scope.register(null, ' ', event => this.confirmFocus(event));
-		this.scope.register(null, 'Delete', event => this.deleteFocus(event));
-		this.scope.register(null, 'Backspace', event => this.deleteFocus(event));
+		this.scope.register(null, 'ArrowUp', (event) => this.nudgeFocus(event));
+		this.scope.register(null, 'ArrowDown', (event) =>
+			this.nudgeFocus(event),
+		);
+		this.scope.register(null, 'ArrowLeft', (event) =>
+			this.nudgeFocus(event),
+		);
+		this.scope.register(null, 'ArrowRight', (event) =>
+			this.nudgeFocus(event),
+		);
+		this.scope.register(null, 'Enter', (event) => this.confirmFocus(event));
+		this.scope.register(null, ' ', (event) => this.confirmFocus(event));
+		this.scope.register(null, 'Delete', (event) => this.deleteFocus(event));
+		this.scope.register(null, 'Backspace', (event) =>
+			this.deleteFocus(event),
+		);
 	}
 
 	/**
@@ -151,21 +210,37 @@ export default class IconPicker extends Modal {
 		let focusEl: Element | null = null;
 
 		switch (event.key) {
-			case 'ArrowUp': this.previousColor(); return;
-			case 'ArrowDown': this.nextColor(); return;
+			case 'ArrowUp':
+				this.previousColor();
+				return;
+			case 'ArrowDown':
+				this.nextColor();
+				return;
 			case 'ArrowLeft': {
 				// Search results
-				if (this.searchResultsSetting.settingEl.contains(event.target)) {
-					if (event.target !== this.searchResultsSetting.settingEl && event.target.previousElementSibling) {
+				if (
+					this.searchResultsSetting.settingEl.contains(event.target)
+				) {
+					if (
+						event.target !== this.searchResultsSetting.settingEl &&
+						event.target.previousElementSibling
+					) {
 						focusEl = event.target.previousElementSibling;
 					} else if (!event.repeat) {
-						focusEl = this.searchResultsSetting.controlEl.lastElementChild;
+						focusEl =
+							this.searchResultsSetting.controlEl
+								.lastElementChild;
 					}
-				// Favorite grids
+					// Favorite grids
 				} else {
-					const grid = event.target.closest('.icon-palette-favorite-grid');
+					const grid = event.target.closest(
+						'.icon-palette-favorite-grid',
+					);
 					if (grid) {
-						if (event.target !== grid && event.target.previousElementSibling) {
+						if (
+							event.target !== grid &&
+							event.target.previousElementSibling
+						) {
 							focusEl = event.target.previousElementSibling;
 						} else if (!event.repeat) {
 							focusEl = grid.lastElementChild;
@@ -176,17 +251,29 @@ export default class IconPicker extends Modal {
 			}
 			case 'ArrowRight': {
 				// Search results
-				if (this.searchResultsSetting.settingEl.contains(event.target)) {
-					if (event.target !== this.searchResultsSetting.settingEl && event.target.nextElementSibling) {
+				if (
+					this.searchResultsSetting.settingEl.contains(event.target)
+				) {
+					if (
+						event.target !== this.searchResultsSetting.settingEl &&
+						event.target.nextElementSibling
+					) {
 						focusEl = event.target.nextElementSibling;
 					} else if (!event.repeat) {
-						focusEl = this.searchResultsSetting.controlEl.firstElementChild;
+						focusEl =
+							this.searchResultsSetting.controlEl
+								.firstElementChild;
 					}
-				// Favorite grids
+					// Favorite grids
 				} else {
-					const grid = event.target.closest('.icon-palette-favorite-grid');
+					const grid = event.target.closest(
+						'.icon-palette-favorite-grid',
+					);
 					if (grid) {
-						if (event.target !== grid && event.target.nextElementSibling) {
+						if (
+							event.target !== grid &&
+							event.target.nextElementSibling
+						) {
 							focusEl = event.target.nextElementSibling;
 						} else if (!event.repeat) {
 							focusEl = grid.firstElementChild;
@@ -222,7 +309,10 @@ export default class IconPicker extends Modal {
 			this.openColorMenu(x, y);
 		}
 		// Search field
-		else if (event.target === this.searchField.inputEl && event.key === 'Enter') {
+		else if (
+			event.target === this.searchField.inputEl &&
+			event.key === 'Enter'
+		) {
 			const [firstResultIcon] = this.searchResults.first() ?? [];
 			if (firstResultIcon) {
 				event.preventDefault();
@@ -238,8 +328,9 @@ export default class IconPicker extends Modal {
 		if (!isHTMLElement(event.target)) return;
 
 		// Anywhere except the search field
-		if (event.target !== this.searchField.inputEl ) {
-			if (event.target === this.colorResetButton.extraSettingsEl) this.colorPickerEl.focus();
+		if (event.target !== this.searchField.inputEl) {
+			if (event.target === this.colorResetButton.extraSettingsEl)
+				this.colorPickerEl.focus();
 			this.resetColor();
 		}
 	}
@@ -247,14 +338,22 @@ export default class IconPicker extends Modal {
 	/**
 	 * Open a dialog to change a single icon.
 	 */
-	static openSingle(plugin: IconPalettePlugin, item: Item, callback: IconPickerCallback): void {
+	static openSingle(
+		plugin: IconPalettePlugin,
+		item: Item,
+		callback: IconPickerCallback,
+	): void {
 		new IconPicker(plugin, [item], callback, null).open();
 	}
 
 	/**
 	 * Open a dialog to change multiple icons at once.
 	 */
-	static openMulti(plugin: IconPalettePlugin, items: Item[], multiCallback: MultiIconPickerCallback): void {
+	static openMulti(
+		plugin: IconPalettePlugin,
+		items: Item[],
+		multiCallback: MultiIconPickerCallback,
+	): void {
 		new IconPicker(plugin, items, null, multiCallback).open();
 	}
 
@@ -268,166 +367,287 @@ export default class IconPicker extends Modal {
 
 		this.containerEl.addClass('mod-confirmation');
 		this.modalEl.addClass('icon-palette-icon-picker');
-		this.setTitle(this.items.length === 1
-			? STRINGS.iconPicker.changeIcon
-			: STRINGS.iconPicker.changeIcons.replace('{#}', this.items.length.toString())
+		this.setTitle(
+			this.items.length === 1
+				? STRINGS.iconPicker.changeIcon
+				: STRINGS.iconPicker.changeIcons.replace(
+						'{#}',
+						this.items.length.toString(),
+					),
 		);
 		this.updateOverruleReminder();
 
 		// Item name
-		const showItemName = this.plugin.settings.showItemName === 'on'
-			|| Platform.isDesktop && this.plugin.settings.showItemName === 'desktop'
-			|| Platform.isMobile && this.plugin.settings.showItemName === 'mobile';
+		const showItemName =
+			this.plugin.settings.showItemName === 'on' ||
+			(Platform.isDesktop &&
+				this.plugin.settings.showItemName === 'desktop') ||
+			(Platform.isMobile &&
+				this.plugin.settings.showItemName === 'mobile');
 		if (showItemName) {
 			const setting = new Setting(this.contentEl)
-				.addText(itemNameField => itemNameField.setValue(this.items.map(item => item.name).join(', ')))
+				.addText((itemNameField) =>
+					itemNameField.setValue(
+						this.items.map((item) => item.name).join(', '),
+					),
+				)
 				.setDisabled(true);
 			const firstItem = this.items.first();
-			const category = firstItem && this.items.every(item => item.category === firstItem.category)
-				? firstItem.category
-				: null;
-			if (this.items.length === 1) switch (category) {
-				default: setting.setName(STRINGS.categories.item); break;
-				case 'app': setting.setName(STRINGS.categories.appItem); break;
-				case 'tab': setting.setName(STRINGS.categories.tab); break;
-				case 'file': setting.setName(STRINGS.categories.file); break;
-				case 'folder': setting.setName(STRINGS.categories.folder); break;
-				case 'group': setting.setName(STRINGS.categories.group); break;
-				case 'search': setting.setName(STRINGS.categories.search); break;
-				case 'graph': setting.setName(STRINGS.categories.graph); break;
-				case 'url': setting.setName(STRINGS.categories.url); break;
-				case 'tag': setting.setName(STRINGS.categories.tag); break;
-				case 'property': setting.setName(STRINGS.categories.property); break;
-				case 'ribbon': setting.setName(STRINGS.categories.ribbonItem); break;
-				case 'rule': setting.setName(STRINGS.categories.rule); break;
-			} else switch (category) {
-				default: setting.setName(STRINGS.categories.items); break;
-				case 'app': setting.setName(STRINGS.categories.appItems); break;
-				case 'tab': setting.setName(STRINGS.categories.tabs); break;
-				case 'file': setting.setName(STRINGS.categories.files); break;
-				case 'folder': setting.setName(STRINGS.categories.folders); break;
-				case 'group': setting.setName(STRINGS.categories.groups); break;
-				case 'search': setting.setName(STRINGS.categories.searches); break;
-				case 'graph': setting.setName(STRINGS.categories.graphs); break;
-				case 'url': setting.setName(STRINGS.categories.urls); break;
-				case 'tag': setting.setName(STRINGS.categories.tags); break;
-				case 'property': setting.setName(STRINGS.categories.properties); break;
-				case 'ribbon': setting.setName(STRINGS.categories.ribbonItems); break;
-				case 'rule': setting.setName(STRINGS.categories.rules); break;
-			}
+			const category =
+				firstItem &&
+				this.items.every((item) => item.category === firstItem.category)
+					? firstItem.category
+					: null;
+			if (this.items.length === 1)
+				switch (category) {
+					default:
+						setting.setName(STRINGS.categories.item);
+						break;
+					case 'app':
+						setting.setName(STRINGS.categories.appItem);
+						break;
+					case 'tab':
+						setting.setName(STRINGS.categories.tab);
+						break;
+					case 'file':
+						setting.setName(STRINGS.categories.file);
+						break;
+					case 'folder':
+						setting.setName(STRINGS.categories.folder);
+						break;
+					case 'group':
+						setting.setName(STRINGS.categories.group);
+						break;
+					case 'search':
+						setting.setName(STRINGS.categories.search);
+						break;
+					case 'graph':
+						setting.setName(STRINGS.categories.graph);
+						break;
+					case 'url':
+						setting.setName(STRINGS.categories.url);
+						break;
+					case 'tag':
+						setting.setName(STRINGS.categories.tag);
+						break;
+					case 'property':
+						setting.setName(STRINGS.categories.property);
+						break;
+					case 'ribbon':
+						setting.setName(STRINGS.categories.ribbonItem);
+						break;
+					case 'rule':
+						setting.setName(STRINGS.categories.rule);
+						break;
+				}
+			else
+				switch (category) {
+					default:
+						setting.setName(STRINGS.categories.items);
+						break;
+					case 'app':
+						setting.setName(STRINGS.categories.appItems);
+						break;
+					case 'tab':
+						setting.setName(STRINGS.categories.tabs);
+						break;
+					case 'file':
+						setting.setName(STRINGS.categories.files);
+						break;
+					case 'folder':
+						setting.setName(STRINGS.categories.folders);
+						break;
+					case 'group':
+						setting.setName(STRINGS.categories.groups);
+						break;
+					case 'search':
+						setting.setName(STRINGS.categories.searches);
+						break;
+					case 'graph':
+						setting.setName(STRINGS.categories.graphs);
+						break;
+					case 'url':
+						setting.setName(STRINGS.categories.urls);
+						break;
+					case 'tag':
+						setting.setName(STRINGS.categories.tags);
+						break;
+					case 'property':
+						setting.setName(STRINGS.categories.properties);
+						break;
+					case 'ribbon':
+						setting.setName(STRINGS.categories.ribbonItems);
+						break;
+					case 'rule':
+						setting.setName(STRINGS.categories.rules);
+						break;
+				}
 		}
 
 		// Favorites (pinned + recent combos), above the search for fast reuse
-		this.favoritesEl = this.contentEl.createDiv({ cls: 'icon-palette-favorites' });
+		this.favoritesEl = this.contentEl.createDiv({
+			cls: 'icon-palette-favorites',
+		});
 		this.updateFavorites();
 
 		// Search
 		this.searchSetting = new Setting(this.contentEl)
-			.addExtraButton(colorResetButton => { colorResetButton
-				.setIcon('lucide-rotate-ccw')
-				.setTooltip(STRINGS.iconPicker.resetColor, { delay: 300 })
-				.onClick(() => this.resetColor());
-				colorResetButton.extraSettingsEl.addClass('icon-palette-reset-color');
-				colorResetButton.extraSettingsEl.toggleClass('icon-palette-invisible', this.color === null);
-				colorResetButton.extraSettingsEl.tabIndex = this.color === null ? -1 : 0;
-				this.iconManager.setEventListener(colorResetButton.extraSettingsEl, 'pointerdown', event => {
-					event.preventDefault();
-				});
+			.addExtraButton((colorResetButton) => {
+				colorResetButton
+					.setIcon('lucide-rotate-ccw')
+					.setTooltip(STRINGS.iconPicker.resetColor, { delay: 300 })
+					.onClick(() => this.resetColor());
+				colorResetButton.extraSettingsEl.addClass(
+					'icon-palette-reset-color',
+				);
+				colorResetButton.extraSettingsEl.toggleClass(
+					'icon-palette-invisible',
+					this.color === null,
+				);
+				colorResetButton.extraSettingsEl.tabIndex =
+					this.color === null ? -1 : 0;
+				this.iconManager.setEventListener(
+					colorResetButton.extraSettingsEl,
+					'pointerdown',
+					(event) => {
+						event.preventDefault();
+					},
+				);
 				this.colorResetButton = colorResetButton;
 			})
-			.addColorPicker(colorPicker => { colorPicker
-				.setValueRgb(ColorUtils.toRgbObject(this.color))
-				.onChange(value => {
-					if (this.colorPickerPaused) return;
-					this.color = value;
-					this.colorResetButton.extraSettingsEl.removeClass('icon-palette-invisible');
-					this.colorResetButton.extraSettingsEl.tabIndex = 0;
-					this.updateColorTooltip();
-					this.updateSearchResults();
-				});
+			.addColorPicker((colorPicker) => {
+				colorPicker
+					.setValueRgb(ColorUtils.toRgbObject(this.color))
+					.onChange((value) => {
+						if (this.colorPickerPaused) return;
+						this.color = value;
+						this.colorResetButton.extraSettingsEl.removeClass(
+							'icon-palette-invisible',
+						);
+						this.colorResetButton.extraSettingsEl.tabIndex = 0;
+						this.updateColorTooltip();
+						this.updateSearchResults();
+					});
 				this.colorPicker = colorPicker;
 			})
-			.addSearch(searchField => { searchField
-				.setPlaceholder(STRINGS.iconPicker.searchIcons)
-				.onChange(() => this.updateSearchResults());
+			.addSearch((searchField) => {
+				searchField
+					.setPlaceholder(STRINGS.iconPicker.searchIcons)
+					.onChange(() => this.updateSearchResults());
 				searchField.inputEl.enterKeyHint = 'go';
 				this.searchField = searchField;
 			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('lucide', STRINGS.iconPicker.libraries.lucide)
-				.addOption('devicon', STRINGS.iconPicker.libraries.devicon)
-				.addOption('simple', STRINGS.iconPicker.libraries.simple)
-				.addOption('emoji', STRINGS.iconPicker.libraries.emoji)
-				.setValue(this.selectedIconLibrary)
-				.onChange(value => {
-					this.selectedIconLibrary = value as IconLibraryFilter;
-					this.updateLibrarySearchMode();
-				});
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption('lucide', STRINGS.iconPicker.libraries.lucide)
+					.addOption('devicon', STRINGS.iconPicker.libraries.devicon)
+					.addOption('simple', STRINGS.iconPicker.libraries.simple)
+					.addOption('emoji', STRINGS.iconPicker.libraries.emoji)
+					.setValue(this.selectedIconLibrary)
+					.onChange((value) => {
+						this.selectedIconLibrary = value as IconLibraryFilter;
+						this.updateLibrarySearchMode();
+					});
 				this.libraryDropdown = dropdown;
 			});
-		if (!Platform.isPhone) this.searchSetting.setName(STRINGS.iconPicker.search);
+		if (!Platform.isPhone)
+			this.searchSetting.setName(STRINGS.iconPicker.search);
 
 		// Color picker
 		let openRgbPicker = false;
-		this.colorPickerEl = this.searchSetting.controlEl.find('input[type="color"]');
+		this.colorPickerEl = this.searchSetting.controlEl.find(
+			'input[type="color"]',
+		);
 		// Reset tooltip delay when cursor starts hovering
-		this.iconManager.setEventListener(this.colorPickerEl, 'pointerenter', () => {
-			this.updateColorTooltip();
-			this.colorPickerHovered = true;
-		});
-		this.iconManager.setEventListener(this.colorPickerEl, 'pointerleave', () => {
-			this.colorPickerHovered = false;
-			this.updateColorTooltip();
-		});
+		this.iconManager.setEventListener(
+			this.colorPickerEl,
+			'pointerenter',
+			() => {
+				this.updateColorTooltip();
+				this.colorPickerHovered = true;
+			},
+		);
+		this.iconManager.setEventListener(
+			this.colorPickerEl,
+			'pointerleave',
+			() => {
+				this.colorPickerHovered = false;
+				this.updateColorTooltip();
+			},
+		);
 		// Primary color picker
-		this.iconManager.setEventListener(this.colorPickerEl, 'click', event => {
-			if (openRgbPicker === true) {
-				openRgbPicker = false;
-			} else if (this.plugin.settings.colorPicker1 === 'list') {
-				this.openColorMenu(event.x, event.y);
-				event.preventDefault();
-			}
-		});
+		this.iconManager.setEventListener(
+			this.colorPickerEl,
+			'click',
+			(event) => {
+				if (openRgbPicker === true) {
+					openRgbPicker = false;
+				} else if (this.plugin.settings.colorPicker1 === 'list') {
+					this.openColorMenu(event.x, event.y);
+					event.preventDefault();
+				}
+			},
+		);
 		// Secondary color picker
-		this.iconManager.setEventListener(this.colorPickerEl, 'contextmenu', event => {
-			navigator.vibrate?.(100); // Not supported on iOS
-			if (this.plugin.settings.colorPicker2 === 'rgb') {
-				openRgbPicker = true;
-				this.colorPickerEl.click();
-			} else if (this.plugin.settings.colorPicker2 === 'list') {
-				this.openColorMenu(event.x, event.y);
-				event.preventDefault();
-			}
-		});
-		this.iconManager.setEventListener(this.colorPickerEl, 'wheel', event => {
-			if (event.deltaY + event.deltaX < 0) {
-				this.previousColor();
-			} else {
-				this.nextColor();
-			}
-		}, { passive: true });
+		this.iconManager.setEventListener(
+			this.colorPickerEl,
+			'contextmenu',
+			(event) => {
+				navigator.vibrate?.(100); // Not supported on iOS
+				if (this.plugin.settings.colorPicker2 === 'rgb') {
+					openRgbPicker = true;
+					this.colorPickerEl.click();
+				} else if (this.plugin.settings.colorPicker2 === 'list') {
+					this.openColorMenu(event.x, event.y);
+					event.preventDefault();
+				}
+			},
+		);
+		this.iconManager.setEventListener(
+			this.colorPickerEl,
+			'wheel',
+			(event) => {
+				if (event.deltaY + event.deltaX < 0) {
+					this.previousColor();
+				} else {
+					this.nextColor();
+				}
+			},
+			{ passive: true },
+		);
 		this.updateColorPicker();
 
 		// Search results
 		this.searchResultsSetting = new Setting(this.contentEl);
-		this.searchResultsSetting.settingEl.addClass('icon-palette-search-results');
+		this.searchResultsSetting.settingEl.addClass(
+			'icon-palette-search-results',
+		);
 		this.searchResultsSetting.settingEl.tabIndex = 0;
 
 		// Match styling of bookmark edit dialog
-		const buttonContainerEl = this.modalEl.createDiv({ cls: 'modal-button-container' });
-		const buttonRowEl = Platform.isMobile ? buttonContainerEl.createDiv({ cls: 'icon-palette-button-row' }) : null;
+		const buttonContainerEl = this.modalEl.createDiv({
+			cls: 'modal-button-container',
+		});
+		const buttonRowEl = Platform.isMobile
+			? buttonContainerEl.createDiv({ cls: 'icon-palette-button-row' })
+			: null;
 
 		// [Remove]
 		if (this.icon !== null || this.color !== null) {
 			new ButtonComponent(buttonRowEl ?? buttonContainerEl)
-				.setButtonText(this.items.length === 1
-					? STRINGS.menu.removeIcon
-					: STRINGS.menu.removeIcons.replace('{#}', this.items.length.toString())
+				.setButtonText(
+					this.items.length === 1
+						? STRINGS.menu.removeIcon
+						: STRINGS.menu.removeIcons.replace(
+								'{#}',
+								this.items.length.toString(),
+							),
 				)
 				.onClick(() => this.closeAndSave(null, null))
-				.buttonEl.addClasses(Platform.isPhone
-					? ['mod-warning']
-					: ['mod-secondary', 'mod-destructive']
+				.buttonEl.addClasses(
+					Platform.isPhone
+						? ['mod-warning']
+						: ['mod-secondary', 'mod-destructive'],
 				);
 		}
 
@@ -456,18 +676,20 @@ export default class IconPicker extends Modal {
 		new ButtonComponent(Platform.isPhone ? this.modalEl : buttonContainerEl)
 			.setButtonText(STRINGS.iconPicker.cancel)
 			.onClick(() => this.close())
-			.buttonEl.addClasses(Platform.isPhone
-				? ['modal-nav-action', 'mod-secondary']
-				: ['mod-cancel']
+			.buttonEl.addClasses(
+				Platform.isPhone
+					? ['modal-nav-action', 'mod-secondary']
+					: ['mod-cancel'],
 			);
 
 		// [Save]
 		new ButtonComponent(Platform.isPhone ? this.modalEl : buttonContainerEl)
 			.setButtonText(STRINGS.iconPicker.save)
 			.onClick(() => this.closeAndSave(this.icon, this.color))
-			.buttonEl.addClasses(Platform.isPhone
-				? ['modal-nav-action', 'mod-cta']
-				: ['mod-cta']
+			.buttonEl.addClasses(
+				Platform.isPhone
+					? ['modal-nav-action', 'mod-cta']
+					: ['mod-cta'],
 			);
 
 		// Hack to guarantee initial focus
@@ -482,27 +704,59 @@ export default class IconPicker extends Modal {
 	private openColorMenu(x: number, y: number): void {
 		const menu = new Menu();
 		for (const color of COLOR_KEYS) {
-			menu.addItem(menuItem => { menuItem
-				.setTitle(STRINGS.iconPicker.colors[color as keyof typeof STRINGS.iconPicker.colors])
-				.setChecked(color === this.color)
-				.setSection('color')
-				.onClick(() => this.selectMenuColor(this.color === color ? null : color));
-				const iconEl = (menuItem as typeof menuItem & MenuItemWithIconElement).iconEl;
-				if (iconEl) this.iconManager.refreshIcon({ icon: 'lucide-paint-bucket', color }, iconEl);
+			menu.addItem((menuItem) => {
+				menuItem
+					.setTitle(
+						STRINGS.iconPicker.colors[
+							color as keyof typeof STRINGS.iconPicker.colors
+						],
+					)
+					.setChecked(color === this.color)
+					.setSection('color')
+					.onClick(() =>
+						this.selectMenuColor(
+							this.color === color ? null : color,
+						),
+					);
+				const iconEl = (
+					menuItem as typeof menuItem & MenuItemWithIconElement
+				).iconEl;
+				if (iconEl)
+					this.iconManager.refreshIcon(
+						{ icon: 'lucide-paint-bucket', color },
+						iconEl,
+					);
 			});
 		}
 
 		// Saved custom colors, below the theme colors as their own section. A named
 		// color shows its name; an unnamed one still shows its hex.
 		for (const color of this.plugin.settings.customColors) {
-			const label = CustomColorsStore.getName(this.plugin.settings.customColorNames, color) || color;
-			menu.addItem(menuItem => { menuItem
-				.setTitle(label)
-				.setChecked(this.isSameCustomColor(this.color, color))
-				.setSection('custom-color')
-				.onClick(() => this.selectMenuColor(this.isSameCustomColor(this.color, color) ? null : color));
-				const iconEl = (menuItem as typeof menuItem & MenuItemWithIconElement).iconEl;
-				if (iconEl) this.iconManager.refreshIcon({ icon: 'lucide-paint-bucket', color }, iconEl);
+			const label =
+				CustomColorsStore.getName(
+					this.plugin.settings.customColorNames,
+					color,
+				) || color;
+			menu.addItem((menuItem) => {
+				menuItem
+					.setTitle(label)
+					.setChecked(this.isSameCustomColor(this.color, color))
+					.setSection('custom-color')
+					.onClick(() =>
+						this.selectMenuColor(
+							this.isSameCustomColor(this.color, color)
+								? null
+								: color,
+						),
+					);
+				const iconEl = (
+					menuItem as typeof menuItem & MenuItemWithIconElement
+				).iconEl;
+				if (iconEl)
+					this.iconManager.refreshIcon(
+						{ icon: 'lucide-paint-bucket', color },
+						iconEl,
+					);
 			});
 		}
 
@@ -511,22 +765,41 @@ export default class IconPicker extends Modal {
 		// saved; if it is already saved, the same slot removes it instead.
 		const active = this.color;
 		if (active && !COLORS.has(active)) {
-			const saved = CustomColorsStore.has(this.plugin.settings.customColors, active);
-			menu.addItem(menuItem => menuItem
-				.setTitle(saved ? STRINGS.iconPicker.removeColor : STRINGS.iconPicker.saveColor)
-				.setIcon(saved ? 'lucide-trash-2' : 'lucide-plus')
-				.setSection('custom-color')
-				.onClick(() => {
-					const changed = saved
-						? CustomColorsStore.remove(this.plugin.settings.customColors, active)
-						: CustomColorsStore.save(this.plugin.settings.customColors, active, CustomColorsStore.CAP);
-					if (changed) {
-						// Drop the name of any color this removed or evicted past the cap,
-						// so re-saving that hex later does not resurrect its old name.
-						CustomColorsStore.pruneNames(this.plugin.settings.customColors, this.plugin.settings.customColorNames);
-						void this.plugin.saveSettings();
-					}
-				}));
+			const saved = CustomColorsStore.has(
+				this.plugin.settings.customColors,
+				active,
+			);
+			menu.addItem((menuItem) =>
+				menuItem
+					.setTitle(
+						saved
+							? STRINGS.iconPicker.removeColor
+							: STRINGS.iconPicker.saveColor,
+					)
+					.setIcon(saved ? 'lucide-trash-2' : 'lucide-plus')
+					.setSection('custom-color')
+					.onClick(() => {
+						const changed = saved
+							? CustomColorsStore.remove(
+									this.plugin.settings.customColors,
+									active,
+								)
+							: CustomColorsStore.save(
+									this.plugin.settings.customColors,
+									active,
+									CustomColorsStore.CAP,
+								);
+						if (changed) {
+							// Drop the name of any color this removed or evicted past the cap,
+							// so re-saving that hex later does not resurrect its old name.
+							CustomColorsStore.pruneNames(
+								this.plugin.settings.customColors,
+								this.plugin.settings.customColorNames,
+							);
+							void this.plugin.saveSettings();
+						}
+					}),
+			);
 		}
 
 		menu.showAtPosition({ x, y });
@@ -540,8 +813,12 @@ export default class IconPicker extends Modal {
 	 */
 	private selectMenuColor(color: string | null): void {
 		this.color = color;
-		this.colorResetButton.extraSettingsEl.toggleClass('icon-palette-invisible', color === null);
-		this.colorResetButton.extraSettingsEl.tabIndex = color === null ? -1 : 0;
+		this.colorResetButton.extraSettingsEl.toggleClass(
+			'icon-palette-invisible',
+			color === null,
+		);
+		this.colorResetButton.extraSettingsEl.tabIndex =
+			color === null ? -1 : 0;
 		this.updateColorPicker();
 		this.updateSearchResults();
 	}
@@ -551,9 +828,15 @@ export default class IconPicker extends Modal {
 	 * store's case-insensitive identity so a saved swatch reads as checked
 	 * regardless of hex casing.
 	 */
-	private isSameCustomColor(color: string | null | undefined, candidate: string): boolean {
-		return typeof color === 'string'
-			&& CustomColorsStore.normalize(color) === CustomColorsStore.normalize(candidate);
+	private isSameCustomColor(
+		color: string | null | undefined,
+		candidate: string,
+	): boolean {
+		return (
+			typeof color === 'string' &&
+			CustomColorsStore.normalize(color) ===
+				CustomColorsStore.normalize(candidate)
+		);
 	}
 
 	/**
@@ -561,11 +844,17 @@ export default class IconPicker extends Modal {
 	 */
 	private previousColor(): void {
 		let index = COLOR_KEYS.length - 1;
-		if (this.color && COLOR_KEYS.includes(this.color) && this.color !== COLOR_KEYS.first()) {
+		if (
+			this.color &&
+			COLOR_KEYS.includes(this.color) &&
+			this.color !== COLOR_KEYS.first()
+		) {
 			index = COLOR_KEYS.indexOf(this.color) - 1;
 		}
 		this.color = COLOR_KEYS[index];
-		this.colorResetButton.extraSettingsEl.removeClass('icon-palette-invisible');
+		this.colorResetButton.extraSettingsEl.removeClass(
+			'icon-palette-invisible',
+		);
 		this.colorResetButton.extraSettingsEl.tabIndex = 0;
 		this.updateColorPicker();
 		this.updateSearchResults();
@@ -576,11 +865,17 @@ export default class IconPicker extends Modal {
 	 */
 	private nextColor(): void {
 		let index = 0;
-		if (this.color && COLOR_KEYS.includes(this.color) && this.color !== COLOR_KEYS.last()) {
+		if (
+			this.color &&
+			COLOR_KEYS.includes(this.color) &&
+			this.color !== COLOR_KEYS.last()
+		) {
 			index = COLOR_KEYS.indexOf(this.color) + 1;
 		}
 		this.color = COLOR_KEYS[index];
-		this.colorResetButton.extraSettingsEl.removeClass('icon-palette-invisible');
+		this.colorResetButton.extraSettingsEl.removeClass(
+			'icon-palette-invisible',
+		);
 		this.colorResetButton.extraSettingsEl.tabIndex = 0;
 		this.updateColorPicker();
 		this.updateSearchResults();
@@ -591,7 +886,9 @@ export default class IconPicker extends Modal {
 	 */
 	private resetColor(): void {
 		this.color = null;
-		this.colorResetButton.extraSettingsEl.addClass('icon-palette-invisible');
+		this.colorResetButton.extraSettingsEl.addClass(
+			'icon-palette-invisible',
+		);
 		this.colorResetButton.extraSettingsEl.tabIndex = -1;
 		this.updateColorPicker();
 		this.updateSearchResults();
@@ -602,15 +899,25 @@ export default class IconPicker extends Modal {
 		this.plugin.settings.dialogState.iconMode = !isEmojiLibrary;
 		this.plugin.settings.dialogState.emojiMode = isEmojiLibrary;
 		this.plugin.settings.dialogState.iconLibrary = this.selectedIconLibrary;
-		this.setTitle(this.items.length === 1
-			? (isEmojiLibrary ? STRINGS.iconPicker.changeEmoji : STRINGS.iconPicker.changeIcon)
-			: (isEmojiLibrary
-				? STRINGS.iconPicker.changeEmojis.replace('{#}', this.items.length.toString())
-				: STRINGS.iconPicker.changeIcons.replace('{#}', this.items.length.toString()))
+		this.setTitle(
+			this.items.length === 1
+				? isEmojiLibrary
+					? STRINGS.iconPicker.changeEmoji
+					: STRINGS.iconPicker.changeIcon
+				: isEmojiLibrary
+					? STRINGS.iconPicker.changeEmojis.replace(
+							'{#}',
+							this.items.length.toString(),
+						)
+					: STRINGS.iconPicker.changeIcons.replace(
+							'{#}',
+							this.items.length.toString(),
+						),
 		);
-		this.searchField.setPlaceholder(isEmojiLibrary
-			? STRINGS.iconPicker.searchEmojis
-			: STRINGS.iconPicker.searchIcons
+		this.searchField.setPlaceholder(
+			isEmojiLibrary
+				? STRINGS.iconPicker.searchEmojis
+				: STRINGS.iconPicker.searchIcons,
 		);
 		this.updateSearchResults();
 	}
@@ -633,7 +940,10 @@ export default class IconPicker extends Modal {
 		let tooltip = STRINGS.iconPicker.changeColor;
 		if (this.color) {
 			if (COLOR_KEYS.includes(this.color)) {
-				tooltip = STRINGS.iconPicker.colors[this.color as keyof typeof STRINGS.iconPicker.colors];
+				tooltip =
+					STRINGS.iconPicker.colors[
+						this.color as keyof typeof STRINGS.iconPicker.colors
+					];
 			} else {
 				tooltip = this.color;
 			}
@@ -649,10 +959,18 @@ export default class IconPicker extends Modal {
 
 	private getSearchableIconEntries(): [string, string][] {
 		switch (this.selectedIconLibrary) {
-			case 'lucide': return [...ICONS].filter(([icon]) => !isLibraryIcon(icon));
-			case 'devicon': return [...ICONS].filter(([icon]) => icon.startsWith('devicon-'));
-			case 'simple': return [...ICONS].filter(([icon]) => icon.startsWith('simple-'));
-			case 'emoji': return [...EMOJIS];
+			case 'lucide':
+				return [...ICONS].filter(([icon]) => !isLibraryIcon(icon));
+			case 'devicon':
+				return [...ICONS].filter(([icon]) =>
+					icon.startsWith('devicon-'),
+				);
+			case 'simple':
+				return [...ICONS].filter(([icon]) =>
+					icon.startsWith('simple-'),
+				);
+			case 'emoji':
+				return [...EMOJIS];
 		}
 	}
 
@@ -667,7 +985,10 @@ export default class IconPicker extends Modal {
 
 		// When no query, show the first icons from the selected library.
 		if (!query) {
-			const limit = Math.min(this.plugin.settings.maxSearchResults || 60, 80);
+			const limit = Math.min(
+				this.plugin.settings.maxSearchResults || 60,
+				80,
+			);
 			for (const entry of iconEntries.slice(0, limit)) {
 				matches.push([0, entry]);
 			}
@@ -679,19 +1000,24 @@ export default class IconPicker extends Modal {
 					continue;
 				}
 				const nameMatch = fuzzySearch(iconName);
-				const idMatch = fuzzySearch(icon);   // support searching by ID like "devicon-react" or "react"
-				const best = nameMatch && idMatch 
-					? (nameMatch.score > idMatch.score ? nameMatch : idMatch)
-					: (nameMatch || idMatch);
+				const idMatch = fuzzySearch(icon); // support searching by ID like "devicon-react" or "react"
+				const best =
+					nameMatch && idMatch
+						? nameMatch.score > idMatch.score
+							? nameMatch
+							: idMatch
+						: nameMatch || idMatch;
 				if (best) matches.push([best.score, [icon, iconName]]);
 			}
 		}
 
 		// Sort matches by score
-		matches.sort(([scoreA,], [scoreB,]) => scoreA > scoreB ? -1 : +1);
+		matches.sort(([scoreA], [scoreB]) => (scoreA > scoreB ? -1 : +1));
 
 		// Keep rendering bounded even for very broad searches in large libraries.
-		const finalResults = matches.map(m => m[1]).slice(0, this.plugin.settings.maxSearchResults || 60);
+		const finalResults = matches
+			.map((m) => m[1])
+			.slice(0, this.plugin.settings.maxSearchResults || 60);
 
 		// Copy into searchResults
 		this.searchResults.length = 0;
@@ -709,7 +1035,7 @@ export default class IconPicker extends Modal {
 		this.searchResultsSetting.clear();
 		for (const iconEntry of this.searchResults) {
 			const [icon, iconName] = iconEntry;
-			this.searchResultsSetting.addExtraButton(iconButton => {
+			this.searchResultsSetting.addExtraButton((iconButton) => {
 				iconButton.setTooltip(iconName, {
 					delay: 300,
 					placement: Platform.isPhone ? 'top' : 'bottom',
@@ -718,14 +1044,25 @@ export default class IconPicker extends Modal {
 				iconEl.addClass('icon-palette-search-result');
 				iconEl.tabIndex = -1;
 
-				this.iconManager.refreshIcon({ icon: icon, color: this.color ?? null }, iconEl, () => {
-					this.closeAndSave(icon, this.color);
-				});
+				this.iconManager.refreshIcon(
+					{ icon: icon, color: this.color ?? null },
+					iconEl,
+					() => {
+						this.closeAndSave(icon, this.color);
+					},
+				);
 
-				if (Platform.isPhone) this.iconManager.setEventListener(iconEl, 'contextmenu', () => {
-					navigator.vibrate?.(100); // Not supported on iOS
-					displayTooltip(iconEl, iconName, { placement: 'top' });
-				});
+				if (Platform.isPhone)
+					this.iconManager.setEventListener(
+						iconEl,
+						'contextmenu',
+						() => {
+							navigator.vibrate?.(100); // Not supported on iOS
+							displayTooltip(iconEl, iconName, {
+								placement: 'top',
+							});
+						},
+					);
 			});
 		}
 
@@ -738,8 +1075,11 @@ export default class IconPicker extends Modal {
 
 		// Use an invisible button to preserve height
 		if (this.searchResults.length === 0) {
-			this.searchResultsSetting.addExtraButton(button => {
-				button.extraSettingsEl.addClasses(['icon-palette-invisible', 'icon-palette-search-result']);
+			this.searchResultsSetting.addExtraButton((button) => {
+				button.extraSettingsEl.addClasses([
+					'icon-palette-invisible',
+					'icon-palette-search-result',
+				]);
 			});
 		}
 	}
@@ -751,8 +1091,16 @@ export default class IconPicker extends Modal {
 	private updateFavorites(): void {
 		this.favoritesEl.empty();
 		const { favorites } = this.plugin.settings;
-		this.renderFavoriteSection(STRINGS.iconPicker.pinned, favorites.pinned, true);
-		this.renderFavoriteSection(STRINGS.iconPicker.recent, FavoritesStore.visibleRecent(favorites), false);
+		this.renderFavoriteSection(
+			STRINGS.iconPicker.pinned,
+			favorites.pinned,
+			true,
+		);
+		this.renderFavoriteSection(
+			STRINGS.iconPicker.recent,
+			FavoritesStore.visibleRecent(favorites),
+			false,
+		);
 	}
 
 	/**
@@ -760,47 +1108,86 @@ export default class IconPicker extends Modal {
 	 * their own colors. Clicking a combo applies it; right-click / long-press
 	 * opens a pin or unpin action.
 	 */
-	private renderFavoriteSection(title: string, combos: IconColorCombo[], pinned: boolean): void {
+	private renderFavoriteSection(
+		title: string,
+		combos: IconColorCombo[],
+		pinned: boolean,
+	): void {
 		if (combos.length === 0) return;
-		const sectionEl = this.favoritesEl.createDiv({ cls: 'icon-palette-favorite-section' });
-		sectionEl.createDiv({ cls: 'icon-palette-favorite-header', text: title });
+		const sectionEl = this.favoritesEl.createDiv({
+			cls: 'icon-palette-favorite-section',
+		});
+		sectionEl.createDiv({
+			cls: 'icon-palette-favorite-header',
+			text: title,
+		});
 		// One tab stop per grid; arrow keys rove between tiles (mirrors the search
 		// results), so keyboard users do not tab through every favorite.
-		const gridEl = sectionEl.createDiv({ cls: 'icon-palette-favorite-grid' });
+		const gridEl = sectionEl.createDiv({
+			cls: 'icon-palette-favorite-grid',
+		});
 		gridEl.tabIndex = 0;
 		for (const combo of combos) {
 			const button = new ExtraButtonComponent(gridEl);
 			const iconEl = button.extraSettingsEl;
 			iconEl.addClass('icon-palette-search-result');
 			iconEl.tabIndex = -1;
-			this.iconManager.refreshIcon({ icon: combo.icon, color: combo.color }, iconEl, () => {
-				this.closeAndSave(combo.icon, combo.color);
-			});
-			this.iconManager.setEventListener(iconEl, 'contextmenu', event => {
-				event.preventDefault();
-				if (Platform.isPhone) navigator.vibrate?.(100); // Not supported on iOS
-				this.openFavoriteMenu(combo, pinned, event.clientX, event.clientY);
-			});
+			this.iconManager.refreshIcon(
+				{ icon: combo.icon, color: combo.color },
+				iconEl,
+				() => {
+					this.closeAndSave(combo.icon, combo.color);
+				},
+			);
+			this.iconManager.setEventListener(
+				iconEl,
+				'contextmenu',
+				(event) => {
+					event.preventDefault();
+					if (Platform.isPhone) navigator.vibrate?.(100); // Not supported on iOS
+					this.openFavoriteMenu(
+						combo,
+						pinned,
+						event.clientX,
+						event.clientY,
+					);
+				},
+			);
 		}
 	}
 
 	/**
 	 * Open a pin or unpin action for a favorite combo, then persist and re-render.
 	 */
-	private openFavoriteMenu(combo: IconColorCombo, pinned: boolean, x: number, y: number): void {
+	private openFavoriteMenu(
+		combo: IconColorCombo,
+		pinned: boolean,
+		x: number,
+		y: number,
+	): void {
 		const menu = new Menu();
-		menu.addItem(menuItem => menuItem
-			.setTitle(pinned ? STRINGS.iconPicker.unpin : STRINGS.iconPicker.pin)
-			.setIcon(pinned ? 'lucide-pin-off' : 'lucide-pin')
-			.onClick(() => {
-				const changed = pinned
-					? FavoritesStore.unpin(this.plugin.settings.favorites, combo)
-					: FavoritesStore.pin(this.plugin.settings.favorites, combo);
-				if (changed) {
-					void this.plugin.saveSettings();
-					this.updateFavorites();
-				}
-			}));
+		menu.addItem((menuItem) =>
+			menuItem
+				.setTitle(
+					pinned ? STRINGS.iconPicker.unpin : STRINGS.iconPicker.pin,
+				)
+				.setIcon(pinned ? 'lucide-pin-off' : 'lucide-pin')
+				.onClick(() => {
+					const changed = pinned
+						? FavoritesStore.unpin(
+								this.plugin.settings.favorites,
+								combo,
+							)
+						: FavoritesStore.pin(
+								this.plugin.settings.favorites,
+								combo,
+							);
+					if (changed) {
+						void this.plugin.saveSettings();
+						this.updateFavorites();
+					}
+				}),
+		);
 		menu.showAtPosition({ x, y });
 	}
 
@@ -815,20 +1202,30 @@ export default class IconPicker extends Modal {
 		// Determine which rule to display
 		if (this.items.length > 1) {
 			for (const item of this.items) {
-				rule = this.plugin.ruleManager?.checkRuling(item.category, item.id) ?? null;
+				rule =
+					this.plugin.ruleManager?.checkRuling(
+						item.category,
+						item.id,
+					) ?? null;
 				page = item.category;
 				if (rule) break;
 			}
 		} else {
 			const item = this.items.first();
 			if (item) {
-				rule = this.plugin.ruleManager?.checkRuling(item.category, item.id) ?? null;
+				rule =
+					this.plugin.ruleManager?.checkRuling(
+						item.category,
+						item.id,
+					) ?? null;
 				page = item.category;
 			}
 		}
 
 		if (rule) {
-			const rgb = ColorUtils.toRgbObject(this.items.length === 1 ? rule.color : 'gray');
+			const rgb = ColorUtils.toRgbObject(
+				this.items.length === 1 ? rule.color : 'gray',
+			);
 			const cssColor = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
 
 			// Create callout elements
@@ -842,7 +1239,10 @@ export default class IconPicker extends Modal {
 
 			// Populate callout message
 			if (this.items.length > 1) {
-				this.iconManager.refreshIcon({ icon: 'lucide-book-image', color: 'gray' }, iconEl);
+				this.iconManager.refreshIcon(
+					{ icon: 'lucide-book-image', color: 'gray' },
+					iconEl,
+				);
 				innerEl.setText(STRINGS.iconPicker.overrules);
 			} else {
 				this.iconManager.refreshIcon(rule, iconEl);
@@ -850,16 +1250,22 @@ export default class IconPicker extends Modal {
 				const linkEl = innerEl.createEl('a', { text: rule.name });
 				innerEl.appendText(STRINGS.iconPicker.overruleSuffix);
 				this.iconManager.setEventListener(linkEl, 'click', () => {
-					if (page && rule) RuleEditor.open(this.plugin, page, rule, newRule => {
-						if (!rule) return;
-						const isRulingChanged = newRule
-							? this.plugin.ruleManager?.saveRule(page, newRule)
-							: this.plugin.ruleManager?.deleteRule(page, rule.id);
-						if (isRulingChanged) {
-							this.plugin.refreshManagers(page);
-						}
-						this.updateOverruleReminder();
-					});
+					if (page)
+						RuleEditor.open(this.plugin, page, rule, (newRule) => {
+							const isRulingChanged = newRule
+								? this.plugin.ruleManager?.saveRule(
+										page,
+										newRule,
+									)
+								: this.plugin.ruleManager?.deleteRule(
+										page,
+										rule.id,
+									);
+							if (isRulingChanged) {
+								this.plugin.refreshManagers(page);
+							}
+							this.updateOverruleReminder();
+						});
 				});
 			}
 			this.contentEl.prepend(this.overruleEl);
@@ -869,7 +1275,10 @@ export default class IconPicker extends Modal {
 	/**
 	 * Close dialog while passing icon & color to original callback.
 	 */
-	private closeAndSave(icon: string | null | undefined, color: string | null | undefined): void {
+	private closeAndSave(
+		icon: string | null | undefined,
+		color: string | null | undefined,
+	): void {
 		if (this.callback) {
 			this.callback(icon ?? null, color ?? null);
 		} else if (this.multiCallback) {
@@ -888,10 +1297,19 @@ export default class IconPicker extends Modal {
 	 * clear colors if that entry were reused. Saves settings only when the recent
 	 * list actually changed.
 	 */
-	private recordRecent(icon: string | null | undefined, color: string | null | undefined): void {
+	private recordRecent(
+		icon: string | null | undefined,
+		color: string | null | undefined,
+	): void {
 		if (typeof icon !== 'string' || icon === '') return;
 		if (color === undefined) return;
-		if (FavoritesStore.recordRecent(this.plugin.settings.favorites, { icon, color }, FavoritesStore.RECENT_CAP)) {
+		if (
+			FavoritesStore.recordRecent(
+				this.plugin.settings.favorites,
+				{ icon, color },
+				FavoritesStore.RECENT_CAP,
+			)
+		) {
 			void this.plugin.saveSettings();
 		}
 	}
@@ -903,7 +1321,10 @@ export default class IconPicker extends Modal {
 		this.contentEl.empty();
 		this.iconManager.stopEventListeners();
 		this.iconManager.stopMutationObservers();
-		if (JSON.stringify(this.plugin.settings.dialogState) !== this.initialDialogStateJson) {
+		if (
+			JSON.stringify(this.plugin.settings.dialogState) !==
+			this.initialDialogStateJson
+		) {
 			void this.plugin.saveSettings();
 		}
 	}

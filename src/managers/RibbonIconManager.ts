@@ -2,7 +2,12 @@ import { Menu, Platform } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { RibbonItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
-import type { WorkspaceRibbonLike, AppWithMobileNavbar, VaultWithConfig, MenuItemWithIconElement } from 'src/obsidian-internals.js';
+import type {
+	WorkspaceRibbonLike,
+	AppWithMobileNavbar,
+	VaultWithConfig,
+	MenuItemWithIconElement,
+} from 'src/obsidian-internals.js';
 import MenuManager from 'src/managers/MenuManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
@@ -15,45 +20,73 @@ export default class RibbonIconManager extends IconManager {
 		super(plugin);
 		this.refreshIcons();
 
-		const containerEl = (this.app.workspace as unknown as WorkspaceRibbonLike).leftRibbon?.ribbonItemsEl;
+		const containerEl = (
+			this.app.workspace as unknown as WorkspaceRibbonLike
+		).leftRibbon?.ribbonItemsEl;
 		if (!containerEl) return;
 
 		// Prevent ribbon from eating auxclick events
-		this.setEventListener(containerEl, 'auxclick', event => {
-			event.stopPropagation();
-		}, { capture: true });
-		this.setMutationsObserver(containerEl, { childList: true }, () => this.refreshIcons());
+		this.setEventListener(
+			containerEl,
+			'auxclick',
+			(event) => {
+				event.stopPropagation();
+			},
+			{ capture: true },
+		);
+		this.setMutationsObserver(containerEl, { childList: true }, () =>
+			this.refreshIcons(),
+		);
 
 		// Refresh ribbon context menu
-		const ribbonEl = activeDocument.body.find(Platform.isDesktop
-			? '.side-dock-ribbon.mod-left.workspace-ribbon'
-			: '.side-dock-ribbon.mod-left.workspace-drawer-ribbon'
+		const ribbonEl = activeDocument.body.find(
+			Platform.isDesktop
+				? '.side-dock-ribbon.mod-left.workspace-ribbon'
+				: '.side-dock-ribbon.mod-left.workspace-drawer-ribbon',
 		);
-		if (ribbonEl) this.setEventListener(ribbonEl, 'contextmenu', () => {
-			const ribbonItems = this.plugin.getRibbonItems();
-			this.plugin.menuManager?.forSection('order', item => {
-				const firstItem = ribbonItems.first();
-				const itemIconEl = (item as typeof item & MenuItemWithIconElement).iconEl;
-				if (firstItem && itemIconEl && itemIconEl.childElementCount > 0) { // Ribbon Divider compatibility
-					item.setIcon(firstItem.icon);
-					this.refreshIcon(firstItem, itemIconEl);
-					ribbonItems.shift();
-				}
+		if (ribbonEl)
+			this.setEventListener(ribbonEl, 'contextmenu', () => {
+				const ribbonItems = this.plugin.getRibbonItems();
+				this.plugin.menuManager?.forSection('order', (item) => {
+					const firstItem = ribbonItems.first();
+					const itemIconEl = (
+						item as typeof item & MenuItemWithIconElement
+					).iconEl;
+					if (
+						firstItem &&
+						itemIconEl &&
+						itemIconEl.childElementCount > 0
+					) {
+						// Ribbon Divider compatibility
+						item.setIcon(firstItem.icon);
+						this.refreshIcon(firstItem, itemIconEl);
+						ribbonItems.shift();
+					}
+				});
 			});
-		});
 
 		// Watch for ribbon configuration dialog
-		this.setMutationObserver(activeDocument.body, { childList: true }, mutation => {
-			for (const addedNode of mutation.addedNodes) {
-				// Very fragile dialog detection
-				if (addedNode.instanceOf(HTMLElement)
-					&& addedNode.hasClass('modal-container')
-					&& addedNode.find('.modal-content > div > .mobile-option-setting-item')
-					&& addedNode.find('.modal-content > .modal-button-container')) {
-					this.refreshConfigIcons(addedNode);
+		this.setMutationObserver(
+			activeDocument.body,
+			{ childList: true },
+			(mutation) => {
+				for (const addedNode of mutation.addedNodes) {
+					// Very fragile dialog detection
+					if (
+						addedNode.instanceOf(HTMLElement) &&
+						addedNode.hasClass('modal-container') &&
+						addedNode.find(
+							'.modal-content > div > .mobile-option-setting-item',
+						) &&
+						addedNode.find(
+							'.modal-content > .modal-button-container',
+						)
+					) {
+						this.refreshConfigIcons(addedNode);
+					}
 				}
-			}
-		});
+			},
+		);
 	}
 
 	/**
@@ -62,36 +95,53 @@ export default class RibbonIconManager extends IconManager {
 	 */
 	refreshIcons(unloading?: boolean): void {
 		if (Platform.isPhone) {
-			const ribbonButtonEl = (this.app as unknown as AppWithMobileNavbar).mobileNavbar?.ribbonMenuItemEl;
+			const ribbonButtonEl = (this.app as unknown as AppWithMobileNavbar)
+				.mobileNavbar?.ribbonMenuItemEl;
 			if (!ribbonButtonEl) return;
 
-			const quickItemId = (this.app.vault as unknown as VaultWithConfig).getConfig?.('mobileQuickRibbonItem');
+			const quickItemId = (
+				this.app.vault as unknown as VaultWithConfig
+			).getConfig?.('mobileQuickRibbonItem');
 			const ribbonButtonListener = () => {
-				const firstRibItem = this.plugin.getRibbonItems().filter(item => !item.isHidden);
-				this.plugin.menuManager?.forSection('', item => {
+				const firstRibItem = this.plugin
+					.getRibbonItems()
+					.filter((item) => !item.isHidden);
+				this.plugin.menuManager?.forSection('', (item) => {
 					const ribbonItem = firstRibItem[0];
 					if (ribbonItem) {
 						item.setIcon(ribbonItem.icon);
-						const itemIconEl = (item as typeof item & MenuItemWithIconElement).iconEl;
-						if (itemIconEl) this.refreshIcon(ribbonItem, itemIconEl);
+						const itemIconEl = (
+							item as typeof item & MenuItemWithIconElement
+						).iconEl;
+						if (itemIconEl)
+							this.refreshIcon(ribbonItem, itemIconEl);
 						firstRibItem.shift();
 					}
 				});
-			}
+			};
 			if (quickItemId) {
 				const quickItem = this.plugin.getRibbonItem(quickItemId);
 				if (this.plugin.settings.uncolorQuick) quickItem.color = null;
 				this.refreshIcon(quickItem, ribbonButtonEl);
 			} else {
-				this.setEventListener(ribbonButtonEl, 'click', ribbonButtonListener);
+				this.setEventListener(
+					ribbonButtonEl,
+					'click',
+					ribbonButtonListener,
+				);
 			}
-			this.setEventListener(ribbonButtonEl, 'contextmenu', ribbonButtonListener);
+			this.setEventListener(
+				ribbonButtonEl,
+				'contextmenu',
+				ribbonButtonListener,
+			);
 		}
 
 		const ribbonItems = this.plugin.getRibbonItems(unloading);
 		for (const ribbonItem of ribbonItems) {
 			const iconEl = ribbonItem.iconEl;
-			if (!iconEl || iconEl.hasClass('ribbon-divider')) { // Ribbon Divider compatibility
+			if (!iconEl || iconEl.hasClass('ribbon-divider')) {
+				// Ribbon Divider compatibility
 				continue;
 			}
 			if (ribbonItem.isHidden) {
@@ -102,9 +152,14 @@ export default class RibbonIconManager extends IconManager {
 
 			// Add context menu
 			if (this.plugin.settings.showMenuActions) {
-				this.setEventListener(iconEl, 'contextmenu', event => {
-					this.onContextMenu(ribbonItem.id, event);
-				}, { capture: true });
+				this.setEventListener(
+					iconEl,
+					'contextmenu',
+					(event) => {
+						this.onContextMenu(ribbonItem.id, event);
+					},
+					{ capture: true },
+				);
 			} else {
 				this.stopEventListener(iconEl, 'contextmenu');
 			}
@@ -116,55 +171,99 @@ export default class RibbonIconManager extends IconManager {
 	 */
 	private refreshConfigIcons(containerEl: HTMLElement): void {
 		if (Platform.isPhone) {
-			const quickDropdownEl = containerEl.find('.setting-item-control > .dropdown');
-			if (quickDropdownEl) this.setEventListener(quickDropdownEl, 'change', () => {
-				this.plugin.refreshManagers('ribbon');
-				this.refreshConfigIcons(containerEl);
-			});
+			const quickDropdownEl = containerEl.find(
+				'.setting-item-control > .dropdown',
+			);
+			if (quickDropdownEl)
+				this.setEventListener(quickDropdownEl, 'change', () => {
+					this.plugin.refreshManagers('ribbon');
+					this.refreshConfigIcons(containerEl);
+				});
 
-			const quickItemId = (this.app.vault as unknown as VaultWithConfig).getConfig?.('mobileQuickRibbonItem');
+			const quickItemId = (
+				this.app.vault as unknown as VaultWithConfig
+			).getConfig?.('mobileQuickRibbonItem');
 			if (quickItemId) {
 				const quickItem = this.plugin.getRibbonItem(quickItemId);
-				const quickIconEl = containerEl.find('.setting-item-control > .extra-setting-button');
+				const quickIconEl = containerEl.find(
+					'.setting-item-control > .extra-setting-button',
+				);
 				this.refreshIcon(quickItem, quickIconEl, () => {
-					IconPicker.openSingle(this.plugin, quickItem, (newIcon, newColor) => {
-						this.plugin.saveRibbonIcon(quickItem, newIcon, newColor);
-						this.plugin.refreshManagers('ribbon');
-						this.refreshConfigIcons(containerEl);
-					});
+					IconPicker.openSingle(
+						this.plugin,
+						quickItem,
+						(newIcon, newColor) => {
+							this.plugin.saveRibbonIcon(
+								quickItem,
+								newIcon,
+								newColor,
+							);
+							this.plugin.refreshManagers('ribbon');
+							this.refreshConfigIcons(containerEl);
+						},
+					);
 				});
 			}
 		}
 
-		const iconEls = containerEl.findAll('.mobile-option-setting-item-option-icon:not(.mobile-option-setting-drag-icon)');
+		const iconEls = containerEl.findAll(
+			'.mobile-option-setting-item-option-icon:not(.mobile-option-setting-drag-icon)',
+		);
 		if (iconEls.length === 0) return;
 
 		const ribbonItems = this.plugin.getRibbonItems();
-		const visibleItems = ribbonItems.filter(item => !item.isHidden);
-		const hiddenItems = ribbonItems.filter(item => item.isHidden);
-		const visibleEls = containerEl.findAll('.mobile-option-setting-item:has(.mobile-option-setting-item-remove-icon)');
-		const hiddenEls = containerEl.findAll('.mobile-option-setting-item:has(.mobile-option-setting-item-add-icon)');
+		const visibleItems = ribbonItems.filter((item) => !item.isHidden);
+		const hiddenItems = ribbonItems.filter((item) => item.isHidden);
+		const visibleEls = containerEl.findAll(
+			'.mobile-option-setting-item:has(.mobile-option-setting-item-remove-icon)',
+		);
+		const hiddenEls = containerEl.findAll(
+			'.mobile-option-setting-item:has(.mobile-option-setting-item-add-icon)',
+		);
 
 		const configItems = [
-			...visibleItems.map((item, i) => [item, visibleEls[i], 'mobile-option-setting-item-remove-icon'] as [RibbonItem, HTMLElement, string]),
-			...hiddenItems.map((item, i) => [item, hiddenEls[i], 'mobile-option-setting-item-add-icon'] as [RibbonItem, HTMLElement, string])
+			...visibleItems.map(
+				(item, i) =>
+					[
+						item,
+						visibleEls[i],
+						'mobile-option-setting-item-remove-icon',
+					] as [RibbonItem, HTMLElement, string],
+			),
+			...hiddenItems.map(
+				(item, i) =>
+					[
+						item,
+						hiddenEls[i],
+						'mobile-option-setting-item-add-icon',
+					] as [RibbonItem, HTMLElement, string],
+			),
 		];
 
 		for (const [item, itemEl, buttonClass] of configItems) {
-			const iconEl = itemEl.find(':scope > .mobile-option-setting-item-option-icon');
-			if (!iconEl || iconEl.childElementCount === 0) { // Ribbon Divider compatibility
+			const iconEl = itemEl.find(
+				':scope > .mobile-option-setting-item-option-icon',
+			);
+			if (!iconEl || iconEl.childElementCount === 0) {
+				// Ribbon Divider compatibility
 				continue;
 			}
 			const buttonEl = itemEl.find(':scope > .' + buttonClass);
-			this.refreshIcon(item, iconEl, event => {
-				IconPicker.openSingle(this.plugin, item, (newIcon, newColor) => {
-					this.plugin.saveRibbonIcon(item, newIcon, newColor);
-					this.plugin.refreshManagers('ribbon');
-					this.refreshConfigIcons(containerEl);
-				});
+			this.refreshIcon(item, iconEl, (event) => {
+				IconPicker.openSingle(
+					this.plugin,
+					item,
+					(newIcon, newColor) => {
+						this.plugin.saveRibbonIcon(item, newIcon, newColor);
+						this.plugin.refreshManagers('ribbon');
+						this.refreshConfigIcons(containerEl);
+					},
+				);
 				event.stopPropagation();
 			});
-			this.setEventListener(buttonEl, 'click', () => this.refreshConfigIcons(containerEl));
+			this.setEventListener(buttonEl, 'click', () =>
+				this.refreshConfigIcons(containerEl),
+			);
 		}
 	}
 
@@ -180,32 +279,52 @@ export default class RibbonIconManager extends IconManager {
 		let menu: Menu | MenuManager | undefined;
 		if (ribbonItemId.startsWith('periodic-notes:')) {
 			menu = this.plugin.menuManager;
-			menu?.forSection('', menuItem => menuItem.setSection('open'));
+			menu?.forSection('', (menuItem) => menuItem.setSection('open'));
 		} else {
 			menu = new Menu();
 		}
 
 		// Change icon
-		menu?.addItem(menuItem => menuItem
-			.setTitle(STRINGS.menu.changeIcon)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => IconPicker.openSingle(this.plugin, ribbonItem, (newIcon, newColor) => {
-				this.plugin.saveRibbonIcon(ribbonItem, newIcon, newColor);
-				this.plugin.refreshManagers('ribbon');
-			}))
+		menu?.addItem((menuItem) =>
+			menuItem
+				.setTitle(STRINGS.menu.changeIcon)
+				.setIcon('lucide-image-plus')
+				.setSection('icon')
+				.onClick(() =>
+					IconPicker.openSingle(
+						this.plugin,
+						ribbonItem,
+						(newIcon, newColor) => {
+							this.plugin.saveRibbonIcon(
+								ribbonItem,
+								newIcon,
+								newColor,
+							);
+							this.plugin.refreshManagers('ribbon');
+						},
+					),
+				),
 		);
 
 		// Remove icon / Reset color
 		if (ribbonItem.icon || ribbonItem.color) {
-			menu?.addItem(menuItem => menuItem
-				.setTitle(ribbonItem.icon ? STRINGS.menu.removeIcon : STRINGS.menu.resetColor)
-				.setIcon(ribbonItem.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw')
-				.setSection('icon')
-				.onClick(() => {
-					this.plugin.saveRibbonIcon(ribbonItem, null, null);
-					this.plugin.refreshManagers('ribbon');
-				})
+			menu?.addItem((menuItem) =>
+				menuItem
+					.setTitle(
+						ribbonItem.icon
+							? STRINGS.menu.removeIcon
+							: STRINGS.menu.resetColor,
+					)
+					.setIcon(
+						ribbonItem.icon
+							? 'lucide-image-minus'
+							: 'lucide-rotate-ccw',
+					)
+					.setSection('icon')
+					.onClick(() => {
+						this.plugin.saveRibbonIcon(ribbonItem, null, null);
+						this.plugin.refreshManagers('ribbon');
+					}),
 			);
 		}
 

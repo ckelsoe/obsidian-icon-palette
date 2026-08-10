@@ -14,10 +14,14 @@ export default class PropertyIconManager extends IconManager {
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
-		this.plugin.registerEvent(this.app.workspace.on('layout-change', () => {
-			this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
-		}));
-		this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
+		this.plugin.registerEvent(
+			this.app.workspace.on('layout-change', () => {
+				this.app.workspace.iterateAllLeaves((leaf) =>
+					this.manageLeaf(leaf),
+				);
+			}),
+		);
+		this.app.workspace.iterateAllLeaves((leaf) => this.manageLeaf(leaf));
 	}
 
 	/**
@@ -26,35 +30,53 @@ export default class PropertyIconManager extends IconManager {
 	private manageLeaf(leaf: WorkspaceLeaf): void {
 		if (leaf.getViewState().type === 'all-properties') {
 			this.stopMutationObserver(this.allPropsContainerEl);
-			this.allPropsContainerEl = leaf.view.containerEl.find('.view-content > div');
-			this.setMutationObserver(this.allPropsContainerEl, {
-				subtree: true,
-				childList: true,
-			}, mutation => {
-				for (const addedNode of mutation.addedNodes) {
-					if (addedNode.instanceOf(HTMLElement) && addedNode.hasClass('tree-item')) {
-						this.refreshIcons();
-						return;
+			this.allPropsContainerEl = leaf.view.containerEl.find(
+				'.view-content > div',
+			);
+			this.setMutationObserver(
+				this.allPropsContainerEl,
+				{
+					subtree: true,
+					childList: true,
+				},
+				(mutation) => {
+					for (const addedNode of mutation.addedNodes) {
+						if (
+							addedNode.instanceOf(HTMLElement) &&
+							addedNode.hasClass('tree-item')
+						) {
+							this.refreshIcons();
+							return;
+						}
 					}
-				}
-			});
+				},
+			);
 			this.refreshIcons();
 		}
 
 		if (leaf.getViewState().type === 'file-properties') {
 			this.stopMutationObserver(this.filePropsContainerEl);
-			this.filePropsContainerEl = leaf.view.containerEl.find('.metadata-properties');
-			this.setMutationObserver(this.filePropsContainerEl, {
-				subtree: true,
-				childList: true,
-			}, mutation => {
-				for (const addedNode of mutation.addedNodes) {
-					if (addedNode.instanceOf(HTMLElement) && addedNode.hasClass('metadata-property')) {
-						this.refreshIcons();
-						return;
+			this.filePropsContainerEl = leaf.view.containerEl.find(
+				'.metadata-properties',
+			);
+			this.setMutationObserver(
+				this.filePropsContainerEl,
+				{
+					subtree: true,
+					childList: true,
+				},
+				(mutation) => {
+					for (const addedNode of mutation.addedNodes) {
+						if (
+							addedNode.instanceOf(HTMLElement) &&
+							addedNode.hasClass('metadata-property')
+						) {
+							this.refreshIcons();
+							return;
+						}
 					}
-				}
-			});
+				},
+			);
 			this.refreshIcons();
 		}
 	}
@@ -71,12 +93,15 @@ export default class PropertyIconManager extends IconManager {
 		this.stopMutationObserver(this.filePropsContainerEl);
 
 		// All Properties pane
-		const itemEls = this.allPropsContainerEl?.findAll(':scope > .tree-item') ?? [];
+		const itemEls =
+			this.allPropsContainerEl?.findAll(':scope > .tree-item') ?? [];
 		for (const itemEl of itemEls) {
 			itemEl.addClass('icon-palette-item');
 
-			const textEl = itemEl.find('.tree-item-self > .tree-item-inner > .tree-item-inner-text');
-			const prop = props.find(prop => prop.id === textEl?.getText());
+			const textEl = itemEl.find(
+				'.tree-item-self > .tree-item-inner > .tree-item-inner-text',
+			);
+			const prop = props.find((prop) => prop.id === textEl?.getText());
 			if (!prop) continue;
 
 			const iconEl = itemEl.find('.tree-item-self > .tree-item-icon');
@@ -84,11 +109,19 @@ export default class PropertyIconManager extends IconManager {
 
 			// Refresh icon
 			if (this.plugin.isSettingEnabled('clickableIcons')) {
-				this.refreshIcon(prop, iconEl, event => {
-					IconPicker.openSingle(this.plugin, prop, (newIcon, newColor) => {
-						this.plugin.savePropertyIcon(prop, newIcon, newColor);
-						this.plugin.refreshManagers('property');
-					});
+				this.refreshIcon(prop, iconEl, (event) => {
+					IconPicker.openSingle(
+						this.plugin,
+						prop,
+						(newIcon, newColor) => {
+							this.plugin.savePropertyIcon(
+								prop,
+								newIcon,
+								newColor,
+							);
+							this.plugin.refreshManagers('property');
+						},
+					);
 					event.stopPropagation();
 				});
 			} else {
@@ -97,16 +130,22 @@ export default class PropertyIconManager extends IconManager {
 
 			// Add menu items
 			if (this.plugin.settings.showMenuActions) {
-				this.setEventListener(itemEl, 'contextmenu', () => {
-					this.onContextMenu(prop.id);
-				}, { capture: true });
+				this.setEventListener(
+					itemEl,
+					'contextmenu',
+					() => {
+						this.onContextMenu(prop.id);
+					},
+					{ capture: true },
+				);
 			} else {
 				this.stopEventListener(itemEl, 'contextmenu');
 			}
 		}
 
 		// File Properties pane
-		const propEls = this.filePropsContainerEl?.findAll('.metadata-property') ?? [];
+		const propEls =
+			this.filePropsContainerEl?.findAll('.metadata-property') ?? [];
 		for (const propEl of propEls) {
 			const propInputEl = propEl.find('.metadata-property-key-input');
 			if (!propInputEl.instanceOf(HTMLInputElement)) continue;
@@ -121,11 +160,19 @@ export default class PropertyIconManager extends IconManager {
 
 			// Refresh icon
 			if (this.plugin.isSettingEnabled('clickableIcons')) {
-				this.refreshIcon(prop, iconEl, event => {
-					IconPicker.openSingle(this.plugin, prop, (newIcon, newColor) => {
-						this.plugin.savePropertyIcon(prop, newIcon, newColor);
-						this.plugin.refreshManagers('property');
-					});
+				this.refreshIcon(prop, iconEl, (event) => {
+					IconPicker.openSingle(
+						this.plugin,
+						prop,
+						(newIcon, newColor) => {
+							this.plugin.savePropertyIcon(
+								prop,
+								newIcon,
+								newColor,
+							);
+							this.plugin.refreshManagers('property');
+						},
+					);
 					event.stopPropagation();
 				});
 			} else {
@@ -134,23 +181,36 @@ export default class PropertyIconManager extends IconManager {
 
 			// Add menu items
 			if (this.plugin.settings.showMenuActions) {
-				this.setEventListener(propEl, 'contextmenu', () => {
-					this.onContextMenu(prop.id);
-				}, { capture: true });
+				this.setEventListener(
+					propEl,
+					'contextmenu',
+					() => {
+						this.onContextMenu(prop.id);
+					},
+					{ capture: true },
+				);
 			} else {
 				this.stopEventListener(propEl, 'contextmenu');
 			}
 		}
 
 		// Restart observers
-		this.setMutationsObserver(this.allPropsContainerEl, {
-			subtree: true,
-			childList: true,
-		}, () => this.refreshIcons());
-		this.setMutationsObserver(this.filePropsContainerEl, {
-			subtree: true,
-			childList: true,
-		}, () => this.refreshIcons());
+		this.setMutationsObserver(
+			this.allPropsContainerEl,
+			{
+				subtree: true,
+				childList: true,
+			},
+			() => this.refreshIcons(),
+		);
+		this.setMutationsObserver(
+			this.filePropsContainerEl,
+			{
+				subtree: true,
+				childList: true,
+			},
+			() => this.refreshIcons(),
+		);
 	}
 
 	/**
@@ -159,68 +219,126 @@ export default class PropertyIconManager extends IconManager {
 	private onContextMenu(clickedPropId: string): void {
 		navigator.vibrate?.(100); // Not supported on iOS
 		this.plugin.menuManager?.closeAndFlush();
-		const clickedProp: PropertyItem = this.plugin.getPropertyItem(clickedPropId);
+		const clickedProp: PropertyItem =
+			this.plugin.getPropertyItem(clickedPropId);
 		const selectedProps: PropertyItem[] = [];
 
-		for (const selfEl of this.allPropsContainerEl?.findAll('.tree-item-self.is-selected') ?? []) {
-			const textEl = selfEl.find(':scope > .tree-item-inner > .tree-item-inner-text');
+		for (const selfEl of this.allPropsContainerEl?.findAll(
+			'.tree-item-self.is-selected',
+		) ?? []) {
+			const textEl = selfEl.find(
+				':scope > .tree-item-inner > .tree-item-inner-text',
+			);
 			if (textEl?.textContent) {
-				selectedProps.push(this.plugin.getPropertyItem(textEl.textContent));
+				selectedProps.push(
+					this.plugin.getPropertyItem(textEl.textContent),
+				);
 			}
 		}
 
 		// If clicked property is not selected, ignore selected items
-		if (!selectedProps.some(selectedProp => selectedProp.id === clickedProp.id)) {
+		if (
+			!selectedProps.some(
+				(selectedProp) => selectedProp.id === clickedProp.id,
+			)
+		) {
 			selectedProps.length = 0;
 		}
 
 		// Change icon(s)
-		const changeTitle = selectedProps.length < 2
-			? STRINGS.menu.changeIcon
-			: STRINGS.menu.changeIcons.replace('{#}', selectedProps.length.toString());
-		this.plugin.menuManager?.addItemAfter(['action.changeType', 'action'], item => item
-			.setTitle(changeTitle)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => {
-				if (selectedProps.length < 2) {
-					IconPicker.openSingle(this.plugin, clickedProp, (newIcon, newColor) => {
-						this.plugin.savePropertyIcon(clickedProp, newIcon, newColor);
-						this.plugin.refreshManagers('property');
-					});
-				} else {
-					IconPicker.openMulti(this.plugin, selectedProps, (newIcon, newColor) => {
-						this.plugin.savePropertyIcons(selectedProps, newIcon, newColor);
-						this.plugin.refreshManagers('property');
-					});
-				}
-			})
+		const changeTitle =
+			selectedProps.length < 2
+				? STRINGS.menu.changeIcon
+				: STRINGS.menu.changeIcons.replace(
+						'{#}',
+						selectedProps.length.toString(),
+					);
+		this.plugin.menuManager?.addItemAfter(
+			['action.changeType', 'action'],
+			(item) =>
+				item
+					.setTitle(changeTitle)
+					.setIcon('lucide-image-plus')
+					.setSection('icon')
+					.onClick(() => {
+						if (selectedProps.length < 2) {
+							IconPicker.openSingle(
+								this.plugin,
+								clickedProp,
+								(newIcon, newColor) => {
+									this.plugin.savePropertyIcon(
+										clickedProp,
+										newIcon,
+										newColor,
+									);
+									this.plugin.refreshManagers('property');
+								},
+							);
+						} else {
+							IconPicker.openMulti(
+								this.plugin,
+								selectedProps,
+								(newIcon, newColor) => {
+									this.plugin.savePropertyIcons(
+										selectedProps,
+										newIcon,
+										newColor,
+									);
+									this.plugin.refreshManagers('property');
+								},
+							);
+						}
+					}),
 		);
 
 		// Remove icon(s) / Reset color(s)
-		const anySelectedIcons = selectedProps.some(file => file.icon);
-		const anySelectedColors = selectedProps.some(file => file.color);
-		const removeTitle = selectedProps.length < 2
-			? clickedProp.icon
-				? STRINGS.menu.removeIcon
-				: STRINGS.menu.resetColor
-			: anySelectedIcons
-				? STRINGS.menu.removeIcons.replace('{#}', selectedProps.length.toString())
-				: STRINGS.menu.resetColors.replace('{#}', selectedProps.length.toString())
-		const removeIcon = clickedProp.icon || anySelectedIcons ? 'lucide-image-minus' : 'lucide-rotate-ccw';
-		if (clickedProp.icon || clickedProp.color || anySelectedIcons || anySelectedColors) {
-			this.plugin.menuManager?.addItem(item => item
-				.setTitle(removeTitle)
-				.setIcon(removeIcon)
-				.setSection('icon')
-				.onClick(() => {
-					if (selectedProps.length < 2) {
-						this.plugin.savePropertyIcon(clickedProp, null, null);
-					} else {
-						this.plugin.savePropertyIcons(selectedProps, null, null);
-					}
-					this.plugin.refreshManagers('property');
-				})
+		const anySelectedIcons = selectedProps.some((file) => file.icon);
+		const anySelectedColors = selectedProps.some((file) => file.color);
+		const removeTitle =
+			selectedProps.length < 2
+				? clickedProp.icon
+					? STRINGS.menu.removeIcon
+					: STRINGS.menu.resetColor
+				: anySelectedIcons
+					? STRINGS.menu.removeIcons.replace(
+							'{#}',
+							selectedProps.length.toString(),
+						)
+					: STRINGS.menu.resetColors.replace(
+							'{#}',
+							selectedProps.length.toString(),
+						);
+		const removeIcon =
+			clickedProp.icon || anySelectedIcons
+				? 'lucide-image-minus'
+				: 'lucide-rotate-ccw';
+		if (
+			clickedProp.icon ||
+			clickedProp.color ||
+			anySelectedIcons ||
+			anySelectedColors
+		) {
+			this.plugin.menuManager?.addItem((item) =>
+				item
+					.setTitle(removeTitle)
+					.setIcon(removeIcon)
+					.setSection('icon')
+					.onClick(() => {
+						if (selectedProps.length < 2) {
+							this.plugin.savePropertyIcon(
+								clickedProp,
+								null,
+								null,
+							);
+						} else {
+							this.plugin.savePropertyIcons(
+								selectedProps,
+								null,
+								null,
+							);
+						}
+						this.plugin.refreshManagers('property');
+					}),
 			);
 		}
 	}

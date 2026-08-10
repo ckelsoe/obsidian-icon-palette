@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 - 2026-08-10
+
+### Fixed
+
+- The "Matches" button in the rule editor now correctly disables, with a "No conditions added" tooltip, when a rule has no conditions yet. The previous check never triggered, so the button stayed active on a rule that could not match anything.
+
 ## 0.4.0 - 2026-08-09
 
 ### Added

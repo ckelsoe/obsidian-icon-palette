@@ -30,53 +30,74 @@ export default class EditorIconManager extends IconManager {
 		super(plugin);
 
 		// Style hashtags in reading mode
-		this.plugin.registerMarkdownPostProcessor(sectionEl => {
+		this.plugin.registerMarkdownPostProcessor((sectionEl) => {
 			const tags = this.plugin.getTagItems();
 			const tagEls = sectionEl.findAll('a.tag');
 			this.refreshReadingModeHashtags(tags, tagEls);
 		});
 
 		const getTagItem = (tagId: string) => this.plugin.getTagItem(tagId);
-		const handleTagContextMenu = (tagId: string) => this.onTagContextMenu(tagId, true);
-		const refreshTag = (tagEl: HTMLElement, tag: TagItem | null, onContextMenu: (event: MouseEvent) => void) => {
+		const handleTagContextMenu = (tagId: string) =>
+			this.onTagContextMenu(tagId, true);
+		const refreshTag = (
+			tagEl: HTMLElement,
+			tag: TagItem | null,
+			onContextMenu: (event: MouseEvent) => void,
+		) => {
 			this.refreshTag(tagEl, tag, onContextMenu);
 		};
-		plugin.registerEditorExtension(ViewPlugin.fromClass(class {
-			update(update: ViewUpdate): void {
-				let viewport = update.view.viewport;
-				let tree = syntaxTree(update.view.state);
+		plugin.registerEditorExtension(
+			ViewPlugin.fromClass(
+				class {
+					update(update: ViewUpdate): void {
+						let viewport = update.view.viewport;
+						let tree = syntaxTree(update.view.state);
 
-				tree.iterate({ from: viewport.from, to: viewport.to, enter: (nodeRef) => {
-					if (!nodeRef.name.includes('hashtag-begin')) return;
+						tree.iterate({
+							from: viewport.from,
+							to: viewport.to,
+							enter: (nodeRef) => {
+								if (!nodeRef.name.includes('hashtag-begin'))
+									return;
 
-					// Get both tag elements
-					const beginEl = update.view.domAtPos(nodeRef.to).node.parentElement;
-					if (!beginEl?.instanceOf(HTMLElement)) return;
-					const endEl = beginEl?.nextElementSibling;
-					if (!endEl?.instanceOf(HTMLElement) || !endEl.hasClass('cm-hashtag-end')) return;
+								// Get both tag elements
+								const beginEl = update.view.domAtPos(nodeRef.to)
+									.node.parentElement;
+								if (!beginEl?.instanceOf(HTMLElement)) return;
+								const endEl = beginEl?.nextElementSibling;
+								if (
+									!endEl?.instanceOf(HTMLElement) ||
+									!endEl.hasClass('cm-hashtag-end')
+								)
+									return;
 
-					// Get tag
-					const tagId = endEl.getText();
-					const tag = getTagItem(tagId);
+								// Get tag
+								const tagId = endEl.getText();
+								const tag = getTagItem(tagId);
 
-					// Refresh tag
-					const onContextMenu = () => {
-						if (tag) handleTagContextMenu(tag.id);
-					};
-					refreshTag(beginEl, tag, onContextMenu);
-					if (tag) tag.icon = null;
-					refreshTag(endEl, tag, onContextMenu);
-				}})
-			}
-		}));
+								// Refresh tag
+								const onContextMenu = () => {
+									if (tag) handleTagContextMenu(tag.id);
+								};
+								refreshTag(beginEl, tag, onContextMenu);
+								if (tag) tag.icon = null;
+								refreshTag(endEl, tag, onContextMenu);
+							},
+						});
+					}
+				},
+			),
+		);
 
 		// Initialize MarkdownViews as they open
-		this.plugin.registerEvent(this.app.workspace.on('active-leaf-change', leaf => {
-			if (leaf?.view instanceof MarkdownView) {
-				this.observeViewIcons(leaf.view);
-				this.refreshViewIcons(leaf.view);
-			}
-		}));
+		this.plugin.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				if (leaf?.view instanceof MarkdownView) {
+					this.observeViewIcons(leaf.view);
+					this.refreshViewIcons(leaf.view);
+				}
+			}),
+		);
 
 		// Initialize any current MarkdownViews
 		for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
@@ -87,20 +108,26 @@ export default class EditorIconManager extends IconManager {
 		}
 
 		// If we add a new property to a file, refresh property icons
-		this.plugin.registerEvent(this.app.vault.on('modify', () => {
-			this.refreshIcons();
-		}));
+		this.plugin.registerEvent(
+			this.app.vault.on('modify', () => {
+				this.refreshIcons();
+			}),
+		);
 	}
 
 	/**
 	 * Refresh title icon whenever editing mode changes.
 	 */
 	private observeEditingMode(view: MarkdownView): void {
-		this.setMutationObserver(view.containerEl, { attributes: true }, mutation => {
-			if (mutation.attributeName === 'data-mode') {
-				this.refreshTitleIcon(view);
-			}
-		});
+		this.setMutationObserver(
+			view.containerEl,
+			{ attributes: true },
+			(mutation) => {
+				if (mutation.attributeName === 'data-mode') {
+					this.refreshTitleIcon(view);
+				}
+			},
+		);
 	}
 
 	/**
@@ -111,12 +138,15 @@ export default class EditorIconManager extends IconManager {
 		this.observeEditingMode(view);
 
 		// Properties list
-		const propsEl = (view as MarkdownViewWithPrivateElements).metadataEditor?.propertyListEl;
+		const propsEl = (view as MarkdownViewWithPrivateElements).metadataEditor
+			?.propertyListEl;
 		if (!propsEl) return;
 		this.observeProperties(propsEl, view, true);
 
 		// `tags` property
-		const tagsEl: HTMLElement = propsEl.find('.metadata-property[data-property-key="tags"] .multi-select-container');
+		const tagsEl: HTMLElement = propsEl.find(
+			'.metadata-property[data-property-key="tags"] .multi-select-container',
+		);
 		if (!tagsEl) return;
 		this.observeTagsProperty(tagsEl, view);
 	}
@@ -124,7 +154,11 @@ export default class EditorIconManager extends IconManager {
 	/**
 	 * Refresh whenever a given properties list needs to redraw its icons.
 	 */
-	private observeProperties(propsEl: HTMLElement, view: MarkdownView, shouldObserve: boolean): void {
+	private observeProperties(
+		propsEl: HTMLElement,
+		view: MarkdownView,
+		shouldObserve: boolean,
+	): void {
 		if (!shouldObserve) {
 			this.stopMutationObserver(propsEl);
 			this.stopEventListener(propsEl, 'click');
@@ -132,53 +166,96 @@ export default class EditorIconManager extends IconManager {
 			return;
 		}
 
-		this.setMutationObserver(propsEl, {
-			childList: true,
-			subtree: true,
-		}, mutation => {
-			if (mutation.target.instanceOf(HTMLElement) && mutation.target.hasClass('metadata-property-icon')) {
-				this.refreshViewIcons(view);
-				return;
-			}
-			for (const addedNode of mutation.addedNodes) {
-				if (addedNode.instanceOf(HTMLElement) && addedNode.hasClass('tree-item')) {
+		this.setMutationObserver(
+			propsEl,
+			{
+				childList: true,
+				subtree: true,
+			},
+			(mutation) => {
+				if (
+					mutation.target.instanceOf(HTMLElement) &&
+					mutation.target.hasClass('metadata-property-icon')
+				) {
 					this.refreshViewIcons(view);
 					return;
 				}
-			}
-		});
-
-		this.setEventListener(propsEl, 'click', event => {
-			const pointEls = event.doc.elementsFromPoint(event.x, event.y);
-			const iconEl = pointEls.find(el => el.hasClass('metadata-property-icon'));
-			const propEl = pointEls.find(el => el.hasClass('metadata-property'));
-			if (iconEl && propEl?.instanceOf(HTMLElement)) {
-				const domPropId = propEl.dataset.propertyKey; // Lowercase
-				const prop = domPropId ? this.plugin.getPropertyItem(domPropId) : null;
-				if (!prop) return;
-				if (this.plugin.isSettingEnabled('clickableIcons')) {
-					IconPicker.openSingle(this.plugin, prop, (newIcon, newColor) => {
-						this.plugin.savePropertyIcon(prop, newIcon, newColor);
-						this.plugin.refreshManagers('property');
-					});
-					event.stopPropagation();
-				} else {
-					this.onPropertyContextMenu(prop.id);
+				for (const addedNode of mutation.addedNodes) {
+					if (
+						addedNode.instanceOf(HTMLElement) &&
+						addedNode.hasClass('tree-item')
+					) {
+						this.refreshViewIcons(view);
+						return;
+					}
 				}
-			}
-		}, { capture: true });
+			},
+		);
 
-		if (this.plugin.settings.showMenuActions) {
-			this.setEventListener(propsEl, 'contextmenu', event => {
+		this.setEventListener(
+			propsEl,
+			'click',
+			(event) => {
 				const pointEls = event.doc.elementsFromPoint(event.x, event.y);
-				const iconEl = pointEls.find(el => el.hasClass('metadata-property-icon'));
-				const propEl = pointEls.find(el => el.hasClass('metadata-property'));
+				const iconEl = pointEls.find((el) =>
+					el.hasClass('metadata-property-icon'),
+				);
+				const propEl = pointEls.find((el) =>
+					el.hasClass('metadata-property'),
+				);
 				if (iconEl && propEl?.instanceOf(HTMLElement)) {
 					const domPropId = propEl.dataset.propertyKey; // Lowercase
-					const prop = domPropId ? this.plugin.getPropertyItem(domPropId) : null;
-					if (prop) this.onPropertyContextMenu(prop.id);
+					const prop = domPropId
+						? this.plugin.getPropertyItem(domPropId)
+						: null;
+					if (!prop) return;
+					if (this.plugin.isSettingEnabled('clickableIcons')) {
+						IconPicker.openSingle(
+							this.plugin,
+							prop,
+							(newIcon, newColor) => {
+								this.plugin.savePropertyIcon(
+									prop,
+									newIcon,
+									newColor,
+								);
+								this.plugin.refreshManagers('property');
+							},
+						);
+						event.stopPropagation();
+					} else {
+						this.onPropertyContextMenu(prop.id);
+					}
 				}
-			}, { capture: true });
+			},
+			{ capture: true },
+		);
+
+		if (this.plugin.settings.showMenuActions) {
+			this.setEventListener(
+				propsEl,
+				'contextmenu',
+				(event) => {
+					const pointEls = event.doc.elementsFromPoint(
+						event.x,
+						event.y,
+					);
+					const iconEl = pointEls.find((el) =>
+						el.hasClass('metadata-property-icon'),
+					);
+					const propEl = pointEls.find((el) =>
+						el.hasClass('metadata-property'),
+					);
+					if (iconEl && propEl?.instanceOf(HTMLElement)) {
+						const domPropId = propEl.dataset.propertyKey; // Lowercase
+						const prop = domPropId
+							? this.plugin.getPropertyItem(domPropId)
+							: null;
+						if (prop) this.onPropertyContextMenu(prop.id);
+					}
+				},
+				{ capture: true },
+			);
 		} else {
 			this.stopEventListener(propsEl, 'contextmenu');
 		}
@@ -188,7 +265,9 @@ export default class EditorIconManager extends IconManager {
 	 * Refresh whenever the `tags` property changes.
 	 */
 	private observeTagsProperty(tagsEl: HTMLElement, view: MarkdownView): void {
-		this.setMutationsObserver(tagsEl, { childList: true }, () => this.refreshViewIcons(view));
+		this.setMutationsObserver(tagsEl, { childList: true }, () =>
+			this.refreshViewIcons(view),
+		);
 	}
 
 	/**
@@ -211,7 +290,8 @@ export default class EditorIconManager extends IconManager {
 		this.refreshTitleIcon(view, unloading);
 
 		// Refresh property icons
-		const propsEl = (view as MarkdownViewWithPrivateElements).metadataEditor?.propertyListEl;
+		const propsEl = (view as MarkdownViewWithPrivateElements).metadataEditor
+			?.propertyListEl;
 		const props = this.plugin.getPropertyItems(unloading);
 		if (propsEl) this.observeProperties(propsEl, view, false);
 		this.refreshPropertyIcons(props, view);
@@ -239,8 +319,9 @@ export default class EditorIconManager extends IconManager {
 
 		// Check whether title is highlighted
 		const selection = titleEl.win.getSelection();
-		const isSelected = selection?.rangeCount
-			&& titleEl.contains(selection?.getRangeAt(0).startContainer);
+		const isSelected =
+			selection?.rangeCount &&
+			titleEl.contains(selection?.getRangeAt(0).startContainer);
 
 		// Remove wrapper if necessary
 		if (!this.plugin.settings.showTitleIcons || unloading) {
@@ -253,10 +334,12 @@ export default class EditorIconManager extends IconManager {
 		}
 
 		// Set up title wrapper
-		const wrapperEl = headerEl.find(':scope > .icon-palette-title-wrapper')
-			?? createDiv({ cls: 'icon-palette-title-wrapper' });
-		const iconEl = wrapperEl.find(':scope > .icon-palette-icon')
-			?? createDiv({ cls: 'icon-palette-icon' });
+		const wrapperEl =
+			headerEl.find(':scope > .icon-palette-title-wrapper') ??
+			createDiv({ cls: 'icon-palette-title-wrapper' });
+		const iconEl =
+			wrapperEl.find(':scope > .icon-palette-icon') ??
+			createDiv({ cls: 'icon-palette-icon' });
 		wrapperEl.append(iconEl, titleEl);
 		headerEl.prepend(wrapperEl);
 
@@ -271,16 +354,21 @@ export default class EditorIconManager extends IconManager {
 
 		// Get file and/or rule icon
 		const file = this.plugin.getFileItem(view.file.path);
-		const rule = this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
+		const rule =
+			this.plugin.ruleManager?.checkRuling('file', file.id) ?? file;
 		if (!rule.icon && !rule.color) file.iconDefault = null;
 
 		// Refresh icon
 		if (this.plugin.isSettingEnabled('clickableIcons')) {
 			this.refreshIcon(rule, iconEl, () => {
-				IconPicker.openSingle(this.plugin, file, (newIcon, newColor) => {
-					this.plugin.saveFileIcon(file, newIcon, newColor);
-					this.plugin.refreshManagers('file');
-				});
+				IconPicker.openSingle(
+					this.plugin,
+					file,
+					(newIcon, newColor) => {
+						this.plugin.saveFileIcon(file, newIcon, newColor);
+						this.plugin.refreshManagers('file');
+					},
+				);
 			});
 		} else {
 			this.refreshIcon(rule, iconEl);
@@ -289,44 +377,75 @@ export default class EditorIconManager extends IconManager {
 
 		// Add menu actions
 		if (this.plugin.settings.showMenuActions) {
-			this.setEventListener(iconEl, 'contextmenu', event => {
+			this.setEventListener(iconEl, 'contextmenu', (event) => {
 				navigator.vibrate?.(100); // Not supported on iOS
 				const menu = new Menu();
-				menu.addItem(item => item
-					.setTitle(STRINGS.menu.changeIcon)
-					.setIcon('lucide-image-plus')
-					.setSection('icon')
-					.onClick(() => {
-						IconPicker.openSingle(this.plugin, file, (newIcon, newColor) => {
-							this.plugin.saveFileIcon(file, newIcon, newColor);
-							this.plugin.refreshManagers('file', 'folder');
-						});
-					})
+				menu.addItem((item) =>
+					item
+						.setTitle(STRINGS.menu.changeIcon)
+						.setIcon('lucide-image-plus')
+						.setSection('icon')
+						.onClick(() => {
+							IconPicker.openSingle(
+								this.plugin,
+								file,
+								(newIcon, newColor) => {
+									this.plugin.saveFileIcon(
+										file,
+										newIcon,
+										newColor,
+									);
+									this.plugin.refreshManagers(
+										'file',
+										'folder',
+									);
+								},
+							);
+						}),
 				);
-				if (file.icon || file.color) menu.addItem(item => item
-					.setTitle(STRINGS.menu.removeIcon)
-					.setIcon('lucide-image-minus')
-					.setSection('icon')
-					.onClick(() => {
-						this.plugin.saveFileIcon(file, null, null);
-						this.plugin.refreshManagers('file');
-					})
+				if (file.icon || file.color)
+					menu.addItem((item) =>
+						item
+							.setTitle(STRINGS.menu.removeIcon)
+							.setIcon('lucide-image-minus')
+							.setSection('icon')
+							.onClick(() => {
+								this.plugin.saveFileIcon(file, null, null);
+								this.plugin.refreshManagers('file');
+							}),
+					);
+				const rule = this.plugin.ruleManager?.checkRuling(
+					'file',
+					file.id,
 				);
-				const rule = this.plugin.ruleManager?.checkRuling('file', file.id);
-				if (rule) menu.addItem(item => { item
-					.setTitle('Edit rule...')
-					.setIcon('lucide-image-play')
-					.setSection('icon')
-					.onClick(() => RuleEditor.open(this.plugin, 'file', rule, newRule => {
-						const isRulingChanged = newRule
-							? this.plugin.ruleManager?.saveRule('file', newRule)
-							: this.plugin.ruleManager?.deleteRule('file', rule.id);
-						if (isRulingChanged) {
-							this.refreshIcons();
-							this.plugin.refreshManagers('file');
-						}
-					}));
-				});
+				if (rule)
+					menu.addItem((item) => {
+						item.setTitle('Edit rule...')
+							.setIcon('lucide-image-play')
+							.setSection('icon')
+							.onClick(() =>
+								RuleEditor.open(
+									this.plugin,
+									'file',
+									rule,
+									(newRule) => {
+										const isRulingChanged = newRule
+											? this.plugin.ruleManager?.saveRule(
+													'file',
+													newRule,
+												)
+											: this.plugin.ruleManager?.deleteRule(
+													'file',
+													rule.id,
+												);
+										if (isRulingChanged) {
+											this.refreshIcons();
+											this.plugin.refreshManagers('file');
+										}
+									},
+								),
+							);
+					});
 				menu.showAtPosition(event);
 			});
 		} else {
@@ -337,8 +456,12 @@ export default class EditorIconManager extends IconManager {
 	/**
 	 * Refresh all property icons in a single MarkdownView.
 	 */
-	private refreshPropertyIcons(props: PropertyItem[], view: MarkdownView): void {
-		const propListEl = (view as MarkdownViewWithPrivateElements).metadataEditor?.propertyListEl;
+	private refreshPropertyIcons(
+		props: PropertyItem[],
+		view: MarkdownView,
+	): void {
+		const propListEl = (view as MarkdownViewWithPrivateElements)
+			.metadataEditor?.propertyListEl;
 		if (!propListEl) return;
 		const propEls = propListEl.findAll(':scope > .metadata-property');
 
@@ -347,7 +470,9 @@ export default class EditorIconManager extends IconManager {
 			if (!domPropId) continue;
 
 			// Use case-insensitive matching to find the property
-			const prop = props.find(prop => prop.id.toLowerCase() === domPropId.toLowerCase());
+			const prop = props.find(
+				(prop) => prop.id.toLowerCase() === domPropId.toLowerCase(),
+			);
 
 			if (!prop) continue;
 
@@ -360,34 +485,57 @@ export default class EditorIconManager extends IconManager {
 	/**
 	 * Refresh all tag icons in the `tags` property.
 	 */
-	private refreshTagsPropertyIcons(tags: TagItem[], view: MarkdownView, unloading?: boolean): void {
-		const propListEl = (view as MarkdownViewWithPrivateElements).metadataEditor?.propertyListEl;
+	private refreshTagsPropertyIcons(
+		tags: TagItem[],
+		view: MarkdownView,
+		unloading?: boolean,
+	): void {
+		const propListEl = (view as MarkdownViewWithPrivateElements)
+			.metadataEditor?.propertyListEl;
 		if (!propListEl) return;
-		const propTagEls = view.contentEl.findAll('.metadata-property[data-property-key="tags"] .multi-select-pill');
+		const propTagEls = view.contentEl.findAll(
+			'.metadata-property[data-property-key="tags"] .multi-select-pill',
+		);
 		if (!propTagEls) return;
 
 		// Refresh each tag pill
 		for (const propTagEl of propTagEls) {
-			const tagId = propTagEl.find(':scope > .multi-select-pill-content')?.getText();
+			const tagId = propTagEl
+				.find(':scope > .multi-select-pill-content')
+				?.getText();
 			if (!tagId) continue;
-			const tag = tags.find(tag => tag.id === tagId) ?? null;
-			this.refreshTag(propTagEl, tag, () => {
-				if (tag) this.onTagContextMenu(tag.id);
-			}, unloading);
+			const tag = tags.find((tag) => tag.id === tagId) ?? null;
+			this.refreshTag(
+				propTagEl,
+				tag,
+				() => {
+					if (tag) this.onTagContextMenu(tag.id);
+				},
+				unloading,
+			);
 		}
 	}
 
 	/**
 	 * Refresh all hashtag elements in reading mode.
 	 */
-	private refreshReadingModeHashtags(tags: TagItem[], tagEls: HTMLElement[], unloading?: boolean): void {
+	private refreshReadingModeHashtags(
+		tags: TagItem[],
+		tagEls: HTMLElement[],
+		unloading?: boolean,
+	): void {
 		for (const tagEl of tagEls) {
 			const tagId = tagEl.getAttribute('href')?.replace('#', '');
 			if (!tagId) continue;
-			const tag = tags.find(tag => tag.id === tagId) ?? null;
-			this.refreshTag(tagEl, tag, event => {
-				if (tag) this.onCreateTagContextMenu(tag.id, event);
-			}, unloading);
+			const tag = tags.find((tag) => tag.id === tagId) ?? null;
+			this.refreshTag(
+				tagEl,
+				tag,
+				(event) => {
+					if (tag) this.onCreateTagContextMenu(tag.id, event);
+				},
+				unloading,
+			);
 		}
 	}
 
@@ -402,7 +550,12 @@ export default class EditorIconManager extends IconManager {
 	/**
 	 * Refresh a given tag pill element.
 	 */
-	private refreshTag(tagEl: HTMLElement, tag: TagItem | null, onContextMenu: (event: MouseEvent) => void, unloading?: boolean): void {
+	private refreshTag(
+		tagEl: HTMLElement,
+		tag: TagItem | null,
+		onContextMenu: (event: MouseEvent) => void,
+		unloading?: boolean,
+	): void {
 		// Remove styling if necessary
 		if (!this.plugin.settings.showTagPillIcons || !tag || unloading) {
 			tagEl.find('.icon-palette-icon')?.remove();
@@ -416,11 +569,15 @@ export default class EditorIconManager extends IconManager {
 			const iconEl = tagEl.find('.icon-palette-icon') ?? createSpan();
 			tagEl.prepend(iconEl);
 			if (tag && this.plugin.isSettingEnabled('clickableIcons')) {
-				this.refreshIcon(tag, iconEl, event => {
-					IconPicker.openSingle(this.plugin, tag, (newIcon, newColor) => {
-						this.plugin.saveTagIcon(tag, newIcon, newColor);
-						this.plugin.refreshManagers('tag');
-					});
+				this.refreshIcon(tag, iconEl, (event) => {
+					IconPicker.openSingle(
+						this.plugin,
+						tag,
+						(newIcon, newColor) => {
+							this.plugin.saveTagIcon(tag, newIcon, newColor);
+							this.plugin.refreshManagers('tag');
+						},
+					);
 					event.stopPropagation();
 				});
 			} else {
@@ -434,7 +591,9 @@ export default class EditorIconManager extends IconManager {
 
 		// Set menu actions
 		if (this.plugin.settings.showMenuActions) {
-			this.setEventListener(tagEl, 'contextmenu', event => onContextMenu(event));
+			this.setEventListener(tagEl, 'contextmenu', (event) =>
+				onContextMenu(event),
+			);
 		} else {
 			this.stopEventListener(tagEl, 'contextmenu');
 		}
@@ -451,9 +610,15 @@ export default class EditorIconManager extends IconManager {
 			tagEl.style.setProperty('--tag-color-hover', cssRgb);
 			tagEl.style.setProperty('--tag-color-remove-hover', cssRgb);
 			tagEl.style.setProperty('--tag-background', cssRgba + ', 0.1)');
-			tagEl.style.setProperty('--tag-background-hover', cssRgba + ', 0.1)');
+			tagEl.style.setProperty(
+				'--tag-background-hover',
+				cssRgba + ', 0.1)',
+			);
 			tagEl.style.setProperty(`--tag-border-color`, cssRgba + ', 0.25)');
-			tagEl.style.setProperty(`--tag-border-color-hover`, cssRgba + ', 0.5)');
+			tagEl.style.setProperty(
+				`--tag-border-color-hover`,
+				cssRgba + ', 0.5)',
+			);
 		} else {
 			tagEl.style.removeProperty('--tag-color');
 			tagEl.style.removeProperty('--tag-color-hover');
@@ -474,26 +639,46 @@ export default class EditorIconManager extends IconManager {
 		const prop = this.plugin.getPropertyItem(propId);
 
 		// Change icon
-		this.plugin.menuManager?.addItemAfter(['action.changeType', 'action'], item => item
-			.setTitle(STRINGS.menu.changeIcon)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => IconPicker.openSingle(this.plugin, prop, (newIcon, newColor) => {
-				this.plugin.savePropertyIcon(prop, newIcon, newColor);
-				this.plugin.refreshManagers('property');
-			}))
+		this.plugin.menuManager?.addItemAfter(
+			['action.changeType', 'action'],
+			(item) =>
+				item
+					.setTitle(STRINGS.menu.changeIcon)
+					.setIcon('lucide-image-plus')
+					.setSection('icon')
+					.onClick(() =>
+						IconPicker.openSingle(
+							this.plugin,
+							prop,
+							(newIcon, newColor) => {
+								this.plugin.savePropertyIcon(
+									prop,
+									newIcon,
+									newColor,
+								);
+								this.plugin.refreshManagers('property');
+							},
+						),
+					),
 		);
 
 		// Remove icon / Reset color
 		if (prop.icon || prop.color) {
-			this.plugin.menuManager?.addItem(item => item
-				.setTitle(prop.icon ? STRINGS.menu.removeIcon : STRINGS.menu.resetColor)
-				.setIcon(prop.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw')
-				.setSection('icon')
-				.onClick(() => {
-					this.plugin.savePropertyIcon(prop, null, null);
-					this.plugin.refreshManagers('property');
-				})
+			this.plugin.menuManager?.addItem((item) =>
+				item
+					.setTitle(
+						prop.icon
+							? STRINGS.menu.removeIcon
+							: STRINGS.menu.resetColor,
+					)
+					.setIcon(
+						prop.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw',
+					)
+					.setSection('icon')
+					.onClick(() => {
+						this.plugin.savePropertyIcon(prop, null, null);
+						this.plugin.refreshManagers('property');
+					}),
 			);
 		}
 	}
@@ -507,26 +692,42 @@ export default class EditorIconManager extends IconManager {
 		if (!tag) return;
 
 		// Change icon
-		this.plugin.menuManager?.addItemAfter(isEditingMode ? [] : 'selection', menuItem => menuItem
-			.setTitle(STRINGS.menu.changeIcon)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => IconPicker.openSingle(this.plugin, tag, (newIcon, newColor) => {
-				this.plugin.saveTagIcon(tag, newIcon, newColor);
-				this.plugin.refreshManagers('tag');
-			}))
+		this.plugin.menuManager?.addItemAfter(
+			isEditingMode ? [] : 'selection',
+			(menuItem) =>
+				menuItem
+					.setTitle(STRINGS.menu.changeIcon)
+					.setIcon('lucide-image-plus')
+					.setSection('icon')
+					.onClick(() =>
+						IconPicker.openSingle(
+							this.plugin,
+							tag,
+							(newIcon, newColor) => {
+								this.plugin.saveTagIcon(tag, newIcon, newColor);
+								this.plugin.refreshManagers('tag');
+							},
+						),
+					),
 		);
 
 		// Remove icon / Reset color
 		if (tag.icon || tag.color) {
-			this.plugin.menuManager?.addItem(menuItem => menuItem
-				.setTitle(tag.icon ? STRINGS.menu.removeIcon : STRINGS.menu.resetColor)
-				.setIcon(tag.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw')
-				.setSection('icon')
-				.onClick(() => {
-					this.plugin.saveTagIcon(tag, null, null);
-					this.plugin.refreshManagers('tag');
-				})
+			this.plugin.menuManager?.addItem((menuItem) =>
+				menuItem
+					.setTitle(
+						tag.icon
+							? STRINGS.menu.removeIcon
+							: STRINGS.menu.resetColor,
+					)
+					.setIcon(
+						tag.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw',
+					)
+					.setSection('icon')
+					.onClick(() => {
+						this.plugin.saveTagIcon(tag, null, null);
+						this.plugin.refreshManagers('tag');
+					}),
 			);
 		}
 	}

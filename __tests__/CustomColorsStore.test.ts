@@ -4,7 +4,9 @@ import CustomColorsStore from '../src/CustomColorsStore.js';
 describe('CustomColorsStore.normalize', () => {
 	it('trims and lowercases so hex case and padding collapse to one key', () => {
 		expect(CustomColorsStore.normalize('  #AABBCC ')).toBe('#aabbcc');
-		expect(CustomColorsStore.normalize('#aabbcc')).toBe(CustomColorsStore.normalize('#AABBCC'));
+		expect(CustomColorsStore.normalize('#aabbcc')).toBe(
+			CustomColorsStore.normalize('#AABBCC'),
+		);
 	});
 });
 
@@ -65,13 +67,17 @@ describe('CustomColorsStore.save', () => {
 	it('does not throw, trims to empty, and reports the change for a non-positive cap', () => {
 		const zero = ['#111111'];
 		let zeroChanged = false;
-		expect(() => { zeroChanged = CustomColorsStore.save(zero, '#222222', 0); }).not.toThrow();
+		expect(() => {
+			zeroChanged = CustomColorsStore.save(zero, '#222222', 0);
+		}).not.toThrow();
 		expect(zeroChanged).toBe(true);
 		expect(zero).toEqual([]);
 
 		const negative = ['#111111'];
 		let negativeChanged = false;
-		expect(() => { negativeChanged = CustomColorsStore.save(negative, '#222222', -5); }).not.toThrow();
+		expect(() => {
+			negativeChanged = CustomColorsStore.save(negative, '#222222', -5);
+		}).not.toThrow();
 		expect(negativeChanged).toBe(true);
 		expect(negative).toEqual([]);
 	});
@@ -98,7 +104,9 @@ describe('CustomColorsStore.getName / setName', () => {
 
 	it('sets a name, trims it, and reports a change', () => {
 		const names: Record<string, string> = {};
-		expect(CustomColorsStore.setName(names, '#AABBCC', '  Brand blue  ')).toBe(true);
+		expect(
+			CustomColorsStore.setName(names, '#AABBCC', '  Brand blue  '),
+		).toBe(true);
 		expect(names).toEqual({ '#aabbcc': 'Brand blue' });
 		expect(CustomColorsStore.getName(names, '#aabbcc')).toBe('Brand blue');
 	});
@@ -129,16 +137,22 @@ describe('CustomColorsStore.getName / setName', () => {
 		// setName treats the inherited key as absent, so a blank is a no-op...
 		expect(CustomColorsStore.setName(names, 'constructor', '')).toBe(false);
 		// ...and a real name creates an own property that then reads back.
-		expect(CustomColorsStore.setName(names, 'constructor', 'Weird')).toBe(true);
+		expect(CustomColorsStore.setName(names, 'constructor', 'Weird')).toBe(
+			true,
+		);
 		expect(CustomColorsStore.getName(names, 'constructor')).toBe('Weird');
 	});
 
 	it('stores a "__proto__" name as an own property without corrupting the prototype', () => {
 		const names: Record<string, string> = {};
-		expect(CustomColorsStore.setName(names, '__proto__', 'Name')).toBe(true);
+		expect(CustomColorsStore.setName(names, '__proto__', 'Name')).toBe(
+			true,
+		);
 		// The name persists as an own data property...
 		expect(CustomColorsStore.getName(names, '__proto__')).toBe('Name');
-		expect(Object.prototype.hasOwnProperty.call(names, '__proto__')).toBe(true);
+		expect(Object.prototype.hasOwnProperty.call(names, '__proto__')).toBe(
+			true,
+		);
 		// ...and the object's prototype is untouched (no setter was invoked).
 		expect(Object.getPrototypeOf(names)).toBe(Object.prototype);
 	});
@@ -179,11 +193,17 @@ describe('customColorNames load normalization', () => {
 	// (normalizing keys, dropping blank/non-string names) then prune orphans, so a
 	// hand-edited or older data.json loads into the same shape the UI writes.
 	it('normalizes mixed-case keys and prunes names whose color is gone', () => {
-		const raw: Record<string, unknown> = { '#AABBCC': 'Sky', '#123456': 'Orphan', '#ffffff': '  ', bad: 42 };
+		const raw: Record<string, unknown> = {
+			'#AABBCC': 'Sky',
+			'#123456': 'Orphan',
+			'#ffffff': '  ',
+			bad: 42,
+		};
 		const colors = ['#aabbcc'];
 		const names: Record<string, string> = {};
 		for (const [color, name] of Object.entries(raw)) {
-			if (typeof name === 'string') CustomColorsStore.setName(names, color, name);
+			if (typeof name === 'string')
+				CustomColorsStore.setName(names, color, name);
 		}
 		CustomColorsStore.pruneNames(colors, names);
 		expect(names).toEqual({ '#aabbcc': 'Sky' });

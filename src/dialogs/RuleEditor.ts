@@ -1,4 +1,10 @@
-import { ButtonComponent, Modal, Platform, Setting, TextComponent } from 'obsidian';
+import {
+	ButtonComponent,
+	Modal,
+	Platform,
+	Setting,
+	TextComponent,
+} from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { Category, Icon, Item, FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
@@ -10,7 +16,17 @@ import ConditionSetting from 'src/components/ConditionSetting.js';
 import ConditionValueSuggest from 'src/components/ConditionValueSuggest.js';
 import RuleNameSuggest from 'src/components/RuleNameSuggest.js';
 
-export type OperatorValueType = 'text' | 'regex' | 'number' | 'datetime' | 'date' | 'time' | 'weekday' | 'month' | 'color' | 'hex';
+type OperatorValueType =
+	| 'text'
+	| 'regex'
+	| 'number'
+	| 'datetime'
+	| 'date'
+	| 'time'
+	| 'weekday'
+	| 'month'
+	| 'color'
+	| 'hex';
 
 const FILE_SOURCES = [
 	'icon',
@@ -87,12 +103,7 @@ const NUMBER_OPERATORS = [
 	'!isDivisible',
 ];
 
-const BOOLEAN_OPERATORS = [
-	'isTrue',
-	'!isTrue',
-	'isFalse',
-	'!isFalse',
-];
+const BOOLEAN_OPERATORS = ['isTrue', '!isTrue', 'isFalse', '!isFalse'];
 
 const DATETIME_OPERATORS = [
 	'datetimeIs',
@@ -257,42 +268,13 @@ const ICON_OPERATORS = [
 	'!nameMatches',
 ];
 
-const COLOR_OPERATORS = [
-	'colorIs',
-	'!colorIs',
-	'hexIs',
-	'!hexIs',
-];
+const COLOR_OPERATORS = ['colorIs', '!colorIs', 'hexIs', '!hexIs'];
 
-const VALUE_OPERATORS = [
-	'hasValue',
-	'!hasValue',
-];
+const VALUE_OPERATORS = ['hasValue', '!hasValue'];
 
-const WEEKDAY_VALUES = [
-	1,
-	2,
-	3,
-	4,
-	5,
-	6,
-	7,
-];
+const WEEKDAY_VALUES = [1, 2, 3, 4, 5, 6, 7];
 
-const MONTH_VALUES = [
-	1,
-	2,
-	3,
-	4,
-	5,
-	6,
-	7,
-	8,
-	9,
-	10,
-	11,
-	12,
-];
+const MONTH_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 const COLOR_VALUES = [
 	'red',
@@ -303,7 +285,7 @@ const COLOR_VALUES = [
 	'blue',
 	'purple',
 	'pink',
-	'gray'
+	'gray',
 ];
 
 const SOURCE_OPERATORS: Record<string, string[]> = {
@@ -429,14 +411,23 @@ class RuleEditorManager extends IconManager {
 	/**
 	 * @override
 	 */
-	refreshIcon(item: Item | Icon, iconEl: HTMLElement, onClick?: ((event: MouseEvent) => void)): void {
+	refreshIcon(
+		item: Item | Icon,
+		iconEl: HTMLElement,
+		onClick?: (event: MouseEvent) => void,
+	): void {
 		super.refreshIcon(item, iconEl, onClick);
 	}
 
 	/**
 	 * @override
 	 */
-	setEventListener<K extends keyof HTMLElementEventMap>(element: HTMLElement, type: K, listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void, options?: boolean | AddEventListenerOptions): void {
+	setEventListener<K extends keyof HTMLElementEventMap>(
+		element: HTMLElement,
+		type: K,
+		listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions,
+	): void {
 		super.setEventListener(element, type, listener, options);
 	}
 
@@ -450,7 +441,11 @@ class RuleEditorManager extends IconManager {
 	/**
 	 * @override
 	 */
-	setMutationObserver(element: HTMLElement | null, options: MutationObserverInit, callback: (mutation: MutationRecord) => void): void {
+	setMutationObserver(
+		element: HTMLElement | null,
+		options: MutationObserverInit,
+		callback: (mutation: MutationRecord) => void,
+	): void {
 		super.setMutationObserver(element, options, callback);
 	}
 
@@ -480,7 +475,12 @@ export default class RuleEditor extends Modal {
 	private nameField!: TextComponent;
 	private matchesButton!: ButtonComponent;
 
-	private constructor(plugin: IconPalettePlugin, page: Category, rule: RuleItem, callback: RuleEditorCallback | null) {
+	private constructor(
+		plugin: IconPalettePlugin,
+		page: Category,
+		rule: RuleItem,
+		callback: RuleEditorCallback | null,
+	) {
 		super(plugin.app);
 		this.plugin = plugin;
 		this.iconManager = new RuleEditorManager(plugin);
@@ -495,9 +495,15 @@ export default class RuleEditor extends Modal {
 	/**
 	 * Open a dialog to edit a single rule.
 	 */
-	static open(plugin: IconPalettePlugin, page: Category, rule: RuleItem, callback: RuleEditorCallback): void {
+	static open(
+		plugin: IconPalettePlugin,
+		page: Category,
+		rule: RuleItem,
+		callback: RuleEditorCallback,
+	): void {
 		// Silently no-op if rulebook hasn't finished loading
-		if (plugin.ruleManager) new RuleEditor(plugin, page, rule, callback).open();
+		if (plugin.ruleManager)
+			new RuleEditor(plugin, page, rule, callback).open();
 	}
 
 	/**
@@ -507,47 +513,81 @@ export default class RuleEditor extends Modal {
 		this.containerEl.addClass('mod-confirmation');
 		this.modalEl.addClass('icon-palette-rule-editor');
 		switch (this.page) {
-			case 'file': this.setTitle(STRINGS.ruleEditor.fileRule); break;
-			case 'folder': this.setTitle(STRINGS.ruleEditor.folderRule); break;
-			default: this.setTitle(STRINGS.categories.rule); break;
+			case 'file':
+				this.setTitle(STRINGS.ruleEditor.fileRule);
+				break;
+			case 'folder':
+				this.setTitle(STRINGS.ruleEditor.folderRule);
+				break;
+			default:
+				this.setTitle(STRINGS.categories.rule);
+				break;
 		}
 
 		const nameSetting = new Setting(this.contentEl);
 		nameSetting.infoEl.remove();
 
 		// BUTTON: Rule icon
-		nameSetting.addExtraButton(button => { button
-			.setIcon(this.rule.icon ?? this.plugin.ruleManager!.getPageIcon(this.page))
-			.setTooltip(STRINGS.iconPicker.changeIcon)
-			.onClick(() => IconPicker.openSingle(this.plugin, this.rule, (newIcon, newColor) => {
-				this.iconManager.refreshIcon({
-					icon: newIcon ?? this.plugin.ruleManager!.getPageIcon(this.page),
-					color: newColor,
-				}, button.extraSettingsEl);
-				this.rule.icon = newIcon;
-				this.rule.color = newColor;
-			}));
-			this.iconManager.refreshIcon({
-				icon: this.rule.icon ?? this.plugin.ruleManager!.getPageIcon(this.page),
-				color: this.rule.color,
-			}, button.extraSettingsEl);
+		nameSetting.addExtraButton((button) => {
+			button
+				.setIcon(
+					this.rule.icon ??
+						this.plugin.ruleManager!.getPageIcon(this.page),
+				)
+				.setTooltip(STRINGS.iconPicker.changeIcon)
+				.onClick(() =>
+					IconPicker.openSingle(
+						this.plugin,
+						this.rule,
+						(newIcon, newColor) => {
+							this.iconManager.refreshIcon(
+								{
+									icon:
+										newIcon ??
+										this.plugin.ruleManager!.getPageIcon(
+											this.page,
+										),
+									color: newColor,
+								},
+								button.extraSettingsEl,
+							);
+							this.rule.icon = newIcon;
+							this.rule.color = newColor;
+						},
+					),
+				);
+			this.iconManager.refreshIcon(
+				{
+					icon:
+						this.rule.icon ??
+						this.plugin.ruleManager!.getPageIcon(this.page),
+					color: this.rule.color,
+				},
+				button.extraSettingsEl,
+			);
 		});
 
 		// FIELD: Rule name
-		nameSetting.addText(text => { text
-			.setValue(this.rule.name)
-			.setPlaceholder(STRINGS.ruleEditor.enterName);
-			this.iconManager.setEventListener(text.inputEl, 'keydown', event => {
-				if (event.key === 'Enter') this.closeAndSave(this.rule);
-			});
+		nameSetting.addText((text) => {
+			text.setValue(this.rule.name).setPlaceholder(
+				STRINGS.ruleEditor.enterName,
+			);
+			this.iconManager.setEventListener(
+				text.inputEl,
+				'keydown',
+				(event) => {
+					if (event.key === 'Enter') this.closeAndSave(this.rule);
+				},
+			);
 			new RuleNameSuggest(this.plugin, this.page, text);
 			this.nameField = text;
 		});
 
 		// TOGGLE: Enable/disable rule
-		nameSetting.addToggle(toggle => { toggle
-			.setValue(this.rule.enabled)
-			.onChange(value => this.rule.enabled = value);
+		nameSetting.addToggle((toggle) => {
+			toggle
+				.setValue(this.rule.enabled)
+				.onChange((value) => (this.rule.enabled = value));
 		});
 
 		// BUTTONS: Match conditions
@@ -555,96 +595,151 @@ export default class RuleEditor extends Modal {
 		new Setting(this.contentEl)
 			.setName(STRINGS.ruleEditor.matchConditions.name)
 			.setDesc(STRINGS.ruleEditor.matchConditions.desc)
-			.addButton(button => { button
-				.setButtonText(STRINGS.ruleEditor.matchConditions.all)
-				.setTooltip('All conditions must match')
-				.buttonEl.toggleClass('icon-palette-button-selected', this.rule.match === 'all');
-				this.iconManager.setEventListener(button.buttonEl, 'pointerdown', () => {
-					buttonEls.forEach(buttonEl => buttonEl.removeClass('icon-palette-button-selected'));
-					button.buttonEl.addClass('icon-palette-button-selected');
-					this.rule.match = 'all';
-					this.updateMatchesButton();
-				});
+			.addButton((button) => {
+				button
+					.setButtonText(STRINGS.ruleEditor.matchConditions.all)
+					.setTooltip('All conditions must match')
+					.buttonEl.toggleClass(
+						'icon-palette-button-selected',
+						this.rule.match === 'all',
+					);
+				this.iconManager.setEventListener(
+					button.buttonEl,
+					'pointerdown',
+					() => {
+						buttonEls.forEach((buttonEl) =>
+							buttonEl.removeClass(
+								'icon-palette-button-selected',
+							),
+						);
+						button.buttonEl.addClass(
+							'icon-palette-button-selected',
+						);
+						this.rule.match = 'all';
+						this.updateMatchesButton();
+					},
+				);
 				buttonEls.push(button.buttonEl);
 			})
-			.addButton(button => { button
-				.setButtonText(STRINGS.ruleEditor.matchConditions.any)
-				.setTooltip('At least 1 condition must match')
-				.buttonEl.toggleClass('icon-palette-button-selected', this.rule.match === 'any');
-				this.iconManager.setEventListener(button.buttonEl, 'pointerdown', () => {
-					buttonEls.forEach(buttonEl => buttonEl.removeClass('icon-palette-button-selected'));
-					button.buttonEl.addClass('icon-palette-button-selected');
-					this.rule.match = 'any';
-					this.updateMatchesButton();
-				});
+			.addButton((button) => {
+				button
+					.setButtonText(STRINGS.ruleEditor.matchConditions.any)
+					.setTooltip('At least 1 condition must match')
+					.buttonEl.toggleClass(
+						'icon-palette-button-selected',
+						this.rule.match === 'any',
+					);
+				this.iconManager.setEventListener(
+					button.buttonEl,
+					'pointerdown',
+					() => {
+						buttonEls.forEach((buttonEl) =>
+							buttonEl.removeClass(
+								'icon-palette-button-selected',
+							),
+						);
+						button.buttonEl.addClass(
+							'icon-palette-button-selected',
+						);
+						this.rule.match = 'any';
+						this.updateMatchesButton();
+					},
+				);
 				buttonEls.push(button.buttonEl);
 			})
-			.addButton(button => { button
-				.setButtonText(STRINGS.ruleEditor.matchConditions.none)
-				.setTooltip('All conditions must fail');
-				button.buttonEl.toggleClass('icon-palette-button-selected', this.rule.match === 'none');
-				this.iconManager.setEventListener(button.buttonEl, 'pointerdown', () => {
-					buttonEls.forEach(buttonEl => buttonEl.removeClass('icon-palette-button-selected'));
-					button.buttonEl.addClass('icon-palette-button-selected');
-					this.rule.match = 'none';
-					this.updateMatchesButton();
-				});
+			.addButton((button) => {
+				button
+					.setButtonText(STRINGS.ruleEditor.matchConditions.none)
+					.setTooltip('All conditions must fail');
+				button.buttonEl.toggleClass(
+					'icon-palette-button-selected',
+					this.rule.match === 'none',
+				);
+				this.iconManager.setEventListener(
+					button.buttonEl,
+					'pointerdown',
+					() => {
+						buttonEls.forEach((buttonEl) =>
+							buttonEl.removeClass(
+								'icon-palette-button-selected',
+							),
+						);
+						button.buttonEl.addClass(
+							'icon-palette-button-selected',
+						);
+						this.rule.match = 'none';
+						this.updateMatchesButton();
+					},
+				);
 				buttonEls.push(button.buttonEl);
 			});
 
 		// HEADING: Conditions
-		new Setting(this.contentEl).setHeading()
+		new Setting(this.contentEl)
+			.setHeading()
 			.setName(STRINGS.ruleEditor.conditions)
-			.addExtraButton(button => button
-				.setIcon('lucide-plus')
-				.setTooltip(STRINGS.ruleEditor.addCondition)
-				.onClick(() => this.newCondition())
+			.addExtraButton((button) =>
+				button
+					.setIcon('lucide-plus')
+					.setTooltip(STRINGS.ruleEditor.addCondition)
+					.onClick(() => this.newCondition()),
 			);
 
 		// LIST: Conditions
-		this.scrollerEl = this.modalEl.createDiv({ cls: 'icon-palette-scroller' });
+		this.scrollerEl = this.modalEl.createDiv({
+			cls: 'icon-palette-scroller',
+		});
 		for (const condition of this.rule.conditions) {
 			this.appendCondition(condition);
 		}
 
 		// Match styling of bookmark edit dialog
-		const buttonContainerEl = this.modalEl.createDiv({ cls: 'modal-button-container' });
-		const buttonRowEl = Platform.isMobile ? buttonContainerEl.createDiv({ cls: 'icon-palette-button-row' }) : null;
+		const buttonContainerEl = this.modalEl.createDiv({
+			cls: 'modal-button-container',
+		});
+		const buttonRowEl = Platform.isMobile
+			? buttonContainerEl.createDiv({ cls: 'icon-palette-button-row' })
+			: null;
 
 		// [Remove rule]
 		new ButtonComponent(buttonRowEl ?? buttonContainerEl)
 			.setButtonText(STRINGS.ruleEditor.removeRule)
 			.onClick(() => this.closeAndSave(null))
-			.buttonEl.addClasses(Platform.isPhone
-				? ['mod-warning']
-				: ['mod-secondary', 'mod-destructive']
+			.buttonEl.addClasses(
+				Platform.isPhone
+					? ['mod-warning']
+					: ['mod-secondary', 'mod-destructive'],
 			);
 
 		// [Matches]
-		this.matchesButton = new ButtonComponent(buttonRowEl ? buttonRowEl : buttonContainerEl)
+		this.matchesButton = new ButtonComponent(
+			buttonRowEl ? buttonRowEl : buttonContainerEl,
+		)
 			.setButtonText(STRINGS.ruleEditor.buttonNoMatches)
-			.onClick(() => RuleChecker.open(this.plugin, this.page, this.matches))
-			.setDisabled(this.rule.conditions === null)
-			.setTooltip(this.rule.conditions === null ? 'No conditions added' : '',
-				{ placement: 'top', delay: 100 }
+			.onClick(() =>
+				RuleChecker.open(this.plugin, this.page, this.matches),
 			);
+		// Disabled state and tooltip are owned by updateMatchesButton() (called
+		// just below and after every condition add/remove) so they never drift.
 
 		// [Cancel]
 		new ButtonComponent(Platform.isPhone ? this.modalEl : buttonContainerEl)
 			.setButtonText(STRINGS.iconPicker.cancel)
 			.onClick(() => this.close())
-			.buttonEl.addClasses(Platform.isPhone
-				? ['modal-nav-action', 'mod-secondary']
-				: ['mod-cancel']
+			.buttonEl.addClasses(
+				Platform.isPhone
+					? ['modal-nav-action', 'mod-secondary']
+					: ['mod-cancel'],
 			);
 
 		// [Save]
 		new ButtonComponent(Platform.isPhone ? this.modalEl : buttonContainerEl)
 			.setButtonText(STRINGS.iconPicker.save)
 			.onClick(() => this.closeAndSave(this.rule))
-			.buttonEl.addClasses(Platform.isPhone
-				? ['modal-nav-action', 'mod-cta']
-				: ['mod-cta']
+			.buttonEl.addClasses(
+				Platform.isPhone
+					? ['modal-nav-action', 'mod-cta']
+					: ['mod-cta'],
 			);
 
 		this.updateMatchesButton();
@@ -654,19 +749,22 @@ export default class RuleEditor extends Modal {
 	 * Append a condition to the rule.
 	 */
 	private appendCondition(condition: ConditionItem): void {
-		const condSetting: ConditionSetting = new ConditionSetting(this.scrollerEl, condition)
-			.onSourceChange(source => {
+		const condSetting: ConditionSetting = new ConditionSetting(
+			this.scrollerEl,
+			condition,
+		)
+			.onSourceChange((source) => {
 				this.setConditionSource(condSetting, source);
 				this.setConditionOperator(condSetting, condition.operator);
 				this.setConditionValue(condSetting, condition.value);
 				this.updateMatchesButton();
 			})
-			.onOperatorChange(operator => {
+			.onOperatorChange((operator) => {
 				this.setConditionOperator(condSetting, operator);
 				this.setConditionValue(condSetting, condition.value);
 				this.updateMatchesButton();
 			})
-			.onValueChange(value => {
+			.onValueChange((value) => {
 				this.setConditionValue(condSetting, value);
 				this.updateMatchesButton();
 			})
@@ -675,7 +773,12 @@ export default class RuleEditor extends Modal {
 			.onDrag((x, y) => this.onDrag(condSetting, x, y))
 			.onDragEnd(() => this.onDragEnd(condSetting));
 
-		new ConditionValueSuggest(this.plugin, this.page, condition, condSetting.valInput);
+		new ConditionValueSuggest(
+			this.plugin,
+			this.page,
+			condition,
+			condSetting.valInput,
+		);
 		this.setConditionSource(condSetting, condition.source);
 		this.setConditionOperator(condSetting, condition.operator);
 		this.setConditionValue(condSetting, condition.value);
@@ -687,19 +790,31 @@ export default class RuleEditor extends Modal {
 	/**
 	 * Set the source of a condition setting, updating its dropdown box.
 	 */
-	private setConditionSource(setting: ConditionSetting, source: string): void {
+	private setConditionSource(
+		setting: ConditionSetting,
+		source: string,
+	): void {
 		setting.condition.source = source;
 		setting.srcDropdown.setValue(source);
 
-		if (setting.condition.source === 'properties' || setting.condition.source.startsWith('property:')) {
+		if (
+			setting.condition.source === 'properties' ||
+			setting.condition.source.startsWith('property:')
+		) {
 			// Get property sources
 			let propSources: string[] = [];
-			propSources = this.plugin.getPropertyItems().map(prop => 'property:' + prop.id).sort((a, b) => a.localeCompare(b))
+			propSources = this.plugin
+				.getPropertyItems()
+				.map((prop) => 'property:' + prop.id)
+				.sort((a, b) => a.localeCompare(b));
 			// Populate source dropdown
 			setting.srcDropdown.selectEl.empty();
 			setting.srcDropdown.addOption('properties-close', '...');
 			for (const propSource of propSources) {
-				setting.srcDropdown.addOption(propSource, propSource.replace('property:', ''));
+				setting.srcDropdown.addOption(
+					propSource,
+					propSource.replace('property:', ''),
+				);
 			}
 			// Preserve the selected property if possible
 			if (propSources.includes(setting.condition.source)) {
@@ -715,13 +830,20 @@ export default class RuleEditor extends Modal {
 			// Get sources based on rule page
 			let sources: string[] = [];
 			switch (this.page) {
-				case 'file': sources = FILE_SOURCES; break;
-				case 'folder': sources = FOLDER_SOURCES; break;
+				case 'file':
+					sources = FILE_SOURCES;
+					break;
+				case 'folder':
+					sources = FOLDER_SOURCES;
+					break;
 			}
 			// Populate source dropdown
 			setting.srcDropdown.selectEl.empty();
 			for (const source of sources) {
-				const label = STRINGS.ruleEditor.source[source as keyof typeof STRINGS.ruleEditor.source]
+				const label =
+					STRINGS.ruleEditor.source[
+						source as keyof typeof STRINGS.ruleEditor.source
+					];
 				setting.srcDropdown.addOption(source, label);
 			}
 			// Preserve the selected source if possible
@@ -740,7 +862,10 @@ export default class RuleEditor extends Modal {
 	/**
 	 * Set the operator of a condition setting, updating its dropdown box.
 	 */
-	private setConditionOperator(setting: ConditionSetting, operator: string): void {
+	private setConditionOperator(
+		setting: ConditionSetting,
+		operator: string,
+	): void {
 		const oldValueType = OPERATOR_VALUE_TYPES[setting.condition.operator];
 		setting.condition.operator = operator;
 
@@ -750,14 +875,30 @@ export default class RuleEditor extends Modal {
 			const propId = setting.condition.source.replace('property:', '');
 			const prop = this.plugin.getPropertyItem(propId);
 			switch (prop.type) {
-				default: operators = TEXT_OPERATORS; break;
-				case 'multitext': operators = LIST_OPERATORS; break;
-				case 'number': operators = NUMBER_OPERATORS; break;
-				case 'checkbox': operators = BOOLEAN_OPERATORS; break;
-				case 'date': operators = DATE_OPERATORS; break;
-				case 'datetime': operators = DATETIME_OPERATORS; break;
-				case 'aliases': operators = LIST_OPERATORS; break;
-				case 'tags': operators = LIST_OPERATORS; break;
+				default:
+					operators = TEXT_OPERATORS;
+					break;
+				case 'multitext':
+					operators = LIST_OPERATORS;
+					break;
+				case 'number':
+					operators = NUMBER_OPERATORS;
+					break;
+				case 'checkbox':
+					operators = BOOLEAN_OPERATORS;
+					break;
+				case 'date':
+					operators = DATE_OPERATORS;
+					break;
+				case 'datetime':
+					operators = DATETIME_OPERATORS;
+					break;
+				case 'aliases':
+					operators = LIST_OPERATORS;
+					break;
+				case 'tags':
+					operators = LIST_OPERATORS;
+					break;
 			}
 		} else {
 			operators = SOURCE_OPERATORS[setting.condition.source] ?? [];
@@ -766,7 +907,10 @@ export default class RuleEditor extends Modal {
 		// Populate operator dropdown
 		setting.opDropdown.selectEl.empty();
 		for (const operator of operators) {
-			const label = STRINGS.ruleEditor.operator[operator as keyof typeof STRINGS.ruleEditor.operator];
+			const label =
+				STRINGS.ruleEditor.operator[
+					operator as keyof typeof STRINGS.ruleEditor.operator
+				];
 			setting.opDropdown.addOption(operator, label);
 		}
 
@@ -800,7 +944,7 @@ export default class RuleEditor extends Modal {
 		let inputType: string | null = null;
 		let inputPlaceholder: string = '';
 		let dropdownValues: (string | number)[] | null = null;
-		let dropdownLabels: Record<(string | number), string> | null = null;
+		let dropdownLabels: Record<string | number, string> | null = null;
 		switch (valueType) {
 			case 'text': {
 				inputType = 'text';
@@ -824,17 +968,14 @@ export default class RuleEditor extends Modal {
 			}
 			case 'datetime': {
 				inputType = 'datetime-local';
-				inputPlaceholder = '';
 				break;
 			}
 			case 'date': {
 				inputType = 'date';
-				inputPlaceholder = '';
 				break;
 			}
 			case 'time': {
 				inputType = 'time';
-				inputPlaceholder = '';
 				break;
 			}
 			case 'weekday': {
@@ -861,7 +1002,10 @@ export default class RuleEditor extends Modal {
 			setting.valInput.setValue(setting.condition.value);
 			// Insert element if not present
 			if (!setting.ctrlContainerEl.contains(setting.valInput.inputEl)) {
-				setting.ctrlContainerEl.insertBefore(setting.valInput.inputEl, setting.removeEl);
+				setting.ctrlContainerEl.insertBefore(
+					setting.valInput.inputEl,
+					setting.removeEl,
+				);
 			}
 		} else {
 			// Remove element
@@ -879,8 +1023,13 @@ export default class RuleEditor extends Modal {
 				setting.valDropdown.setValue(setting.condition.value);
 			}
 			// Insert element if not present
-			if (!setting.ctrlContainerEl.contains(setting.valDropdown.selectEl)) {
-				setting.ctrlContainerEl.insertBefore(setting.valDropdown.selectEl, setting.removeEl);
+			if (
+				!setting.ctrlContainerEl.contains(setting.valDropdown.selectEl)
+			) {
+				setting.ctrlContainerEl.insertBefore(
+					setting.valDropdown.selectEl,
+					setting.removeEl,
+				);
 			}
 
 			// Preserve the selected value if possible
@@ -905,11 +1054,17 @@ export default class RuleEditor extends Modal {
 	private newCondition(): void {
 		const lastCondition = this.rule.conditions.last();
 		const condition = lastCondition
-			? { source: lastCondition.source, operator: lastCondition.operator, value: '' }
+			? {
+					source: lastCondition.source,
+					operator: lastCondition.operator,
+					value: '',
+				}
 			: { source: 'name', operator: 'contains', value: '' };
 		this.rule.conditions.push(condition);
 		this.appendCondition(condition);
-		this.scrollerEl.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+		this.scrollerEl.lastElementChild?.scrollIntoView({
+			behavior: 'smooth',
+		});
 	}
 
 	/**
@@ -934,17 +1089,21 @@ export default class RuleEditor extends Modal {
 		const gripRect = gripEl.getBoundingClientRect();
 
 		// Create ghost and set initial position
-		setting.ghostEl = settingEl.doc.body.createDiv({ cls: ['drag-reorder-ghost', 'icon-palette-condition-dragger'] });
+		setting.ghostEl = settingEl.doc.body.createDiv({
+			cls: ['drag-reorder-ghost', 'icon-palette-condition-dragger'],
+		});
 		setting.ghostEl.setCssStyles({
 			width: settingRect.width + 'px',
 			height: settingRect.height + 'px',
-			left: x - (gripRect.x - settingRect.x) - (gripRect.width / 2) + 'px',
+			left: x - (gripRect.x - settingRect.x) - gripRect.width / 2 + 'px',
 			top: y - settingRect.height / 2 + 'px',
 		});
 		setting.ghostEl.appendChild(settingEl.cloneNode(true));
 
 		// Show correct values in ghost dropdowns
-		const [ghostSourceEl, ghostOperatorEl] = setting.ghostEl.findAll('select') as HTMLSelectElement[];
+		const [ghostSourceEl, ghostOperatorEl] = setting.ghostEl.findAll(
+			'select',
+		) as HTMLSelectElement[];
 		if (ghostSourceEl) ghostSourceEl.value = setting.condition.source;
 		if (ghostOperatorEl) ghostOperatorEl.value = setting.condition.operator;
 
@@ -953,7 +1112,9 @@ export default class RuleEditor extends Modal {
 
 		// Hack to hide the browser-native drag ghost
 		settingEl.setCssStyles({ opacity: '0%' });
-		settingEl.win.requestAnimationFrame(() => settingEl.style.removeProperty('opacity'));
+		settingEl.win.requestAnimationFrame(() =>
+			settingEl.style.removeProperty('opacity'),
+		);
 	}
 
 	private onDrag(setting: ConditionSetting, x: number, y: number): void {
@@ -968,7 +1129,7 @@ export default class RuleEditor extends Modal {
 
 		// Update ghost position
 		setting.ghostEl?.setCssStyles({
-			left: x - (gripRect.x - settingRect.x) - (gripRect.width / 2) + 'px',
+			left: x - (gripRect.x - settingRect.x) - gripRect.width / 2 + 'px',
 			top: y - settingRect.height / 2 + 'px',
 		});
 
@@ -1000,7 +1161,7 @@ export default class RuleEditor extends Modal {
 	 * Reset drag UI and save the new position.
 	 */
 	private onDragEnd(setting: ConditionSetting): void {
-		setting.ghostEl?.remove()
+		setting.ghostEl?.remove();
 		setting.ghostEl = null;
 		setting.settingEl.removeClass('drag-ghost-hidden');
 		setting.settingEl.removeAttribute('draggable');
@@ -1026,6 +1187,20 @@ export default class RuleEditor extends Modal {
 		const matchesButton = this.matchesButton;
 		if (typeof matchesButton === 'undefined') return;
 
+		// No conditions: nothing to match against, so disable the button with an
+		// explanation instead of running the judge over an empty rule. Handled in
+		// this shared update path so the state stays correct after a condition is
+		// added or removed.
+		if (!this.rule.conditions?.length) {
+			matchesButton.setButtonText(STRINGS.ruleEditor.buttonNoMatches);
+			matchesButton.setDisabled(true);
+			matchesButton.setTooltip(STRINGS.ruleEditor.noConditionsAdded, {
+				placement: 'top',
+				delay: 100,
+			});
+			return;
+		}
+
 		// Show a loading spinner if check takes longer than 100ms
 		const timeoutId = this.modalEl.win.setTimeout(() => {
 			this.setMatchesButtonLoading(true);
@@ -1034,28 +1209,53 @@ export default class RuleEditor extends Modal {
 
 		// Update matches
 		switch (this.page) {
-			case 'file': this.matches = this.plugin.ruleManager!.judgeFiles(this.rule, new Date(), true); break;
-			case 'folder': this.matches = this.plugin.ruleManager!.judgeFolders(this.rule, new Date(), true); break;
+			case 'file':
+				this.matches = this.plugin.ruleManager!.judgeFiles(
+					this.rule,
+					new Date(),
+					true,
+				);
+				break;
+			case 'folder':
+				this.matches = this.plugin.ruleManager!.judgeFolders(
+					this.rule,
+					new Date(),
+					true,
+				);
+				break;
 		}
 		this.modalEl.win.clearTimeout(timeoutId);
 
 		// Update button text
 		switch (this.matches.length) {
-			case 0: matchesButton.setButtonText(STRINGS.ruleEditor.buttonNoMatches); break;
-			case 1: matchesButton.setButtonText(STRINGS.ruleEditor.buttonMatch); break;
+			case 0:
+				matchesButton.setButtonText(STRINGS.ruleEditor.buttonNoMatches);
+				break;
+			case 1:
+				matchesButton.setButtonText(STRINGS.ruleEditor.buttonMatch);
+				break;
 			default: {
 				matchesButton.setButtonText(
-					STRINGS.ruleEditor.buttonMatches.replace('{#}', this.matches.length.toString())
+					STRINGS.ruleEditor.buttonMatches.replace(
+						'{#}',
+						this.matches.length.toString(),
+					),
 				);
 				break;
 			}
 		}
 		this.setMatchesButtonLoading(false);
 		matchesButton.setDisabled(this.matches.length === 0);
+		// Conditions exist, so clear the no-conditions explanation.
+		matchesButton.setTooltip('', { placement: 'top', delay: 100 });
 	}
 
 	private setMatchesButtonLoading(loading: boolean): void {
-		(this.matchesButton as ButtonComponent & { setLoading?: (value: boolean) => void }).setLoading?.(loading);
+		(
+			this.matchesButton as ButtonComponent & {
+				setLoading?: (value: boolean) => void;
+			}
+		).setLoading?.(loading);
 	}
 
 	/**
@@ -1075,7 +1275,9 @@ export default class RuleEditor extends Modal {
 		this.iconManager.stopEventListeners();
 		this.iconManager.stopMutationObservers();
 		// Clean up any drag ghosts left hanging when dialog is closed
-		for (const ghostEl of this.modalEl.doc.body.findAll(':scope > .icon-palette-condition-dragger')) {
+		for (const ghostEl of this.modalEl.doc.body.findAll(
+			':scope > .icon-palette-condition-dragger',
+		)) {
 			ghostEl.remove();
 		}
 	}

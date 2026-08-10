@@ -32,7 +32,7 @@ export default class CustomColorsStore {
 	 */
 	static has(colors: string[], color: string): boolean {
 		const key = CustomColorsStore.normalize(color);
-		return colors.some(c => CustomColorsStore.normalize(c) === key);
+		return colors.some((c) => CustomColorsStore.normalize(c) === key);
 	}
 
 	/**
@@ -44,7 +44,9 @@ export default class CustomColorsStore {
 	 */
 	static save(colors: string[], color: string, cap: number): boolean {
 		const key = CustomColorsStore.normalize(color);
-		const existingIndex = colors.findIndex(c => CustomColorsStore.normalize(c) === key);
+		const existingIndex = colors.findIndex(
+			(c) => CustomColorsStore.normalize(c) === key,
+		);
 		// Clamp: a non-positive cap trims to empty rather than throwing a
 		// RangeError on a negative array length.
 		const max = Math.max(0, cap);
@@ -71,7 +73,9 @@ export default class CustomColorsStore {
 	 */
 	static remove(colors: string[], color: string): boolean {
 		const key = CustomColorsStore.normalize(color);
-		const index = colors.findIndex(c => CustomColorsStore.normalize(c) === key);
+		const index = colors.findIndex(
+			(c) => CustomColorsStore.normalize(c) === key,
+		);
 		if (index < 0) return false;
 
 		colors.splice(index, 1);
@@ -89,7 +93,9 @@ export default class CustomColorsStore {
 		// Own-property + type guard: a color that normalizes to an inherited key
 		// (e.g. "constructor") must not return Object.prototype's value, which would
 		// hand the icon-picker menu a non-string title.
-		const value = Object.prototype.hasOwnProperty.call(names, key) ? names[key] : undefined;
+		const value = Object.prototype.hasOwnProperty.call(names, key)
+			? names[key]
+			: undefined;
 		return typeof value === 'string' ? value : '';
 	}
 
@@ -99,7 +105,11 @@ export default class CustomColorsStore {
 	 * prune later. Returns whether the map changed, matching the mutator
 	 * convention on the list methods above, so the caller saves only when needed.
 	 */
-	static setName(names: Record<string, string>, color: string, name: string): boolean {
+	static setName(
+		names: Record<string, string>,
+		color: string,
+		name: string,
+	): boolean {
 		const key = CustomColorsStore.normalize(color);
 		const trimmed = name.trim();
 		// Own-property checks so an inherited key (e.g. "constructor") is treated as
@@ -114,7 +124,12 @@ export default class CustomColorsStore {
 		// defineProperty, not `names[key] = trimmed`: a key normalizing to
 		// "__proto__" would otherwise invoke the inherited setter and never store an
 		// own property. This forces a plain own data property for any key.
-		Object.defineProperty(names, key, { value: trimmed, writable: true, enumerable: true, configurable: true });
+		Object.defineProperty(names, key, {
+			value: trimmed,
+			writable: true,
+			enumerable: true,
+			configurable: true,
+		});
 		return true;
 	}
 
@@ -123,8 +138,11 @@ export default class CustomColorsStore {
 	 * removed or evicted past the cap cannot strand its name. Call after `save`
 	 * (which trims silently) and after `remove`. Returns whether the map changed.
 	 */
-	static pruneNames(colors: string[], names: Record<string, string>): boolean {
-		const live = new Set(colors.map(c => CustomColorsStore.normalize(c)));
+	static pruneNames(
+		colors: string[],
+		names: Record<string, string>,
+	): boolean {
+		const live = new Set(colors.map((c) => CustomColorsStore.normalize(c)));
 		let changed = false;
 		for (const key of Object.keys(names)) {
 			if (!live.has(key)) {

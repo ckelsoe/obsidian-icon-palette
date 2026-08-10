@@ -8,7 +8,7 @@ type Icon = { icon?: string | null; color?: string | null };
 // boundary must leave both siblings untouched.
 function sampleMap(): Record<string, Icon> {
 	return {
-		'Notes': { color: 'red' },
+		Notes: { color: 'red' },
 		'Notes/a.md': { color: 'blue' },
 		'Notes/sub/b.md': { icon: 'star' },
 		'Notes.md': { color: 'green' },
@@ -22,7 +22,7 @@ describe('IconPathMap.rekeyDescendants', () => {
 		const changed = IconPathMap.rekeyDescendants(map, 'Notes', 'Journal');
 		expect(changed).toBe(true);
 		expect(map).toEqual({
-			'Journal': { color: 'red' },
+			Journal: { color: 'red' },
 			'Journal/a.md': { color: 'blue' },
 			'Journal/sub/b.md': { icon: 'star' },
 			'Notes.md': { color: 'green' },
@@ -31,10 +31,16 @@ describe('IconPathMap.rekeyDescendants', () => {
 	});
 
 	it('moves only the exact key for a plain file rename (no descendants)', () => {
-		const map: Record<string, Icon> = { 'a.md': { color: 'red' }, 'ab.md': { color: 'blue' } };
+		const map: Record<string, Icon> = {
+			'a.md': { color: 'red' },
+			'ab.md': { color: 'blue' },
+		};
 		const changed = IconPathMap.rekeyDescendants(map, 'a.md', 'b.md');
 		expect(changed).toBe(true);
-		expect(map).toEqual({ 'b.md': { color: 'red' }, 'ab.md': { color: 'blue' } });
+		expect(map).toEqual({
+			'b.md': { color: 'red' },
+			'ab.md': { color: 'blue' },
+		});
 	});
 
 	it('reports no change when nothing is keyed under the path', () => {
@@ -57,7 +63,10 @@ describe('IconPathMap.pruneDescendants', () => {
 	});
 
 	it('deletes a single file key with no descendants', () => {
-		const map: Record<string, Icon> = { 'a.md': { color: 'red' }, 'ab.md': { color: 'blue' } };
+		const map: Record<string, Icon> = {
+			'a.md': { color: 'red' },
+			'ab.md': { color: 'blue' },
+		};
 		const changed = IconPathMap.pruneDescendants(map, 'a.md');
 		expect(changed).toBe(true);
 		expect(map).toEqual({ 'ab.md': { color: 'blue' } });
@@ -74,7 +83,9 @@ describe('IconPathMap.pruneDescendants', () => {
 describe('IconPathMap end-to-end folder flow (plan regression scenario)', () => {
 	it('follows a rename then prunes on delete', () => {
 		const map = sampleMap();
-		expect(IconPathMap.rekeyDescendants(map, 'Notes', 'Journal')).toBe(true);
+		expect(IconPathMap.rekeyDescendants(map, 'Notes', 'Journal')).toBe(
+			true,
+		);
 		expect(IconPathMap.pruneDescendants(map, 'Journal')).toBe(true);
 		// Every Journal/... key and the exact Journal key are gone; siblings remain.
 		expect(map).toEqual({

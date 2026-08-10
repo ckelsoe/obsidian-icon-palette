@@ -6,9 +6,19 @@ import RuleManager from '../src/managers/RuleManager.js';
 // real, pure operator dispatch that judgeFile delegates to. Call it through a
 // wrapper so it stays bound to RuleManager (satisfies unbound-method).
 const RuleManagerInternal = RuleManager as unknown as {
-	evaluateOperator(operator: string, source: unknown, value: string, now: Date): boolean;
+	evaluateOperator(
+		operator: string,
+		source: unknown,
+		value: string,
+		now: Date,
+	): boolean;
 };
-const evaluateOperator = (operator: string, source: unknown, value: string, now: Date): boolean =>
+const evaluateOperator = (
+	operator: string,
+	source: unknown,
+	value: string,
+	now: Date,
+): boolean =>
 	RuleManagerInternal.evaluateOperator(operator, source, value, now);
 
 // A fixed timestamp; the operators exercised here are time-independent.
@@ -39,7 +49,9 @@ describe('RuleManager.evaluateOperator string operators', () => {
 	it('compares case-insensitively', () => {
 		expect(evaluateOperator('is', 'Hello', 'hello', NOW)).toBe(true);
 		expect(evaluateOperator('is', 'Hello', 'world', NOW)).toBe(false);
-		expect(evaluateOperator('contains', 'Hello World', 'world', NOW)).toBe(true);
+		expect(evaluateOperator('contains', 'Hello World', 'world', NOW)).toBe(
+			true,
+		);
 		expect(evaluateOperator('startsWith', 'Hello', 'hel', NOW)).toBe(true);
 		expect(evaluateOperator('endsWith', 'Hello', 'LLO', NOW)).toBe(true);
 	});
@@ -55,8 +67,12 @@ describe('RuleManager.evaluateOperator string operators', () => {
 	});
 
 	it('does not throw on an invalid regex, and reports no match', () => {
-		expect(() => evaluateOperator('matches', 'Hello', '[invalid(', NOW)).not.toThrow();
-		expect(evaluateOperator('matches', 'Hello', '[invalid(', NOW)).toBe(false);
+		expect(() =>
+			evaluateOperator('matches', 'Hello', '[invalid(', NOW),
+		).not.toThrow();
+		expect(evaluateOperator('matches', 'Hello', '[invalid(', NOW)).toBe(
+			false,
+		);
 	});
 });
 
@@ -77,18 +93,30 @@ describe('RuleManager.evaluateOperator now-relative datetime operators', () => {
 	const future = new Date('2026-07-03T13:00:00.000Z');
 
 	it('isBeforeNow/isAfterNow classify a past number-source timestamp', () => {
-		expect(evaluateOperator('isBeforeNow', past.getTime(), '', NOW)).toBe(true);
-		expect(evaluateOperator('isAfterNow', past.getTime(), '', NOW)).toBe(false);
+		expect(evaluateOperator('isBeforeNow', past.getTime(), '', NOW)).toBe(
+			true,
+		);
+		expect(evaluateOperator('isAfterNow', past.getTime(), '', NOW)).toBe(
+			false,
+		);
 	});
 
 	it('isBeforeNow/isAfterNow classify a future number-source timestamp', () => {
-		expect(evaluateOperator('isAfterNow', future.getTime(), '', NOW)).toBe(true);
-		expect(evaluateOperator('isBeforeNow', future.getTime(), '', NOW)).toBe(false);
+		expect(evaluateOperator('isAfterNow', future.getTime(), '', NOW)).toBe(
+			true,
+		);
+		expect(evaluateOperator('isBeforeNow', future.getTime(), '', NOW)).toBe(
+			false,
+		);
 	});
 
 	it('isBeforeNow/isAfterNow classify a past string-source timestamp', () => {
-		expect(evaluateOperator('isBeforeNow', past.toISOString(), '', NOW)).toBe(true);
-		expect(evaluateOperator('isAfterNow', past.toISOString(), '', NOW)).toBe(false);
+		expect(
+			evaluateOperator('isBeforeNow', past.toISOString(), '', NOW),
+		).toBe(true);
+		expect(
+			evaluateOperator('isAfterNow', past.toISOString(), '', NOW),
+		).toBe(false);
 	});
 });
 
@@ -136,6 +164,8 @@ describe('RuleManager.evaluateOperator none* operators are case-insensitive', ()
 
 describe('RuleManager.evaluateOperator unknown operator', () => {
 	it('returns false when no branch matches the operator', () => {
-		expect(evaluateOperator('notARealOperator', 'Hello', 'Hello', NOW)).toBe(false);
+		expect(
+			evaluateOperator('notARealOperator', 'Hello', 'Hello', NOW),
+		).toBe(false);
 	});
 });

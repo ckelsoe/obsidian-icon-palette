@@ -49,6 +49,7 @@ export default class Strings {
 		buttonMatch: '1 match',
 		buttonMatches: '{#} matches',
 		buttonNoMatches: 'No matches',
+		noConditionsAdded: 'No conditions added',
 		enterName: 'Give this rule a name',
 		enterValue: 'Enter a value',
 		enterRegex: 'Enter a regex',
@@ -410,7 +411,7 @@ export default class Strings {
 		},
 		headingSavedColors: 'Saved colors',
 		savedColors: {
-			desc: 'These appear in the icon picker\'s color menu. Add one below, or save one from the picker. Give a color a name to recognize it.',
+			desc: "These appear in the icon picker's color menu. Add one below, or save one from the picker. Give a color a name to recognize it.",
 			empty: 'No saved colors yet. Add one below, or save one from the color menu in the icon picker.',
 			addColorLabel: 'New color',
 			namePlaceholder: 'Name (optional)',
@@ -454,11 +455,14 @@ export default class Strings {
 	};
 	static backups = {
 		backupNotice: 'Icon Palette had a problem loading its icon settings.',
-		backupSecondsAgo: 'Your icons have been restored from a backup saved {#} seconds ago.',
-		backupMinutesAgo: 'Your icons have been restored from a backup saved {#} minutes ago.',
-		backupHoursAgo: 'Your icons have been restored from a backup saved {#} hours ago.',
+		backupSecondsAgo:
+			'Your icons have been restored from a backup saved {#} seconds ago.',
+		backupMinutesAgo:
+			'Your icons have been restored from a backup saved {#} minutes ago.',
+		backupHoursAgo:
+			'Your icons have been restored from a backup saved {#} hours ago.',
 		backupDate: 'Your icons have been restored from a backup saved on {#}.',
-	}
+	};
 
 	static {
 		void Strings.localize();
@@ -470,19 +474,43 @@ export default class Strings {
 	private static async localize(): Promise<void> {
 		let localizedStrings: unknown;
 		switch (getLanguage()) {
-			case 'ar': localizedStrings = await import('i18n/ar.json'); break;
-			case 'de': localizedStrings = await import('i18n/de.json'); break;
-			case 'en-GB': localizedStrings = await import('i18n/en-GB.json'); break;
-			case 'es': localizedStrings = await import('i18n/es.json'); break;
-			case 'fr': localizedStrings = await import('i18n/fr.json'); break;
-			case 'id': localizedStrings = await import('i18n/id.json'); break;
-			case 'ja': localizedStrings = await import('i18n/ja.json'); break;
-			case 'ru': localizedStrings = await import('i18n/ru.json'); break;
-			case 'uk': localizedStrings = await import('i18n/uk.json'); break;
-			case 'zh': localizedStrings = await import('i18n/zh.json'); break;
-			default: return;
+			case 'ar':
+				localizedStrings = await import('i18n/ar.json');
+				break;
+			case 'de':
+				localizedStrings = await import('i18n/de.json');
+				break;
+			case 'en-GB':
+				localizedStrings = await import('i18n/en-GB.json');
+				break;
+			case 'es':
+				localizedStrings = await import('i18n/es.json');
+				break;
+			case 'fr':
+				localizedStrings = await import('i18n/fr.json');
+				break;
+			case 'id':
+				localizedStrings = await import('i18n/id.json');
+				break;
+			case 'ja':
+				localizedStrings = await import('i18n/ja.json');
+				break;
+			case 'ru':
+				localizedStrings = await import('i18n/ru.json');
+				break;
+			case 'uk':
+				localizedStrings = await import('i18n/uk.json');
+				break;
+			case 'zh':
+				localizedStrings = await import('i18n/zh.json');
+				break;
+			default:
+				return;
 		}
-		this.localizeDefaultStrings(this as unknown as Record<string, unknown>, this.getDefaultStrings(localizedStrings));
+		this.localizeDefaultStrings(
+			this as unknown as Record<string, unknown>,
+			this.getDefaultStrings(localizedStrings),
+		);
 	}
 
 	private static getDefaultStrings(module: unknown): Record<string, unknown> {
@@ -499,12 +527,18 @@ export default class Strings {
 	 * Replace default strings with localized strings.
 	 * Strings and their keys are always type-safe, even if the localized JSON is incomplete or broken.
 	 */
-	private static localizeDefaultStrings(defaultStrings: Record<string, unknown>, localizedStrings: Record<string, unknown>): void {
+	private static localizeDefaultStrings(
+		defaultStrings: Record<string, unknown>,
+		localizedStrings: Record<string, unknown>,
+	): void {
 		for (const [key, value] of Object.entries(localizedStrings)) {
 			const defaultValue = defaultStrings[key];
 			if (defaultValue && typeof defaultValue === 'object') {
 				if (value && typeof value === 'object') {
-					this.localizeDefaultStrings(defaultValue as Record<string, unknown>, value as Record<string, unknown>);
+					this.localizeDefaultStrings(
+						defaultValue as Record<string, unknown>,
+						value as Record<string, unknown>,
+					);
 				}
 			} else if (typeof value === 'string') {
 				defaultStrings[key] = value;

@@ -26,7 +26,8 @@ export default class RuleSetting extends Setting {
 	// Menu callbacks
 	private addCallback: (() => void) | null = null;
 	private duplicateCallback: (() => void) | null = null;
-	private edgeCheckCallback: ((edge: 'top' | 'bottom') => boolean) | null = null;
+	private edgeCheckCallback: ((edge: 'top' | 'bottom') => boolean) | null =
+		null;
 	private edgeMoveCallback: ((edge: 'top' | 'bottom') => void) | null = null;
 	private removeCallback: (() => void) | null = null;
 
@@ -35,9 +36,9 @@ export default class RuleSetting extends Setting {
 		this.settingEl.addClass('icon-palette-rule');
 
 		// BUTTON: Grip
-		this.gripEl = new ExtraButtonComponent(this.settingEl)
-			.setIcon('lucide-grip-vertical')
-			.extraSettingsEl;
+		this.gripEl = new ExtraButtonComponent(this.settingEl).setIcon(
+			'lucide-grip-vertical',
+		).extraSettingsEl;
 		this.gripEl.addClass('icon-palette-grip');
 		this.settingEl.prepend(this.gripEl);
 
@@ -45,13 +46,14 @@ export default class RuleSetting extends Setting {
 		this.iconEl = new ExtraButtonComponent(this.settingEl)
 			.setIcon(rule.icon ?? rule.iconDefault ?? 'lucide-file')
 			.setTooltip(STRINGS.iconPicker.changeIcon)
-			.onClick(() => this.iconClickCallback?.())
-			.extraSettingsEl;
+			.onClick(() => this.iconClickCallback?.()).extraSettingsEl;
 		this.gripEl.after(this.iconEl);
 
 		// FIELD: Rule name
 		this.setName(rule.name);
-		this.nameEl.addEventListener('click', () => this.toggleEditable(this.nameEl, true));
+		this.nameEl.addEventListener('click', () =>
+			this.toggleEditable(this.nameEl, true),
+		);
 		this.nameEl.addEventListener('blur', () => {
 			this.toggleEditable(this.nameEl, false);
 			const name = this.nameEl.getText();
@@ -61,30 +63,31 @@ export default class RuleSetting extends Setting {
 				this.nameEl.setText(rule.name); // Prevent untitled rules
 			}
 		});
-		this.nameEl.addEventListener('keydown', event => {
+		this.nameEl.addEventListener('keydown', (event) => {
 			if (event.key === 'Enter') this.nameEl.blur();
 		});
 
 		// BUTTON: Edit rule
-		this.addExtraButton(button => button
-			.setIcon('lucide-settings')
-			.setTooltip(STRINGS.rulePicker.editRule)
-			.onClick(() => this.editClickCallback?.())
+		this.addExtraButton((button) =>
+			button
+				.setIcon('lucide-settings')
+				.setTooltip(STRINGS.rulePicker.editRule)
+				.onClick(() => this.editClickCallback?.()),
 		);
 
 		// TOGGLE: Enable/disable rule
 		this.toggle = new ToggleComponent(this.controlEl)
 			.setValue(rule.enabled)
-			.onChange(value => this.toggleCallback?.(value));
+			.onChange((value) => this.toggleCallback?.(value));
 
 		// Drag & drop (mouse)
 		this.gripEl.addEventListener('pointerdown', () => {
 			this.settingEl.draggable = true;
 		});
-		this.settingEl.addEventListener('dragstart', event => {
+		this.settingEl.addEventListener('dragstart', (event) => {
 			this.dragStartCallback?.(event.clientX, event.clientY);
 		});
-		this.settingEl.addEventListener('drag', event => {
+		this.settingEl.addEventListener('drag', (event) => {
 			this.dragCallback?.(event.clientX, event.clientY);
 		});
 		this.settingEl.addEventListener('dragend', () => {
@@ -92,21 +95,27 @@ export default class RuleSetting extends Setting {
 		});
 
 		// Drag & drop (multi-touch)
-		this.gripEl.addEventListener('touchstart', event => {
+		this.gripEl.addEventListener('touchstart', (event) => {
 			event.preventDefault(); // Prevent dragstart
 			const touch = event.targetTouches[0];
 			if (touch) this.dragStartCallback?.(touch.clientX, touch.clientY);
 		});
-		this.gripEl.addEventListener('touchmove', event => {
+		this.gripEl.addEventListener('touchmove', (event) => {
 			event.preventDefault(); // Prevent scrolling
 			const touch = event.targetTouches[0];
 			if (touch) this.dragCallback?.(touch.clientX, touch.clientY);
 		});
-		this.gripEl.addEventListener('touchend', () => this.dragEndCallback?.());
-		this.gripEl.addEventListener('touchcancel', () => this.dragEndCallback?.());
+		this.gripEl.addEventListener('touchend', () =>
+			this.dragEndCallback?.(),
+		);
+		this.gripEl.addEventListener('touchcancel', () =>
+			this.dragEndCallback?.(),
+		);
 
 		// Register menu listener
-		this.settingEl.addEventListener('contextmenu', event => this.showMenu(event));
+		this.settingEl.addEventListener('contextmenu', (event) =>
+			this.showMenu(event),
+		);
 	}
 
 	/**
@@ -206,51 +215,55 @@ export default class RuleSetting extends Setting {
 
 		// Highlight rule until menu closes
 		this.settingEl.addClass('has-active-menu');
-		menu.onHide(() => window.requestAnimationFrame(() => {
-			this.settingEl.removeClass('has-active-menu');
-		}));
+		menu.onHide(() =>
+			window.requestAnimationFrame(() => {
+				this.settingEl.removeClass('has-active-menu');
+			}),
+		);
 
 		// MENU ITEM: Add rule
-		menu.addItem(item => { item
-			.setIcon('lucide-plus')
-			.setTitle(STRINGS.rulePicker.addRule)
-			.setSection('action-primary')
-			.onClick(() => this.addCallback?.());
+		menu.addItem((item) => {
+			item.setIcon('lucide-plus')
+				.setTitle(STRINGS.rulePicker.addRule)
+				.setSection('action-primary')
+				.onClick(() => this.addCallback?.());
 		});
 
 		// MENU ITEM: Duplicate rule
-		menu.addItem(item => { item
-			.setIcon('lucide-files')
-			.setTitle(STRINGS.rulePicker.duplicateRule)
-			.setSection('action-primary')
-			.onClick(() => this.duplicateCallback?.());
+		menu.addItem((item) => {
+			item.setIcon('lucide-files')
+				.setTitle(STRINGS.rulePicker.duplicateRule)
+				.setSection('action-primary')
+				.onClick(() => this.duplicateCallback?.());
 		});
 
 		// MENU ITEM: Move rule to top
-		menu.addItem(item => { item
-			.setIcon('lucide-arrow-up-to-line')
-			.setTitle(STRINGS.rulePicker.moveRuleToTop)
-			.setSection('move')
-			.onClick(() => this.edgeMoveCallback?.('top'))
-			.setDisabled(this.edgeCheckCallback?.('top') === true);
+		menu.addItem((item) => {
+			item.setIcon('lucide-arrow-up-to-line')
+				.setTitle(STRINGS.rulePicker.moveRuleToTop)
+				.setSection('move')
+				.onClick(() => this.edgeMoveCallback?.('top'))
+				.setDisabled(this.edgeCheckCallback?.('top') === true);
 		});
 
 		// MENU ITEM: Move rule to bottom
-		menu.addItem(item => { item
-			.setIcon('lucide-arrow-down-to-line')
-			.setTitle(STRINGS.rulePicker.moveRuleToBottom)
-			.setSection('move')
-			.onClick(() => this.edgeMoveCallback?.('bottom'))
-			.setDisabled(this.edgeCheckCallback?.('bottom') === true);
+		menu.addItem((item) => {
+			item.setIcon('lucide-arrow-down-to-line')
+				.setTitle(STRINGS.rulePicker.moveRuleToBottom)
+				.setSection('move')
+				.onClick(() => this.edgeMoveCallback?.('bottom'))
+				.setDisabled(this.edgeCheckCallback?.('bottom') === true);
 		});
 
 		// MENU ITEM: Remove rule
-		menu.addItem(item => { item
-			.setIcon('lucide-trash-2')
-			.setTitle(STRINGS.rulePicker.removeRule)
-			.setSection('danger')
-			.onClick(() => this.removeCallback?.());
-			(item as typeof item & { dom?: HTMLElement }).dom?.addClass('is-warning');
+		menu.addItem((item) => {
+			item.setIcon('lucide-trash-2')
+				.setTitle(STRINGS.rulePicker.removeRule)
+				.setSection('danger')
+				.onClick(() => this.removeCallback?.());
+			(item as typeof item & { dom?: HTMLElement }).dom?.addClass(
+				'is-warning',
+			);
 		});
 
 		menu.showAtMouseEvent(event);

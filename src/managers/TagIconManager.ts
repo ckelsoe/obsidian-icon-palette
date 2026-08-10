@@ -13,14 +13,18 @@ export default class TagIconManager extends IconManager {
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
-		this.plugin.registerEvent(this.app.workspace.on('layout-change', () => {
-			if (activeDocument.contains(this.containerEl)) {
-				return;
-			} else {
-				this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
-			}
-		}));
-		this.app.workspace.iterateAllLeaves(leaf => this.manageLeaf(leaf));
+		this.plugin.registerEvent(
+			this.app.workspace.on('layout-change', () => {
+				if (activeDocument.contains(this.containerEl)) {
+					return;
+				} else {
+					this.app.workspace.iterateAllLeaves((leaf) =>
+						this.manageLeaf(leaf),
+					);
+				}
+			}),
+		);
+		this.app.workspace.iterateAllLeaves((leaf) => this.manageLeaf(leaf));
 	}
 
 	/**
@@ -30,21 +34,30 @@ export default class TagIconManager extends IconManager {
 		if (leaf.getViewState().type !== 'tag') return;
 
 		this.stopMutationObserver(this.containerEl);
-		this.containerEl = leaf.view.containerEl.find(':scope > .tag-container > div');
-		this.setMutationsObserver(this.containerEl, {
-			subtree: true,
-			childList: true,
-		}, mutations => {
-			// Refresh when tags are added or removed
-			for (const mutation of mutations) {
-				for (const addedNode of mutation.addedNodes) {
-					if (addedNode.instanceOf(HTMLElement) && addedNode.hasClass('tree-item')) {
-						this.refreshIcons();
-						return;
+		this.containerEl = leaf.view.containerEl.find(
+			':scope > .tag-container > div',
+		);
+		this.setMutationsObserver(
+			this.containerEl,
+			{
+				subtree: true,
+				childList: true,
+			},
+			(mutations) => {
+				// Refresh when tags are added or removed
+				for (const mutation of mutations) {
+					for (const addedNode of mutation.addedNodes) {
+						if (
+							addedNode.instanceOf(HTMLElement) &&
+							addedNode.hasClass('tree-item')
+						) {
+							this.refreshIcons();
+							return;
+						}
 					}
 				}
-			}
-		});
+			},
+		);
 		this.refreshIcons();
 	}
 
@@ -67,22 +80,34 @@ export default class TagIconManager extends IconManager {
 
 			const selfEl = itemEl.find(':scope > .tree-item-self');
 			if (!selfEl) continue;
-			const tagId = selfEl.find(':scope > .tree-item-inner > .tree-item-inner-text')?.getText();
+			const tagId = selfEl
+				.find(':scope > .tree-item-inner > .tree-item-inner-text')
+				?.getText();
 			if (!tagId) continue;
-			const tag = tags.find(tag => tag.id === tagId);
+			const tag = tags.find((tag) => tag.id === tagId);
 			if (!tag) continue;
 
 			if (tag.color) tag.iconDefault = 'lucide-tag';
 
-			let iconEl = selfEl.find(':scope > .tree-item-icon') ?? selfEl.createDiv({ cls: 'tree-item-icon' });
-			if (iconEl.hasClass('collapse-icon') && !tag.icon && !tag.iconDefault) {
+			let iconEl =
+				selfEl.find(':scope > .tree-item-icon') ??
+				selfEl.createDiv({ cls: 'tree-item-icon' });
+			if (
+				iconEl.hasClass('collapse-icon') &&
+				!tag.icon &&
+				!tag.iconDefault
+			) {
 				this.refreshIcon(tag, iconEl); // Skip click listener if icon will be a collapse arrow
 			} else if (this.plugin.isSettingEnabled('clickableIcons')) {
-				this.refreshIcon(tag, iconEl, event => {
-					IconPicker.openSingle(this.plugin, tag, (newIcon, newColor) => {
-						this.plugin.saveTagIcon(tag, newIcon, newColor);
-						this.plugin.refreshManagers('tag');
-					});
+				this.refreshIcon(tag, iconEl, (event) => {
+					IconPicker.openSingle(
+						this.plugin,
+						tag,
+						(newIcon, newColor) => {
+							this.plugin.saveTagIcon(tag, newIcon, newColor);
+							this.plugin.refreshManagers('tag');
+						},
+					);
 					event.stopPropagation();
 				});
 			} else {
@@ -90,7 +115,7 @@ export default class TagIconManager extends IconManager {
 			}
 
 			if (this.plugin.settings.showMenuActions && selfEl) {
-				this.setEventListener(selfEl, 'contextmenu', event => {
+				this.setEventListener(selfEl, 'contextmenu', (event) => {
 					this.onContextMenu(tag.id, event);
 				});
 			} else {
@@ -114,26 +139,40 @@ export default class TagIconManager extends IconManager {
 			: new Menu();
 
 		// Change icon
-		menu?.addItem(menuItem => menuItem
-			.setTitle(STRINGS.menu.changeIcon)
-			.setIcon('lucide-image-plus')
-			.setSection('icon')
-			.onClick(() => IconPicker.openSingle(this.plugin, tag, (newIcon, newColor) => {
-				this.plugin.saveTagIcon(tag, newIcon, newColor);
-				this.plugin.refreshManagers('tag');
-			}))
+		menu?.addItem((menuItem) =>
+			menuItem
+				.setTitle(STRINGS.menu.changeIcon)
+				.setIcon('lucide-image-plus')
+				.setSection('icon')
+				.onClick(() =>
+					IconPicker.openSingle(
+						this.plugin,
+						tag,
+						(newIcon, newColor) => {
+							this.plugin.saveTagIcon(tag, newIcon, newColor);
+							this.plugin.refreshManagers('tag');
+						},
+					),
+				),
 		);
 
 		// Remove icon / Reset color
 		if (tag.icon || tag.color) {
-			menu?.addItem(menuItem => menuItem
-				.setTitle(tag.icon ? STRINGS.menu.removeIcon : STRINGS.menu.resetColor)
-				.setIcon(tag.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw')
-				.setSection('icon')
-				.onClick(() => {
-					this.plugin.saveTagIcon(tag, null, null);
-					this.plugin.refreshManagers('tag');
-				})
+			menu?.addItem((menuItem) =>
+				menuItem
+					.setTitle(
+						tag.icon
+							? STRINGS.menu.removeIcon
+							: STRINGS.menu.resetColor,
+					)
+					.setIcon(
+						tag.icon ? 'lucide-image-minus' : 'lucide-rotate-ccw',
+					)
+					.setSection('icon')
+					.onClick(() => {
+						this.plugin.saveTagIcon(tag, null, null);
+						this.plugin.refreshManagers('tag');
+					}),
 			);
 		}
 

@@ -1,4 +1,15 @@
-import { ButtonComponent, ColorComponent, ExtraButtonComponent, Platform, PluginSettingTab, Setting, SettingGroup, TextComponent, setIcon, type SettingDefinitionItem } from 'obsidian';
+import {
+	ButtonComponent,
+	ColorComponent,
+	ExtraButtonComponent,
+	Platform,
+	PluginSettingTab,
+	Setting,
+	SettingGroup,
+	TextComponent,
+	setIcon,
+	type SettingDefinitionItem,
+} from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
@@ -79,7 +90,9 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	/** Return focus to the add-a-color picker after the list is rebuilt, so a
 	 *  keyboard user is not dropped to the document body when a row detaches. */
 	private focusAddColor(host: HTMLElement): void {
-		const el = host.querySelector('.icon-palette-add-color input[type="color"]');
+		const el = host.querySelector(
+			'.icon-palette-add-color input[type="color"]',
+		);
 		if (el instanceof HTMLElement) el.focus();
 	}
 
@@ -104,8 +117,15 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	private maxBackupsOptions(): Record<string, string> {
 		return {
 			'0': STRINGS.settings.values.none,
-			'1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
-			'6': '6', '7': '7', '8': '8', '9': '9',
+			'1': '1',
+			'2': '2',
+			'3': '3',
+			'4': '4',
+			'5': '5',
+			'6': '6',
+			'7': '7',
+			'8': '8',
+			'9': '9',
 		};
 	}
 
@@ -128,78 +148,218 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			{
 				name: S.biggerIcons.name,
 				desc: S.biggerIcons.desc,
-				control: { type: 'dropdown', key: 'biggerIcons', options: this.platformOptions() },
+				control: {
+					type: 'dropdown',
+					key: 'biggerIcons',
+					options: this.platformOptions(),
+				},
 			},
 			{
-				name: Platform.isDesktop ? S.clickableIcons.nameDesktop : S.clickableIcons.nameMobile,
-				desc: Platform.isDesktop ? S.clickableIcons.descDesktop : S.clickableIcons.descMobile,
-				control: { type: 'dropdown', key: 'clickableIcons', options: this.platformOptions() },
+				name: Platform.isDesktop
+					? S.clickableIcons.nameDesktop
+					: S.clickableIcons.nameMobile,
+				desc: Platform.isDesktop
+					? S.clickableIcons.descDesktop
+					: S.clickableIcons.descMobile,
+				control: {
+					type: 'dropdown',
+					key: 'clickableIcons',
+					options: this.platformOptions(),
+				},
 			},
 			{
 				type: 'group',
 				heading: S.headingSidebarsAndTabs,
 				items: [
-					{ name: S.showAllFileIcons.name, desc: S.showAllFileIcons.desc, control: { type: 'toggle', key: 'showAllFileIcons' } },
-					{ name: S.showAllFolderIcons.name, desc: S.showAllFolderIcons.desc, control: { type: 'toggle', key: 'showAllFolderIcons' } },
-					{ name: S.minimalFolderIcons.name, desc: S.minimalFolderIcons.desc, control: { type: 'toggle', key: 'minimalFolderIcons' } },
-					{ name: S.showMarkdownTabIcons.name, desc: S.showMarkdownTabIcons.desc, control: { type: 'toggle', key: 'showMarkdownTabIcons' } },
+					{
+						name: S.showAllFileIcons.name,
+						desc: S.showAllFileIcons.desc,
+						control: { type: 'toggle', key: 'showAllFileIcons' },
+					},
+					{
+						name: S.showAllFolderIcons.name,
+						desc: S.showAllFolderIcons.desc,
+						control: { type: 'toggle', key: 'showAllFolderIcons' },
+					},
+					{
+						name: S.minimalFolderIcons.name,
+						desc: S.minimalFolderIcons.desc,
+						control: { type: 'toggle', key: 'minimalFolderIcons' },
+					},
+					{
+						name: S.showMarkdownTabIcons.name,
+						desc: S.showMarkdownTabIcons.desc,
+						control: {
+							type: 'toggle',
+							key: 'showMarkdownTabIcons',
+						},
+					},
 				],
 			},
 			{
 				type: 'group',
 				heading: S.headingEditor,
 				items: [
-					{ name: S.showTitleIcons.name, desc: S.showTitleIcons.desc, control: { type: 'toggle', key: 'showTitleIcons' } },
-					{ name: S.showTagPillIcons.name, desc: S.showTagPillIcons.desc, control: { type: 'toggle', key: 'showTagPillIcons' } },
+					{
+						name: S.showTitleIcons.name,
+						desc: S.showTitleIcons.desc,
+						control: { type: 'toggle', key: 'showTitleIcons' },
+					},
+					{
+						name: S.showTagPillIcons.name,
+						desc: S.showTagPillIcons.desc,
+						control: { type: 'toggle', key: 'showTagPillIcons' },
+					},
 				],
 			},
 			{
 				type: 'group',
 				heading: S.headingMenusAndDialogs,
 				items: [
-					{ name: S.showMenuActions.name, desc: S.showMenuActions.desc, control: { type: 'toggle', key: 'showMenuActions' } },
-					{ name: S.showSuggestionIcons.name, desc: S.showSuggestionIcons.desc, control: { type: 'toggle', key: 'showSuggestionIcons' } },
-					{ name: S.showQuickSwitcherIcons.name, desc: S.showQuickSwitcherIcons.desc, control: { type: 'toggle', key: 'showQuickSwitcherIcons' } },
-					{ name: S.showMoveFileIcons.name, desc: S.showMoveFileIcons.desc, control: { type: 'toggle', key: 'showMoveFileIcons' } },
+					{
+						name: S.showMenuActions.name,
+						desc: S.showMenuActions.desc,
+						control: { type: 'toggle', key: 'showMenuActions' },
+					},
+					{
+						name: S.showSuggestionIcons.name,
+						desc: S.showSuggestionIcons.desc,
+						control: { type: 'toggle', key: 'showSuggestionIcons' },
+					},
+					{
+						name: S.showQuickSwitcherIcons.name,
+						desc: S.showQuickSwitcherIcons.desc,
+						control: {
+							type: 'toggle',
+							key: 'showQuickSwitcherIcons',
+						},
+					},
+					{
+						name: S.showMoveFileIcons.name,
+						desc: S.showMoveFileIcons.desc,
+						control: { type: 'toggle', key: 'showMoveFileIcons' },
+					},
 				],
 			},
 			{
 				type: 'group',
 				heading: S.headingIconPicker,
 				items: [
-					{ name: S.showItemName.name, desc: S.showItemName.desc, control: { type: 'dropdown', key: 'showItemName', options: this.platformOptions() } },
-					{ name: S.biggerSearchResults.name, desc: S.biggerSearchResults.desc, control: { type: 'dropdown', key: 'biggerSearchResults', options: this.platformOptions() } },
-					{ name: S.maxSearchResults.name, desc: S.maxSearchResults.desc, control: { type: 'slider', key: 'maxSearchResults', min: 10, max: 300, step: 10 } },
-					{ name: S.colorPicker1.name, desc: Platform.isDesktop ? S.colorPicker1.descDesktop : S.colorPicker1.descMobile, control: { type: 'dropdown', key: 'colorPicker1', options: this.colorModeOptions() } },
-					{ name: S.colorPicker2.name, desc: Platform.isDesktop ? S.colorPicker2.descDesktop : S.colorPicker2.descMobile, control: { type: 'dropdown', key: 'colorPicker2', options: this.colorModeOptions() } },
+					{
+						name: S.showItemName.name,
+						desc: S.showItemName.desc,
+						control: {
+							type: 'dropdown',
+							key: 'showItemName',
+							options: this.platformOptions(),
+						},
+					},
+					{
+						name: S.biggerSearchResults.name,
+						desc: S.biggerSearchResults.desc,
+						control: {
+							type: 'dropdown',
+							key: 'biggerSearchResults',
+							options: this.platformOptions(),
+						},
+					},
+					{
+						name: S.maxSearchResults.name,
+						desc: S.maxSearchResults.desc,
+						control: {
+							type: 'slider',
+							key: 'maxSearchResults',
+							min: 10,
+							max: 300,
+							step: 10,
+						},
+					},
+					{
+						name: S.colorPicker1.name,
+						desc: Platform.isDesktop
+							? S.colorPicker1.descDesktop
+							: S.colorPicker1.descMobile,
+						control: {
+							type: 'dropdown',
+							key: 'colorPicker1',
+							options: this.colorModeOptions(),
+						},
+					},
+					{
+						name: S.colorPicker2.name,
+						desc: Platform.isDesktop
+							? S.colorPicker2.descDesktop
+							: S.colorPicker2.descMobile,
+						control: {
+							type: 'dropdown',
+							key: 'colorPicker2',
+							options: this.colorModeOptions(),
+						},
+					},
 				],
 			},
 			{
 				type: 'group',
 				heading: S.headingSavedColors,
 				items: [
-					{ name: '', searchable: false, render: (setting: Setting) => this.renderSavedColors(setting) },
+					{
+						name: '',
+						searchable: false,
+						render: (setting: Setting) =>
+							this.renderSavedColors(setting),
+					},
 				],
 			},
 			{
 				type: 'group',
 				heading: S.headingAdvanced,
 				items: [
-					{ name: S.uncolorHover.name, desc: S.uncolorHover.desc, control: { type: 'toggle', key: 'uncolorHover' } },
-					{ name: S.uncolorDrag.name, desc: S.uncolorDrag.desc, control: { type: 'toggle', key: 'uncolorDrag' } },
-					{ name: S.uncolorSelect.name, desc: S.uncolorSelect.desc, control: { type: 'toggle', key: 'uncolorSelect' } },
-					{ name: S.uncolorQuick.name, desc: S.uncolorQuick.desc, control: { type: 'toggle', key: 'uncolorQuick' } },
-					{ name: S.viewUnusedIcons.name, desc: S.viewUnusedIcons.desc, searchable: false, render: (setting: Setting) => this.renderViewUnusedIcons(setting) },
+					{
+						name: S.uncolorHover.name,
+						desc: S.uncolorHover.desc,
+						control: { type: 'toggle', key: 'uncolorHover' },
+					},
+					{
+						name: S.uncolorDrag.name,
+						desc: S.uncolorDrag.desc,
+						control: { type: 'toggle', key: 'uncolorDrag' },
+					},
+					{
+						name: S.uncolorSelect.name,
+						desc: S.uncolorSelect.desc,
+						control: { type: 'toggle', key: 'uncolorSelect' },
+					},
+					{
+						name: S.uncolorQuick.name,
+						desc: S.uncolorQuick.desc,
+						control: { type: 'toggle', key: 'uncolorQuick' },
+					},
+					{
+						name: S.viewUnusedIcons.name,
+						desc: S.viewUnusedIcons.desc,
+						searchable: false,
+						render: (setting: Setting) =>
+							this.renderViewUnusedIcons(setting),
+					},
 					// The desktop-only "open plugin folder" shortcut has no declarative
 					// control slot; it stays on the imperative path. The value itself is
 					// the searchable dropdown here.
-					{ name: S.maxBackups.name, desc: S.maxBackups.desc, control: { type: 'dropdown', key: 'maxBackups', options: this.maxBackupsOptions() } },
+					{
+						name: S.maxBackups.name,
+						desc: S.maxBackups.desc,
+						control: {
+							type: 'dropdown',
+							key: 'maxBackups',
+							options: this.maxBackupsOptions(),
+						},
+					},
 				],
 			},
 			{
 				name: '',
 				searchable: false,
-				render: (setting: Setting) => this.renderFooter(setting.settingEl),
+				render: (setting: Setting) =>
+					this.renderFooter(setting.settingEl),
 			},
 		];
 	}
@@ -210,8 +370,11 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * boundary; every other value is returned as stored.
 	 */
 	getControlValue(key: string): unknown {
-		if (key === 'maxBackups') return String(this.plugin.settings.maxBackups);
-		return (this.plugin.settings as unknown as Record<string, unknown>)[key];
+		if (key === 'maxBackups')
+			return String(this.plugin.settings.maxBackups);
+		return (this.plugin.settings as unknown as Record<string, unknown>)[
+			key
+		];
 	}
 
 	setControlValue(key: string, value: unknown): void | Promise<void> {
@@ -223,8 +386,14 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * Shared by the declarative setControlValue() (1.13+) and the imperative
 	 * onChange handlers in display() (< 1.13), so neither path can drift.
 	 */
-	private async applyControlChange(key: string, value: unknown): Promise<void> {
-		const settings = this.plugin.settings as unknown as Record<string, unknown>;
+	private async applyControlChange(
+		key: string,
+		value: unknown,
+	): Promise<void> {
+		const settings = this.plugin.settings as unknown as Record<
+			string,
+			unknown
+		>;
 		if (key === 'maxBackups') {
 			settings.maxBackups = Number(value) || 0;
 		} else if (key === 'maxSearchResults') {
@@ -285,223 +454,392 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		const groupTop = new SettingGroup(this.containerEl);
 
 		// SETTING: Rules
-		groupTop.addSetting(setting => void setting
-			.setName(STRINGS.settings.rulebook.name)
-			.setDesc(STRINGS.settings.rulebook.desc)
-			.addButton(button => { button
-				.setButtonText(STRINGS.settings.manage)
-				.onClick(() => this.openRulePicker());
-			})
+		groupTop.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.rulebook.name)
+					.setDesc(STRINGS.settings.rulebook.desc)
+					.addButton((button) => {
+						button
+							.setButtonText(STRINGS.settings.manage)
+							.onClick(() => this.openRulePicker());
+					}),
 		);
 
 		// SETTING: Bigger icons
-		groupTop.addSetting(setting => void setting
-			.setName(STRINGS.settings.biggerIcons.name)
-			.setDesc(STRINGS.settings.biggerIcons.desc)
-			.addExtraButton(indicator => {
-				indicator.extraSettingsEl.addClass('icon-palette-indicator');
-				this.indicators.biggerIcons = indicator;
-			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('on', STRINGS.settings.values.on)
-				.addOption('desktop', STRINGS.settings.values.desktop)
-				.addOption('mobile', STRINGS.settings.values.mobile)
-				.addOption('off', STRINGS.settings.values.off)
-				.setValue(this.plugin.settings.biggerIcons)
-				.onChange(value => {
-					this.refreshIndicator(this.indicators.biggerIcons, value);
-					void this.applyControlChange('biggerIcons', value);
-				});
-				this.refreshIndicator(this.indicators.biggerIcons, dropdown.getValue());
-			})
+		groupTop.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.biggerIcons.name)
+					.setDesc(STRINGS.settings.biggerIcons.desc)
+					.addExtraButton((indicator) => {
+						indicator.extraSettingsEl.addClass(
+							'icon-palette-indicator',
+						);
+						this.indicators.biggerIcons = indicator;
+					})
+					.addDropdown((dropdown) => {
+						dropdown
+							.addOption('on', STRINGS.settings.values.on)
+							.addOption(
+								'desktop',
+								STRINGS.settings.values.desktop,
+							)
+							.addOption('mobile', STRINGS.settings.values.mobile)
+							.addOption('off', STRINGS.settings.values.off)
+							.setValue(this.plugin.settings.biggerIcons)
+							.onChange((value) => {
+								this.refreshIndicator(
+									this.indicators.biggerIcons,
+									value,
+								);
+								void this.applyControlChange(
+									'biggerIcons',
+									value,
+								);
+							});
+						this.refreshIndicator(
+							this.indicators.biggerIcons,
+							dropdown.getValue(),
+						);
+					}),
 		);
 
 		// SETTING: Clickable icons
-		groupTop.addSetting(setting => void setting
-			.setName(Platform.isDesktop
-				? STRINGS.settings.clickableIcons.nameDesktop
-				: STRINGS.settings.clickableIcons.nameMobile
-			)
-			.setDesc(Platform.isDesktop
-				? STRINGS.settings.clickableIcons.descDesktop
-				: STRINGS.settings.clickableIcons.descMobile
-			)
-			.addExtraButton(indicator => {
-				indicator.extraSettingsEl.addClass('icon-palette-indicator');
-				this.indicators.clickableIcons = indicator;
-			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('on', STRINGS.settings.values.on)
-				.addOption('desktop', STRINGS.settings.values.desktop)
-				.addOption('mobile', STRINGS.settings.values.mobile)
-				.addOption('off', STRINGS.settings.values.off)
-				.setValue(this.plugin.settings.clickableIcons)
-				.onChange(value => {
-					this.refreshIndicator(this.indicators.clickableIcons, value);
-					void this.applyControlChange('clickableIcons', value);
-				});
-				this.refreshIndicator(this.indicators.clickableIcons, dropdown.getValue());
-			})
+		groupTop.addSetting(
+			(setting) =>
+				void setting
+					.setName(
+						Platform.isDesktop
+							? STRINGS.settings.clickableIcons.nameDesktop
+							: STRINGS.settings.clickableIcons.nameMobile,
+					)
+					.setDesc(
+						Platform.isDesktop
+							? STRINGS.settings.clickableIcons.descDesktop
+							: STRINGS.settings.clickableIcons.descMobile,
+					)
+					.addExtraButton((indicator) => {
+						indicator.extraSettingsEl.addClass(
+							'icon-palette-indicator',
+						);
+						this.indicators.clickableIcons = indicator;
+					})
+					.addDropdown((dropdown) => {
+						dropdown
+							.addOption('on', STRINGS.settings.values.on)
+							.addOption(
+								'desktop',
+								STRINGS.settings.values.desktop,
+							)
+							.addOption('mobile', STRINGS.settings.values.mobile)
+							.addOption('off', STRINGS.settings.values.off)
+							.setValue(this.plugin.settings.clickableIcons)
+							.onChange((value) => {
+								this.refreshIndicator(
+									this.indicators.clickableIcons,
+									value,
+								);
+								void this.applyControlChange(
+									'clickableIcons',
+									value,
+								);
+							});
+						this.refreshIndicator(
+							this.indicators.clickableIcons,
+							dropdown.getValue(),
+						);
+					}),
 		);
 
 		// GROUP: Sidebars & tabs
-		const groupSidebarsAndTabs = new SettingGroup(this.containerEl)
-			.setHeading(STRINGS.settings.headingSidebarsAndTabs);
+		const groupSidebarsAndTabs = new SettingGroup(
+			this.containerEl,
+		).setHeading(STRINGS.settings.headingSidebarsAndTabs);
 
 		// SETTING: Show all file icons
-		groupSidebarsAndTabs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showAllFileIcons.name)
-			.setDesc(STRINGS.settings.showAllFileIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showAllFileIcons)
-				.onChange(value => void this.applyControlChange('showAllFileIcons', value))
-			)
+		groupSidebarsAndTabs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showAllFileIcons.name)
+					.setDesc(STRINGS.settings.showAllFileIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showAllFileIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showAllFileIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Show all folder icons
-		groupSidebarsAndTabs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showAllFolderIcons.name)
-			.setDesc(STRINGS.settings.showAllFolderIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showAllFolderIcons)
-				.onChange(value => void this.applyControlChange('showAllFolderIcons', value))
-			)
+		groupSidebarsAndTabs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showAllFolderIcons.name)
+					.setDesc(STRINGS.settings.showAllFolderIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showAllFolderIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showAllFolderIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Minimal folder icons
-		groupSidebarsAndTabs.addSetting(setting => void setting
-			.setName(STRINGS.settings.minimalFolderIcons.name)
-			.setDesc(STRINGS.settings.minimalFolderIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.minimalFolderIcons)
-				.onChange(value => void this.applyControlChange('minimalFolderIcons', value))
-			)
+		groupSidebarsAndTabs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.minimalFolderIcons.name)
+					.setDesc(STRINGS.settings.minimalFolderIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.minimalFolderIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'minimalFolderIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Show Markdown tab icons
-		groupSidebarsAndTabs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showMarkdownTabIcons.name)
-			.setDesc(STRINGS.settings.showMarkdownTabIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showMarkdownTabIcons)
-				.onChange(value => void this.applyControlChange('showMarkdownTabIcons', value))
-			)
+		groupSidebarsAndTabs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showMarkdownTabIcons.name)
+					.setDesc(STRINGS.settings.showMarkdownTabIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showMarkdownTabIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showMarkdownTabIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// GROUP: Editor
-		const groupEditor = new SettingGroup(this.containerEl)
-			.setHeading(STRINGS.settings.headingEditor);
+		const groupEditor = new SettingGroup(this.containerEl).setHeading(
+			STRINGS.settings.headingEditor,
+		);
 
 		// SETTING: Show title icons
-		groupEditor.addSetting(setting => void setting
-			.setName(STRINGS.settings.showTitleIcons.name)
-			.setDesc(STRINGS.settings.showTitleIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showTitleIcons)
-				.onChange(value => void this.applyControlChange('showTitleIcons', value))
-			)
+		groupEditor.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showTitleIcons.name)
+					.setDesc(STRINGS.settings.showTitleIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showTitleIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showTitleIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Show tag pill icons
-		groupEditor.addSetting(setting => void setting
-			.setName(STRINGS.settings.showTagPillIcons.name)
-			.setDesc(STRINGS.settings.showTagPillIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showTagPillIcons)
-				.onChange(value => void this.applyControlChange('showTagPillIcons', value))
-			)
+		groupEditor.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showTagPillIcons.name)
+					.setDesc(STRINGS.settings.showTagPillIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showTagPillIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showTagPillIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// GROUP: Menus & dialogs
-		const groupMenusAndDialogs = new SettingGroup(this.containerEl)
-			.setHeading(STRINGS.settings.headingMenusAndDialogs);
+		const groupMenusAndDialogs = new SettingGroup(
+			this.containerEl,
+		).setHeading(STRINGS.settings.headingMenusAndDialogs);
 
 		// SETTING: Show menu actions
-		groupMenusAndDialogs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showMenuActions.name)
-			.setDesc(STRINGS.settings.showMenuActions.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showMenuActions)
-				.onChange(value => void this.applyControlChange('showMenuActions', value))
-			)
+		groupMenusAndDialogs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showMenuActions.name)
+					.setDesc(STRINGS.settings.showMenuActions.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showMenuActions)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showMenuActions',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Show suggestion icons
-		groupMenusAndDialogs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showSuggestionIcons.name)
-			.setDesc(STRINGS.settings.showSuggestionIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showSuggestionIcons)
-				.onChange(value => void this.applyControlChange('showSuggestionIcons', value))
-			)
+		groupMenusAndDialogs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showSuggestionIcons.name)
+					.setDesc(STRINGS.settings.showSuggestionIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showSuggestionIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showSuggestionIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Show quick switcher icons
-		groupMenusAndDialogs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showQuickSwitcherIcons.name)
-			.setDesc(STRINGS.settings.showQuickSwitcherIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showQuickSwitcherIcons)
-				.onChange(value => void this.applyControlChange('showQuickSwitcherIcons', value))
-			)
+		groupMenusAndDialogs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showQuickSwitcherIcons.name)
+					.setDesc(STRINGS.settings.showQuickSwitcherIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(
+								this.plugin.settings.showQuickSwitcherIcons,
+							)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showQuickSwitcherIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Show "Move file" dialog icons
-		groupMenusAndDialogs.addSetting(setting => void setting
-			.setName(STRINGS.settings.showMoveFileIcons.name)
-			.setDesc(STRINGS.settings.showMoveFileIcons.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showMoveFileIcons)
-				.onChange(value => void this.applyControlChange('showMoveFileIcons', value))
-			)
+		groupMenusAndDialogs.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showMoveFileIcons.name)
+					.setDesc(STRINGS.settings.showMoveFileIcons.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.showMoveFileIcons)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'showMoveFileIcons',
+										value,
+									),
+							),
+					),
 		);
 
 		// GROUP: Icon picker
-		const groupIconPicker = new SettingGroup(this.containerEl)
-			.setHeading(STRINGS.settings.headingIconPicker);
+		const groupIconPicker = new SettingGroup(this.containerEl).setHeading(
+			STRINGS.settings.headingIconPicker,
+		);
 
 		// SETTING: Show item name
-		groupIconPicker.addSetting(setting => void setting
-			.setName(STRINGS.settings.showItemName.name)
-			.setDesc(STRINGS.settings.showItemName.desc)
-			.addExtraButton(indicator => {
-				indicator.extraSettingsEl.addClass('icon-palette-indicator');
-				this.indicators.showItemName = indicator;
-			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('on', STRINGS.settings.values.on)
-				.addOption('desktop', STRINGS.settings.values.desktop)
-				.addOption('mobile', STRINGS.settings.values.mobile)
-				.addOption('off', STRINGS.settings.values.off)
-				.setValue(this.plugin.settings.showItemName)
-				.onChange(value => {
-					this.refreshIndicator(this.indicators.showItemName, value);
-					void this.applyControlChange('showItemName', value);
-				});
-				this.refreshIndicator(this.indicators.showItemName, dropdown.getValue());
-			})
+		groupIconPicker.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.showItemName.name)
+					.setDesc(STRINGS.settings.showItemName.desc)
+					.addExtraButton((indicator) => {
+						indicator.extraSettingsEl.addClass(
+							'icon-palette-indicator',
+						);
+						this.indicators.showItemName = indicator;
+					})
+					.addDropdown((dropdown) => {
+						dropdown
+							.addOption('on', STRINGS.settings.values.on)
+							.addOption(
+								'desktop',
+								STRINGS.settings.values.desktop,
+							)
+							.addOption('mobile', STRINGS.settings.values.mobile)
+							.addOption('off', STRINGS.settings.values.off)
+							.setValue(this.plugin.settings.showItemName)
+							.onChange((value) => {
+								this.refreshIndicator(
+									this.indicators.showItemName,
+									value,
+								);
+								void this.applyControlChange(
+									'showItemName',
+									value,
+								);
+							});
+						this.refreshIndicator(
+							this.indicators.showItemName,
+							dropdown.getValue(),
+						);
+					}),
 		);
 
 		// SETTING: Bigger search results
-		groupIconPicker.addSetting(setting => void setting
-			.setName(STRINGS.settings.biggerSearchResults.name)
-			.setDesc(STRINGS.settings.biggerSearchResults.desc)
-			.addExtraButton(indicator => {
-				indicator.extraSettingsEl.addClass('icon-palette-indicator');
-				this.indicators.biggerSearchResults = indicator;
-			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('on', STRINGS.settings.values.on)
-				.addOption('desktop', STRINGS.settings.values.desktop)
-				.addOption('mobile', STRINGS.settings.values.mobile)
-				.addOption('off', STRINGS.settings.values.off)
-				.setValue(this.plugin.settings.biggerSearchResults)
-				.onChange(value => {
-					this.refreshIndicator(this.indicators.biggerSearchResults, value);
-					void this.applyControlChange('biggerSearchResults', value);
-				});
-				this.refreshIndicator(this.indicators.biggerSearchResults, dropdown.getValue());
-			})
+		groupIconPicker.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.biggerSearchResults.name)
+					.setDesc(STRINGS.settings.biggerSearchResults.desc)
+					.addExtraButton((indicator) => {
+						indicator.extraSettingsEl.addClass(
+							'icon-palette-indicator',
+						);
+						this.indicators.biggerSearchResults = indicator;
+					})
+					.addDropdown((dropdown) => {
+						dropdown
+							.addOption('on', STRINGS.settings.values.on)
+							.addOption(
+								'desktop',
+								STRINGS.settings.values.desktop,
+							)
+							.addOption('mobile', STRINGS.settings.values.mobile)
+							.addOption('off', STRINGS.settings.values.off)
+							.setValue(this.plugin.settings.biggerSearchResults)
+							.onChange((value) => {
+								this.refreshIndicator(
+									this.indicators.biggerSearchResults,
+									value,
+								);
+								void this.applyControlChange(
+									'biggerSearchResults',
+									value,
+								);
+							});
+						this.refreshIndicator(
+							this.indicators.biggerSearchResults,
+							dropdown.getValue(),
+						);
+					}),
 		);
 
 		// SETTING: Maximum search results. Obsidian shows a slider's value inline on
@@ -509,18 +847,19 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		// setDynamicTooltip(), which is deprecated in 1.13 and cannot be used (the
 		// marketplace scan rejects eslint-disable). Render our own readout so the
 		// value stays visible on every version.
-		groupIconPicker.addSetting(setting => {
+		groupIconPicker.addSetting((setting) => {
 			setting
 				.setName(STRINGS.settings.maxSearchResults.name)
 				.setDesc(STRINGS.settings.maxSearchResults.desc);
 			let valueEl: HTMLElement | undefined;
-			setting.addSlider(slider => slider
-				.setLimits(10, 300, 10)
-				.setValue(this.plugin.settings.maxSearchResults)
-				.onChange(value => {
-					valueEl?.setText(String(value));
-					void this.applyControlChange('maxSearchResults', value);
-				})
+			setting.addSlider((slider) =>
+				slider
+					.setLimits(10, 300, 10)
+					.setValue(this.plugin.settings.maxSearchResults)
+					.onChange((value) => {
+						valueEl?.setText(String(value));
+						void this.applyControlChange('maxSearchResults', value);
+					}),
 			);
 			valueEl = setting.controlEl.createSpan({
 				cls: 'icon-palette-slider-value',
@@ -529,145 +868,238 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		});
 
 		// SETTING: Main color picker
-		groupIconPicker.addSetting(setting => void setting
-			.setName(STRINGS.settings.colorPicker1.name)
-			.setDesc(Platform.isDesktop
-				? STRINGS.settings.colorPicker1.descDesktop
-				: STRINGS.settings.colorPicker1.descMobile
-			)
-			.addExtraButton(indicator => {
-				indicator.extraSettingsEl.addClass('icon-palette-indicator');
-				this.indicators.colorPicker1 = indicator;
-			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('list', STRINGS.settings.values.list)
-				.addOption('rgb', STRINGS.settings.values.rgb)
-				.setValue(this.plugin.settings.colorPicker1)
-				.onChange(value => {
-					this.refreshIndicator(this.indicators.colorPicker1, value);
-					void this.applyControlChange('colorPicker1', value);
-				});
-				this.refreshIndicator(this.indicators.colorPicker1, dropdown.getValue());
-			})
+		groupIconPicker.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.colorPicker1.name)
+					.setDesc(
+						Platform.isDesktop
+							? STRINGS.settings.colorPicker1.descDesktop
+							: STRINGS.settings.colorPicker1.descMobile,
+					)
+					.addExtraButton((indicator) => {
+						indicator.extraSettingsEl.addClass(
+							'icon-palette-indicator',
+						);
+						this.indicators.colorPicker1 = indicator;
+					})
+					.addDropdown((dropdown) => {
+						dropdown
+							.addOption('list', STRINGS.settings.values.list)
+							.addOption('rgb', STRINGS.settings.values.rgb)
+							.setValue(this.plugin.settings.colorPicker1)
+							.onChange((value) => {
+								this.refreshIndicator(
+									this.indicators.colorPicker1,
+									value,
+								);
+								void this.applyControlChange(
+									'colorPicker1',
+									value,
+								);
+							});
+						this.refreshIndicator(
+							this.indicators.colorPicker1,
+							dropdown.getValue(),
+						);
+					}),
 		);
 
 		// SETTING: Second color picker
-		groupIconPicker.addSetting(setting => void setting
-			.setName(STRINGS.settings.colorPicker2.name)
-			.setDesc(Platform.isDesktop
-				? STRINGS.settings.colorPicker2.descDesktop
-				: STRINGS.settings.colorPicker2.descMobile
-			)
-			.addExtraButton(indicator => {
-				indicator.extraSettingsEl.addClass('icon-palette-indicator');
-				this.indicators.colorPicker2 = indicator;
-			})
-			.addDropdown(dropdown => { dropdown
-				.addOption('list', STRINGS.settings.values.list)
-				.addOption('rgb', STRINGS.settings.values.rgb)
-				.setValue(this.plugin.settings.colorPicker2)
-				.onChange(value => {
-					this.refreshIndicator(this.indicators.colorPicker2, value);
-					void this.applyControlChange('colorPicker2', value);
-				});
-				this.refreshIndicator(this.indicators.colorPicker2, dropdown.getValue());
-			})
+		groupIconPicker.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.colorPicker2.name)
+					.setDesc(
+						Platform.isDesktop
+							? STRINGS.settings.colorPicker2.descDesktop
+							: STRINGS.settings.colorPicker2.descMobile,
+					)
+					.addExtraButton((indicator) => {
+						indicator.extraSettingsEl.addClass(
+							'icon-palette-indicator',
+						);
+						this.indicators.colorPicker2 = indicator;
+					})
+					.addDropdown((dropdown) => {
+						dropdown
+							.addOption('list', STRINGS.settings.values.list)
+							.addOption('rgb', STRINGS.settings.values.rgb)
+							.setValue(this.plugin.settings.colorPicker2)
+							.onChange((value) => {
+								this.refreshIndicator(
+									this.indicators.colorPicker2,
+									value,
+								);
+								void this.applyControlChange(
+									'colorPicker2',
+									value,
+								);
+							});
+						this.refreshIndicator(
+							this.indicators.colorPicker2,
+							dropdown.getValue(),
+						);
+					}),
 		);
 
 		// GROUP: Saved colors
-		const groupSavedColors = new SettingGroup(this.containerEl)
-			.setHeading(STRINGS.settings.headingSavedColors);
+		const groupSavedColors = new SettingGroup(this.containerEl).setHeading(
+			STRINGS.settings.headingSavedColors,
+		);
 
 		// SETTING: add-a-color control plus the editable saved-colors list
-		groupSavedColors.addSetting(setting => {
+		groupSavedColors.addSetting((setting) => {
 			const host = setting.settingEl;
-			const rerender = (): void => this.renderSavedColorsBody(host, rerender);
+			const rerender = (): void =>
+				this.renderSavedColorsBody(host, rerender);
 			rerender();
 		});
 
 		// GROUP: Advanced
-		const groupAdvanced = new SettingGroup(this.containerEl)
-			.setHeading(STRINGS.settings.headingAdvanced);
+		const groupAdvanced = new SettingGroup(this.containerEl).setHeading(
+			STRINGS.settings.headingAdvanced,
+		);
 
 		// SETTING: Colorless hover
-		groupAdvanced.addSetting(setting => void setting
-			.setName(STRINGS.settings.uncolorHover.name)
-			.setDesc(STRINGS.settings.uncolorHover.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.uncolorHover)
-				.onChange(value => void this.applyControlChange('uncolorHover', value))
-			)
+		groupAdvanced.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.uncolorHover.name)
+					.setDesc(STRINGS.settings.uncolorHover.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.uncolorHover)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'uncolorHover',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Colorless drag
-		groupAdvanced.addSetting(setting => void setting
-			.setName(STRINGS.settings.uncolorDrag.name)
-			.setDesc(STRINGS.settings.uncolorDrag.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.uncolorDrag)
-				.onChange(value => void this.applyControlChange('uncolorDrag', value))
-			)
+		groupAdvanced.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.uncolorDrag.name)
+					.setDesc(STRINGS.settings.uncolorDrag.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.uncolorDrag)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'uncolorDrag',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Colorless selection
-		groupAdvanced.addSetting(setting => void setting
-			.setName(STRINGS.settings.uncolorSelect.name)
-			.setDesc(STRINGS.settings.uncolorSelect.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.uncolorSelect)
-				.onChange(value => void this.applyControlChange('uncolorSelect', value))
-			)
+		groupAdvanced.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.uncolorSelect.name)
+					.setDesc(STRINGS.settings.uncolorSelect.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.uncolorSelect)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'uncolorSelect',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: Colorless ribbon button
-		groupAdvanced.addSetting(setting => void setting
-			.setName(STRINGS.settings.uncolorQuick.name)
-			.setDesc(STRINGS.settings.uncolorQuick.desc)
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.uncolorQuick)
-				.onChange(value => void this.applyControlChange('uncolorQuick', value))
-			)
+		groupAdvanced.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.uncolorQuick.name)
+					.setDesc(STRINGS.settings.uncolorQuick.desc)
+					.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.uncolorQuick)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'uncolorQuick',
+										value,
+									),
+							),
+					),
 		);
 
 		// SETTING: View unused icons
-		groupAdvanced.addSetting(setting => void setting
-			.setName(STRINGS.settings.viewUnusedIcons.name)
-			.setDesc(STRINGS.settings.viewUnusedIcons.desc)
-			.addButton(button => button
-				.setButtonText(STRINGS.settings.manage)
-				.onClick(() => {
-					void this.openUnusedIcons();
-				})
-			)
+		groupAdvanced.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.viewUnusedIcons.name)
+					.setDesc(STRINGS.settings.viewUnusedIcons.desc)
+					.addButton((button) =>
+						button
+							.setButtonText(STRINGS.settings.manage)
+							.onClick(() => {
+								void this.openUnusedIcons();
+							}),
+					),
 		);
 
 		// SETTING: Maximum automatic backups
-		groupAdvanced.addSetting(setting => void setting
-			.setName(STRINGS.settings.maxBackups.name)
-			.setDesc(STRINGS.settings.maxBackups.desc)
-			.then(setting => {
-				if (Platform.isDesktop) setting.addExtraButton(button => button
-					.setIcon('lucide-folder-open')
-					.setTooltip(STRINGS.settings.maxBackups.openPluginFolder)
-					.onClick(() => {
-						void (this.app as unknown as AppWithSettingsUI).openWithDefaultApp?.(this.plugin.manifest.dir ?? '');
+		groupAdvanced.addSetting(
+			(setting) =>
+				void setting
+					.setName(STRINGS.settings.maxBackups.name)
+					.setDesc(STRINGS.settings.maxBackups.desc)
+					.then((setting) => {
+						if (Platform.isDesktop)
+							setting.addExtraButton((button) =>
+								button
+									.setIcon('lucide-folder-open')
+									.setTooltip(
+										STRINGS.settings.maxBackups
+											.openPluginFolder,
+									)
+									.onClick(() => {
+										void (
+											this
+												.app as unknown as AppWithSettingsUI
+										).openWithDefaultApp?.(
+											this.plugin.manifest.dir ?? '',
+										);
+									}),
+							);
 					})
-				)
-			})
-			.addDropdown(dropdown => dropdown
-				.addOption('0', STRINGS.settings.values.none)
-				.addOption('1', '1')
-				.addOption('2', '2')
-				.addOption('3', '3')
-				.addOption('4', '4')
-				.addOption('5', '5')
-				.addOption('6', '6')
-				.addOption('7', '7')
-				.addOption('8', '8')
-				.addOption('9', '9')
-				.setValue(this.plugin.settings.maxBackups.toString())
-				.onChange(value => void this.applyControlChange('maxBackups', value))
-			)
+					.addDropdown((dropdown) =>
+						dropdown
+							.addOption('0', STRINGS.settings.values.none)
+							.addOption('1', '1')
+							.addOption('2', '2')
+							.addOption('3', '3')
+							.addOption('4', '4')
+							.addOption('5', '5')
+							.addOption('6', '6')
+							.addOption('7', '7')
+							.addOption('8', '8')
+							.addOption('9', '9')
+							.setValue(
+								this.plugin.settings.maxBackups.toString(),
+							)
+							.onChange(
+								(value) =>
+									void this.applyControlChange(
+										'maxBackups',
+										value,
+									),
+							),
+					),
 		);
 
 		// Footer: version + links, the same trailing row the workspace's other
@@ -691,9 +1123,10 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * Declarative render for the rulebook button (1.13+ has no button control).
 	 */
 	private renderRulesButton(setting: Setting): void {
-		setting.addButton(button => button
-			.setButtonText(STRINGS.settings.manage)
-			.onClick(() => this.openRulePicker())
+		setting.addButton((button) =>
+			button
+				.setButtonText(STRINGS.settings.manage)
+				.onClick(() => this.openRulePicker()),
 		);
 	}
 
@@ -701,9 +1134,10 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * Declarative render for the "view unused icons" button.
 	 */
 	private renderViewUnusedIcons(setting: Setting): void {
-		setting.addButton(button => button
-			.setButtonText(STRINGS.settings.manage)
-			.onClick(() => void this.openUnusedIcons())
+		setting.addButton((button) =>
+			button
+				.setButtonText(STRINGS.settings.manage)
+				.onClick(() => void this.openUnusedIcons()),
 		);
 	}
 
@@ -726,7 +1160,10 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * place after a mutation, avoiding this.display() (missing on the render path)
 	 * and this.update() (a 1.13-only API barred below the 1.11 floor).
 	 */
-	private renderSavedColorsBody(host: HTMLElement, rerender: () => void): void {
+	private renderSavedColorsBody(
+		host: HTMLElement,
+		rerender: () => void,
+	): void {
 		host.empty();
 		host.addClass('icon-palette-saved-colors-row');
 		this.appendAddSavedColor(host, rerender);
@@ -734,9 +1171,10 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		const customColors = this.plugin.settings.customColors;
 		host.createDiv({
 			cls: 'setting-item-description',
-			text: customColors.length === 0
-				? STRINGS.settings.savedColors.empty
-				: STRINGS.settings.savedColors.desc,
+			text:
+				customColors.length === 0
+					? STRINGS.settings.savedColors.empty
+					: STRINGS.settings.savedColors.desc,
 		});
 		if (customColors.length === 0) return;
 
@@ -754,35 +1192,55 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		const rowEl = host.createDiv({ cls: 'icon-palette-add-color' });
 		let pendingColor = DEFAULT_NEW_SAVED_COLOR;
 
-		new ColorComponent(rowEl)
-			.setValue(pendingColor)
-			.onChange(value => { pendingColor = value; });
+		new ColorComponent(rowEl).setValue(pendingColor).onChange((value) => {
+			pendingColor = value;
+		});
 		// Label the color input itself; ColorComponent does not expose its element,
 		// so reach the just-created <input type="color"> in this row.
 		const colorInputEl = rowEl.querySelector('input[type="color"]');
-		if (colorInputEl) colorInputEl.setAttribute('aria-label', STRINGS.settings.savedColors.addColorLabel);
+		if (colorInputEl)
+			colorInputEl.setAttribute(
+				'aria-label',
+				STRINGS.settings.savedColors.addColorLabel,
+			);
 
-		const nameField = new TextComponent(rowEl)
-			.setPlaceholder(STRINGS.settings.savedColors.namePlaceholder);
+		const nameField = new TextComponent(rowEl).setPlaceholder(
+			STRINGS.settings.savedColors.namePlaceholder,
+		);
 		nameField.inputEl.addClass('icon-palette-saved-color-name');
-		nameField.inputEl.setAttribute('aria-label', STRINGS.settings.savedColors.namePlaceholder);
+		nameField.inputEl.setAttribute(
+			'aria-label',
+			STRINGS.settings.savedColors.namePlaceholder,
+		);
 
 		const addButton = new ButtonComponent(rowEl)
 			.setButtonText(STRINGS.settings.savedColors.add)
 			.setCta()
 			.onClick(() => {
 				const { customColors, customColorNames } = this.plugin.settings;
-				CustomColorsStore.save(customColors, pendingColor, CustomColorsStore.CAP);
+				CustomColorsStore.save(
+					customColors,
+					pendingColor,
+					CustomColorsStore.CAP,
+				);
 				// Only set the name when one was typed. A blank field must not clear
 				// the name of a color that was already saved and named.
 				const newName = nameField.getValue().trim();
-				if (newName) CustomColorsStore.setName(customColorNames, pendingColor, newName);
+				if (newName)
+					CustomColorsStore.setName(
+						customColorNames,
+						pendingColor,
+						newName,
+					);
 				CustomColorsStore.pruneNames(customColors, customColorNames);
 				this.queueSavedColorsSave();
 				rerender();
 				this.focusAddColor(host);
 			});
-		addButton.buttonEl.setAttribute('aria-label', STRINGS.settings.savedColors.addAria);
+		addButton.buttonEl.setAttribute(
+			'aria-label',
+			STRINGS.settings.savedColors.addAria,
+		);
 	}
 
 	/**
@@ -793,40 +1251,66 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	 * must not run per keystroke); hide() flushes any edit left pending on close.
 	 * Shared by both settings paths; `rerender` rebuilds the body after a removal.
 	 */
-	private appendSavedColorRows(listEl: HTMLElement, rerender: () => void, host: HTMLElement): void {
+	private appendSavedColorRows(
+		listEl: HTMLElement,
+		rerender: () => void,
+		host: HTMLElement,
+	): void {
 		const { customColors, customColorNames } = this.plugin.settings;
 		for (const color of customColors) {
-			const rowEl = listEl.createDiv({ cls: 'icon-palette-saved-color-row' });
+			const rowEl = listEl.createDiv({
+				cls: 'icon-palette-saved-color-row',
+			});
 
-			const swatchEl = rowEl.createSpan({ cls: 'icon-palette-saved-color' });
+			const swatchEl = rowEl.createSpan({
+				cls: 'icon-palette-saved-color',
+			});
 			setIcon(swatchEl, 'lucide-paint-bucket');
 			const svgEl = swatchEl.find('svg');
-			if (svgEl) svgEl.style.setProperty('color', ColorUtils.toRgb(color));
+			if (svgEl)
+				svgEl.style.setProperty('color', ColorUtils.toRgb(color));
 
-			rowEl.createSpan({ cls: 'icon-palette-saved-color-code', text: color });
+			rowEl.createSpan({
+				cls: 'icon-palette-saved-color-code',
+				text: color,
+			});
 
 			const nameField = new TextComponent(rowEl)
 				.setPlaceholder(STRINGS.settings.savedColors.namePlaceholder)
 				.setValue(CustomColorsStore.getName(customColorNames, color));
 			nameField.inputEl.addClass('icon-palette-saved-color-name');
-			nameField.inputEl.setAttribute('aria-label', STRINGS.settings.savedColors.nameLabel.replace('{color}', color));
-			nameField.onChange(value => {
-				if (CustomColorsStore.setName(customColorNames, color, value)) this.savedColorsDirty = true;
+			nameField.inputEl.setAttribute(
+				'aria-label',
+				STRINGS.settings.savedColors.nameLabel.replace(
+					'{color}',
+					color,
+				),
+			);
+			nameField.onChange((value) => {
+				if (CustomColorsStore.setName(customColorNames, color, value))
+					this.savedColorsDirty = true;
 			});
-			nameField.inputEl.addEventListener('blur', () => this.flushSavedColorNames());
+			nameField.inputEl.addEventListener('blur', () =>
+				this.flushSavedColorNames(),
+			);
 
 			const removeButton = new ExtraButtonComponent(rowEl)
 				.setIcon('lucide-trash-2')
 				.setTooltip(STRINGS.settings.savedColors.remove)
 				.onClick(() => {
 					if (CustomColorsStore.remove(customColors, color)) {
-						CustomColorsStore.pruneNames(customColors, customColorNames);
+						CustomColorsStore.pruneNames(
+							customColors,
+							customColorNames,
+						);
 						this.queueSavedColorsSave();
 						rerender();
 						this.focusAddColor(host);
 					}
 				});
-			removeButton.extraSettingsEl.addClass('icon-palette-saved-color-remove');
+			removeButton.extraSettingsEl.addClass(
+				'icon-palette-saved-color-remove',
+			);
 		}
 	}
 
@@ -841,21 +1325,41 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		// whitespace in text nodes. The row is a flex row, and a flex item drops
 		// the whitespace at its own edges, so the old ' | ' spans could render as
 		// "GitHub|Report issues". Same fix as the reference plugin's footer.
-		const inner = host.createDiv({ cls: 'icon-palette-settings-footer-inner' });
-		inner.createSpan({ text: STRINGS.settings.footer.version.replace('{#}', this.plugin.manifest.version) });
+		const inner = host.createDiv({
+			cls: 'icon-palette-settings-footer-inner',
+		});
+		inner.createSpan({
+			text: STRINGS.settings.footer.version.replace(
+				'{#}',
+				this.plugin.manifest.version,
+			),
+		});
 		const link = (text: string, url: string): void => {
-			inner.createSpan({ cls: 'icon-palette-settings-footer-separator', text: '|' });
-			inner.createEl('a', { text, href: url, attr: { target: '_blank', rel: 'noopener' } });
+			inner.createSpan({
+				cls: 'icon-palette-settings-footer-separator',
+				text: '|',
+			});
+			inner.createEl('a', {
+				text,
+				href: url,
+				attr: { target: '_blank', rel: 'noopener' },
+			});
 		};
-		link(STRINGS.settings.footer.github, 'https://github.com/ckelsoe/obsidian-icon-palette');
+		link(
+			STRINGS.settings.footer.github,
+			'https://github.com/ckelsoe/obsidian-icon-palette',
+		);
 		link(STRINGS.settings.footer.discord, DISCORD_URL);
-		link(STRINGS.settings.footer.reportIssues, 'https://github.com/ckelsoe/obsidian-icon-palette/issues');
+		link(
+			STRINGS.settings.footer.reportIssues,
+			'https://github.com/ckelsoe/obsidian-icon-palette/issues',
+		);
 	}
 
 	private async openUnusedIcons(): Promise<void> {
 		const unusedIcons: FileItem[] = [];
 		for (const fileId of Object.keys(this.plugin.settings.fileIcons)) {
-			if (!await this.app.vault.adapter.exists(fileId)) {
+			if (!(await this.app.vault.adapter.exists(fileId))) {
 				const file = this.plugin.getFileItem(fileId);
 				unusedIcons.push(file);
 			}
@@ -866,14 +1370,27 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	/**
 	 * Change a dropdown indicator icon.
 	 */
-	private refreshIndicator(indicator: ExtraButtonComponent | undefined, value: string): void {
+	private refreshIndicator(
+		indicator: ExtraButtonComponent | undefined,
+		value: string,
+	): void {
 		if (!indicator) return;
 		switch (value) {
-			case 'desktop': indicator.setIcon('lucide-monitor'); break;
-			case 'mobile': indicator.setIcon('lucide-tablet-smartphone'); break;
-			case 'list': indicator.setIcon('lucide-paint-bucket'); break;
-			case 'rgb': indicator.setIcon('lucide-pipette'); break;
-			default: indicator.extraSettingsEl.hide(); return;
+			case 'desktop':
+				indicator.setIcon('lucide-monitor');
+				break;
+			case 'mobile':
+				indicator.setIcon('lucide-tablet-smartphone');
+				break;
+			case 'list':
+				indicator.setIcon('lucide-paint-bucket');
+				break;
+			case 'rgb':
+				indicator.setIcon('lucide-pipette');
+				break;
+			default:
+				indicator.extraSettingsEl.hide();
+				return;
 		}
 		indicator.extraSettingsEl.show();
 	}

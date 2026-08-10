@@ -1,4 +1,10 @@
-import { DropdownComponent, ExtraButtonComponent, Platform, Setting, TextComponent } from 'obsidian';
+import {
+	DropdownComponent,
+	ExtraButtonComponent,
+	Platform,
+	Setting,
+	TextComponent,
+} from 'obsidian';
 import { STRINGS } from 'src/registry.js';
 import { ConditionItem } from 'src/managers/RuleManager.js';
 
@@ -30,7 +36,7 @@ export default class ConditionSetting extends Setting {
 	private dragEndCallback: (() => void) | null = null;
 	private removeCallback: (() => void) | null = null;
 
-	constructor(containerEl: HTMLElement, condition: ConditionItem,) {
+	constructor(containerEl: HTMLElement, condition: ConditionItem) {
 		super(containerEl);
 		this.condition = condition;
 
@@ -38,66 +44,77 @@ export default class ConditionSetting extends Setting {
 		this.infoEl.remove();
 
 		// BUTTON: Grip
-		this.gripEl = new ExtraButtonComponent(this.controlEl)
-			.setIcon('lucide-grip-vertical')
-			.extraSettingsEl;
+		this.gripEl = new ExtraButtonComponent(this.controlEl).setIcon(
+			'lucide-grip-vertical',
+		).extraSettingsEl;
 		this.gripEl.addClass('icon-palette-grip');
 
 		this.ctrlContainerEl = Platform.isPhone
 			? this.controlEl.createDiv({ cls: 'icon-palette-control-column' })
 			: this.controlEl;
 		this.dropContainerEl = Platform.isPhone
-			? this.ctrlContainerEl.createDiv({ cls: 'icon-palette-dropdown-row' })
+			? this.ctrlContainerEl.createDiv({
+					cls: 'icon-palette-dropdown-row',
+				})
 			: this.controlEl;
 
 		// DROPDOWN: Source
-		this.srcDropdown = new DropdownComponent(this.dropContainerEl)
-			.onChange(value => this.sourceChangeCallback?.(value));
+		this.srcDropdown = new DropdownComponent(this.dropContainerEl).onChange(
+			(value) => this.sourceChangeCallback?.(value),
+		);
 
 		// DROPDOWN: Operator
-		this.opDropdown = new DropdownComponent(this.dropContainerEl)
-			.onChange(value => this.operatorChangeCallback?.(value));
+		this.opDropdown = new DropdownComponent(this.dropContainerEl).onChange(
+			(value) => this.operatorChangeCallback?.(value),
+		);
 
 		// FIELD: Value
-		this.valInput = new TextComponent(this.ctrlContainerEl)
-			.onChange(value => this.valueChangeCallback?.(value));
+		this.valInput = new TextComponent(this.ctrlContainerEl).onChange(
+			(value) => this.valueChangeCallback?.(value),
+		);
 
 		// DROPDOWN: Value
-		this.valDropdown = new DropdownComponent(this.ctrlContainerEl)
-			.onChange(value => this.valueChangeCallback?.(value));
+		this.valDropdown = new DropdownComponent(this.ctrlContainerEl).onChange(
+			(value) => this.valueChangeCallback?.(value),
+		);
 
 		// BUTTON: Remove condition
 		this.removeEl = new ExtraButtonComponent(this.controlEl)
 			.setIcon('lucide-trash-2')
 			.setTooltip(STRINGS.ruleEditor.removeCondition)
-			.onClick(() => this.removeCallback?.())
-			.extraSettingsEl;
+			.onClick(() => this.removeCallback?.()).extraSettingsEl;
 
 		// Drag & drop (mouse)
 		this.gripEl.addEventListener('pointerdown', () => {
 			this.settingEl.draggable = true;
 		});
-		this.settingEl.addEventListener('dragstart', event => {
+		this.settingEl.addEventListener('dragstart', (event) => {
 			this.dragStartCallback?.(event.clientX, event.clientY);
 		});
-		this.settingEl.addEventListener('drag', event => {
+		this.settingEl.addEventListener('drag', (event) => {
 			this.dragCallback?.(event.clientX, event.clientY);
 		});
-		this.settingEl.addEventListener('dragend', () => this.dragEndCallback?.());
+		this.settingEl.addEventListener('dragend', () =>
+			this.dragEndCallback?.(),
+		);
 
 		// Drag & drop (multi-touch)
-		this.gripEl.addEventListener('touchstart', event => {
+		this.gripEl.addEventListener('touchstart', (event) => {
 			event.preventDefault(); // Prevent dragstart
 			const touch = event.targetTouches[0];
 			if (touch) this.dragStartCallback?.(touch.clientX, touch.clientY);
 		});
-		this.gripEl.addEventListener('touchmove', event => {
+		this.gripEl.addEventListener('touchmove', (event) => {
 			event.preventDefault(); // Prevent scrolling
 			const touch = event.targetTouches[0];
 			if (touch) this.dragCallback?.(touch.clientX, touch.clientY);
 		});
-		this.gripEl.addEventListener('touchend', () => this.dragEndCallback?.());
-		this.gripEl.addEventListener('touchcancel', () => this.dragEndCallback?.());
+		this.gripEl.addEventListener('touchend', () =>
+			this.dragEndCallback?.(),
+		);
+		this.gripEl.addEventListener('touchcancel', () =>
+			this.dragEndCallback?.(),
+		);
 	}
 
 	onSourceChange(callback: (source: string) => void): this {

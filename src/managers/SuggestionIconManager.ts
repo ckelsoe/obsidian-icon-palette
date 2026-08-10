@@ -31,13 +31,16 @@ type RenderSuggestionMethod = (value: unknown, el: HTMLElement) => void;
  * Intercepts suggestion popovers to add custom icons.
  */
 export default class SuggestionIconManager extends IconManager {
-	private showAbstractSuggestionsOriginal: ShowSuggestionsMethod | null = null;
+	private showAbstractSuggestionsOriginal: ShowSuggestionsMethod | null =
+		null;
 	private showAbstractSuggestionsProxy: ShowSuggestionsMethod | null = null;
-	private renderAbstractSuggestionProxy: typeof AbstractInputSuggest.prototype.renderSuggestion | null = null;
+	private renderAbstractSuggestionProxy:
+		typeof AbstractInputSuggest.prototype.renderSuggestion | null = null;
 
 	private showEditorSuggestionsOriginal: ShowSuggestionsMethod | null = null;
 	private showEditorSuggestionsProxy: ShowSuggestionsMethod | null = null;
-	private renderEditorSuggestionProxy: typeof AbstractInputSuggest.prototype.renderSuggestion | null = null;
+	private renderEditorSuggestionProxy:
+		typeof AbstractInputSuggest.prototype.renderSuggestion | null = null;
 
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
@@ -50,43 +53,71 @@ export default class SuggestionIconManager extends IconManager {
 	 */
 	private setupAbstractSuggestionProxies(): void {
 		// Store original method
-		const abstractPrototype = AbstractInputSuggest.prototype as AbstractInputSuggestWithPrivate<unknown>;
-		this.showAbstractSuggestionsOriginal = abstractPrototype.showSuggestions;
+		const abstractPrototype =
+			AbstractInputSuggest.prototype as AbstractInputSuggestWithPrivate<unknown>;
+		this.showAbstractSuggestionsOriginal =
+			abstractPrototype.showSuggestions;
 
 		// Catch popovers before they open
-		this.showAbstractSuggestionsProxy = new Proxy(abstractPrototype.showSuggestions, {
-			apply: (showSuggestions, popover: AbstractInputSuggest<unknown>, args: []) => {
-				if (this.isDisabled()) {
+		this.showAbstractSuggestionsProxy = new Proxy(
+			abstractPrototype.showSuggestions,
+			{
+				apply: (
+					showSuggestions,
+					popover: AbstractInputSuggest<unknown>,
+					args: [],
+				) => {
+					if (this.isDisabled()) {
+						return Reflect.apply(showSuggestions, popover, args);
+					}
+
+					// Proxy renderSuggestion() for each instance
+					if (
+						popover.renderSuggestion !==
+						this.renderAbstractSuggestionProxy
+					) {
+						const renderSuggestionOriginal: RenderSuggestionMethod =
+							popover.renderSuggestion.bind(popover);
+						this.renderAbstractSuggestionProxy = new Proxy(
+							renderSuggestionOriginal,
+							{
+								apply: (
+									renderSuggestion,
+									_popover,
+									args: [unknown, HTMLElement],
+								) => {
+									// Call base method first to pre-populate elements
+									renderSuggestion(...args);
+									if (this.isDisabled()) return;
+
+									const [value, el] = args;
+									if (!value || !el.instanceOf(HTMLElement))
+										return;
+
+									switch (this.getSuggestionType(value)) {
+										case FILE_SUGGESTION:
+											this.refreshFileIcon(value, el);
+											break;
+										case TAG_SUGGESTION:
+											this.refreshTagIcon(value, el);
+											break;
+										case PROPERTY_SUGGESTION:
+											this.refreshPropertyIcon(value, el);
+											break;
+									}
+								},
+							},
+						);
+
+						// Replace original method
+						popover.renderSuggestion =
+							this.renderAbstractSuggestionProxy;
+					}
+
 					return Reflect.apply(showSuggestions, popover, args);
-				}
-
-				// Proxy renderSuggestion() for each instance
-				if (popover.renderSuggestion !== this.renderAbstractSuggestionProxy) {
-					const renderSuggestionOriginal: RenderSuggestionMethod = popover.renderSuggestion.bind(popover);
-					this.renderAbstractSuggestionProxy = new Proxy(renderSuggestionOriginal, {
-						apply: (renderSuggestion, _popover, args: [unknown, HTMLElement]) => {
-							// Call base method first to pre-populate elements
-							renderSuggestion(...args);
-							if (this.isDisabled()) return;
-
-							const [value, el] = args;
-							if (!value || !el.instanceOf(HTMLElement)) return;
-
-							switch (this.getSuggestionType(value)) {
-								case FILE_SUGGESTION: this.refreshFileIcon(value, el); break;
-								case TAG_SUGGESTION: this.refreshTagIcon(value, el); break;
-								case PROPERTY_SUGGESTION: this.refreshPropertyIcon(value, el); break;
-							}
-						}
-					});
-
-					// Replace original method
-					popover.renderSuggestion = this.renderAbstractSuggestionProxy;
-				}
-
-				return Reflect.apply(showSuggestions, popover, args);
-			}
-		});
+				},
+			},
+		);
 
 		// Replace original method
 		abstractPrototype.showSuggestions = this.showAbstractSuggestionsProxy;
@@ -97,43 +128,70 @@ export default class SuggestionIconManager extends IconManager {
 	 */
 	private setupEditorSuggestionProxies(): void {
 		// Store original method
-		const editorPrototype = EditorSuggest.prototype as EditorSuggestWithPrivate<unknown>;
+		const editorPrototype =
+			EditorSuggest.prototype as EditorSuggestWithPrivate<unknown>;
 		this.showEditorSuggestionsOriginal = editorPrototype.showSuggestions;
 
 		// Catch popovers before they open
-		this.showEditorSuggestionsProxy = new Proxy(editorPrototype.showSuggestions, {
-			apply: (showSuggestions, popover: EditorSuggest<unknown>, args: []) => {
-				if (this.isDisabled()) {
+		this.showEditorSuggestionsProxy = new Proxy(
+			editorPrototype.showSuggestions,
+			{
+				apply: (
+					showSuggestions,
+					popover: EditorSuggest<unknown>,
+					args: [],
+				) => {
+					if (this.isDisabled()) {
+						return Reflect.apply(showSuggestions, popover, args);
+					}
+
+					// Proxy renderSuggestion() for each instance
+					if (
+						popover.renderSuggestion !==
+						this.renderEditorSuggestionProxy
+					) {
+						const renderSuggestionOriginal: RenderSuggestionMethod =
+							popover.renderSuggestion.bind(popover);
+						this.renderEditorSuggestionProxy = new Proxy(
+							renderSuggestionOriginal,
+							{
+								apply: (
+									renderSuggestion,
+									_popover,
+									args: [unknown, HTMLElement],
+								) => {
+									// Call base method first to pre-populate elements
+									renderSuggestion(...args);
+									if (this.isDisabled()) return;
+
+									const [value, el] = args;
+									if (!value || !el.instanceOf(HTMLElement))
+										return;
+
+									switch (this.getSuggestionType(value)) {
+										case FILE_SUGGESTION:
+											this.refreshFileIcon(value, el);
+											break;
+										case TAG_SUGGESTION:
+											this.refreshTagIcon(value, el);
+											break;
+										case PROPERTY_SUGGESTION:
+											this.refreshPropertyIcon(value, el);
+											break;
+									}
+								},
+							},
+						);
+
+						// Replace original method
+						popover.renderSuggestion =
+							this.renderEditorSuggestionProxy;
+					}
+
 					return Reflect.apply(showSuggestions, popover, args);
-				}
-
-				// Proxy renderSuggestion() for each instance
-				if (popover.renderSuggestion !== this.renderEditorSuggestionProxy) {
-					const renderSuggestionOriginal: RenderSuggestionMethod = popover.renderSuggestion.bind(popover);
-					this.renderEditorSuggestionProxy = new Proxy(renderSuggestionOriginal, {
-						apply: (renderSuggestion, _popover, args: [unknown, HTMLElement]) => {
-							// Call base method first to pre-populate elements
-							renderSuggestion(...args);
-							if (this.isDisabled()) return;
-
-							const [value, el] = args;
-							if (!value || !el.instanceOf(HTMLElement)) return;
-
-							switch (this.getSuggestionType(value)) {
-								case FILE_SUGGESTION: this.refreshFileIcon(value, el); break;
-								case TAG_SUGGESTION: this.refreshTagIcon(value, el); break;
-								case PROPERTY_SUGGESTION: this.refreshPropertyIcon(value, el); break;
-							}
-						}
-					});
-
-					// Replace original method
-					popover.renderSuggestion = this.renderEditorSuggestionProxy;
-				}
-
-				return Reflect.apply(showSuggestions, popover, args);
-			}
-		});
+				},
+			},
+		);
 
 		// Replace original method
 		editorPrototype.showSuggestions = this.showEditorSuggestionsProxy;
@@ -171,16 +229,20 @@ export default class SuggestionIconManager extends IconManager {
 		if (!fileId) return;
 		const file = this.plugin.getFileItem(fileId);
 		if (!file) return;
-		const rule = this.plugin.ruleManager?.checkRuling('file', fileId) ?? file;
+		const rule =
+			this.plugin.ruleManager?.checkRuling('file', fileId) ?? file;
 
 		el.addClass('icon-palette-item');
-		const iconContainerEl = el.find(':scope > .suggestion-icon')
-			?? createDiv({ cls: 'suggestion-icon' });
-		const iconEl = iconContainerEl.find(':scope > .suggestion-flair')
-			?? iconContainerEl.createSpan({ cls: 'suggestion-flair' });
+		const iconContainerEl =
+			el.find(':scope > .suggestion-icon') ??
+			createDiv({ cls: 'suggestion-icon' });
+		const iconEl =
+			iconContainerEl.find(':scope > .suggestion-flair') ??
+			iconContainerEl.createSpan({ cls: 'suggestion-flair' });
 		el.prepend(iconContainerEl);
 		if (rule) {
-			if (!rule.icon && !rule.color) iconEl.addClass('icon-palette-invisible');
+			if (!rule.icon && !rule.color)
+				iconEl.addClass('icon-palette-invisible');
 			this.refreshIcon(rule, iconEl);
 		}
 	}
@@ -196,21 +258,27 @@ export default class SuggestionIconManager extends IconManager {
 				const propId = value?.text;
 				if (propId) {
 					const prop = this.plugin.getPropertyItem(propId);
-					const iconEl = el.find(':scope > .suggestion-icon > .suggestion-flair');
+					const iconEl = el.find(
+						':scope > .suggestion-icon > .suggestion-flair',
+					);
 					if (iconEl) this.refreshIcon(prop, iconEl);
 				}
 				break;
 			}
 			// BASES: File attribute suggestions
-			case 'file': break;
+			case 'file':
+				break;
 			// BASES: Formula suggestions
-			case 'formula': break;
+			case 'formula':
+				break;
 			// BASES: Property suggestions
 			case 'note': {
 				const propId = value?.name;
 				if (propId) {
 					const prop = this.plugin.getPropertyItem(propId);
-					const iconEl = el.find(':scope > .suggestion-icon > .suggestion-flair');
+					const iconEl = el.find(
+						':scope > .suggestion-icon > .suggestion-flair',
+					);
 					if (iconEl) this.refreshIcon(prop, iconEl);
 				}
 				break;
@@ -227,14 +295,17 @@ export default class SuggestionIconManager extends IconManager {
 		if (tagId) {
 			el.addClass('mod-complex', 'icon-palette-item');
 			const tag = this.plugin.getTagItem(tagId);
-			const iconContainerEl = el.find(':scope > .suggestion-icon')
-				?? createDiv({ cls: 'suggestion-icon' });
-			const iconEl = iconContainerEl.find(':scope > .suggestion-flair')
-				?? iconContainerEl.createSpan({ cls: 'suggestion-flair' });
+			const iconContainerEl =
+				el.find(':scope > .suggestion-icon') ??
+				createDiv({ cls: 'suggestion-icon' });
+			const iconEl =
+				iconContainerEl.find(':scope > .suggestion-flair') ??
+				iconContainerEl.createSpan({ cls: 'suggestion-flair' });
 			el.prepend(iconContainerEl);
 			if (tag) {
 				tag.iconDefault = 'lucide-tag';
-				if (!tag.icon && !tag.color) iconEl.addClass('icon-palette-invisible');
+				if (!tag.icon && !tag.color)
+					iconEl.addClass('icon-palette-invisible');
 				this.refreshIcon(tag, iconEl);
 			}
 		}
@@ -253,14 +324,25 @@ export default class SuggestionIconManager extends IconManager {
 	unload(): void {
 		super.unload();
 
-		const abstractPrototype = AbstractInputSuggest.prototype as AbstractInputSuggestWithPrivate<unknown>;
-		if (this.showAbstractSuggestionsOriginal && abstractPrototype.showSuggestions === this.showAbstractSuggestionsProxy) {
-			abstractPrototype.showSuggestions = this.showAbstractSuggestionsOriginal;
+		const abstractPrototype =
+			AbstractInputSuggest.prototype as AbstractInputSuggestWithPrivate<unknown>;
+		if (
+			this.showAbstractSuggestionsOriginal &&
+			abstractPrototype.showSuggestions ===
+				this.showAbstractSuggestionsProxy
+		) {
+			abstractPrototype.showSuggestions =
+				this.showAbstractSuggestionsOriginal;
 		}
 
-		const editorPrototype = EditorSuggest.prototype as EditorSuggestWithPrivate<unknown>;
-		if (this.showEditorSuggestionsOriginal && editorPrototype.showSuggestions === this.showEditorSuggestionsProxy) {
-			editorPrototype.showSuggestions = this.showEditorSuggestionsOriginal;
+		const editorPrototype =
+			EditorSuggest.prototype as EditorSuggestWithPrivate<unknown>;
+		if (
+			this.showEditorSuggestionsOriginal &&
+			editorPrototype.showSuggestions === this.showEditorSuggestionsProxy
+		) {
+			editorPrototype.showSuggestions =
+				this.showEditorSuggestionsOriginal;
 		}
 	}
 }

@@ -14,8 +14,12 @@ export default class PathComponent extends BaseComponent {
 	constructor(containerEl: HTMLElement) {
 		super();
 		this.pathEl = containerEl.createDiv({ cls: 'icon-palette-path' });
-		this.iconButton = new IconButtonComponent(this.pathEl).setIcon('lucide-file');
-		this.pathInnerEl = this.pathEl.createDiv({ cls: 'icon-palette-path-inner'});
+		this.iconButton = new IconButtonComponent(this.pathEl).setIcon(
+			'lucide-file',
+		);
+		this.pathInnerEl = this.pathEl.createDiv({
+			cls: 'icon-palette-path-inner',
+		});
 	}
 
 	/**
@@ -47,7 +51,9 @@ export default class PathComponent extends BaseComponent {
 	 */
 	setRemoveTooltip(tooltip: string, options?: TooltipOptions): this {
 		if (!this.removeButton) {
-			this.removeButton = new ExtraButtonComponent(this.pathEl).setIcon('lucide-x');
+			this.removeButton = new ExtraButtonComponent(this.pathEl).setIcon(
+				'lucide-x',
+			);
 		}
 		this.removeButton.setTooltip(tooltip, options);
 		return this;
@@ -58,11 +64,20 @@ export default class PathComponent extends BaseComponent {
 	 */
 	setPathText(tree: string, basename: string, extension?: string): this {
 		this.pathInnerEl.empty();
-		this.pathInnerEl.createSpan({ cls: 'icon-palette-path-tree', text: tree });
-		this.pathInnerEl.createSpan({ cls: 'icon-palette-path-name', text: basename });
+		this.pathInnerEl.createSpan({
+			cls: 'icon-palette-path-tree',
+			text: tree,
+		});
+		this.pathInnerEl.createSpan({
+			cls: 'icon-palette-path-name',
+			text: basename,
+		});
 		if (extension) {
 			this.pathInnerEl.createSpan({ text: '.' });
-			this.pathInnerEl.createSpan({ cls: 'icon-palette-path-extension', text: extension });
+			this.pathInnerEl.createSpan({
+				cls: 'icon-palette-path-extension',
+				text: extension,
+			});
 		}
 		return this;
 	}
@@ -71,7 +86,9 @@ export default class PathComponent extends BaseComponent {
 	 * Set click behavior for the icon button.
 	 */
 	onIconClick(callback: () => void | Promise<void>): this {
-		this.iconButton.onClick(() => { void callback(); });
+		this.iconButton.onClick(() => {
+			void callback();
+		});
 		return this;
 	}
 
@@ -80,9 +97,13 @@ export default class PathComponent extends BaseComponent {
 	 */
 	onRemoveClick(callback: () => void | Promise<void>): this {
 		if (!this.removeButton) {
-			this.removeButton = new ExtraButtonComponent(this.pathEl).setIcon('lucide-x');
+			this.removeButton = new ExtraButtonComponent(this.pathEl).setIcon(
+				'lucide-x',
+			);
 		}
-		this.removeButton.onClick(() => { void callback(); });
+		this.removeButton.onClick(() => {
+			void callback();
+		});
 		return this;
 	}
 
