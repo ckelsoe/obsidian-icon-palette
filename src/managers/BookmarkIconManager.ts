@@ -2,7 +2,7 @@ import { WorkspaceLeaf } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { Category, BookmarkItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
-import { RuleItem } from 'src/managers/RuleManager.js';
+import RuleManager, { RuleItem } from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
@@ -397,15 +397,15 @@ export default class BookmarkIconManager extends IconManager {
 
 		// Edit rule
 		if (selectedBmarks.length < 2) {
-			const rule =
-				clickedBmark.category === 'file' ||
-				clickedBmark.category === 'folder'
-					? this.plugin.ruleManager?.checkRuling(
-							clickedBmark.category,
-							clickedBmark.id,
-						)
-					: null;
-			if (rule) {
+			// A bookmark's rule lives under its own page (file or folder), so
+			// thread that page through every rule call. Hardcoding 'file' here
+			// saved, deleted, and refreshed a folder bookmark's rule against the
+			// file collection, corrupting it.
+			const page = RuleManager.rulePageForCategory(clickedBmark.category);
+			const rule = page
+				? this.plugin.ruleManager?.checkRuling(page, clickedBmark.id)
+				: null;
+			if (page && rule) {
 				this.plugin.menuManager?.addItem((item) => {
 					item.setTitle(STRINGS.menu.editRule)
 						.setIcon('lucide-image-play')
@@ -413,20 +413,20 @@ export default class BookmarkIconManager extends IconManager {
 						.onClick(() =>
 							RuleEditor.open(
 								this.plugin,
-								'file',
+								page,
 								rule,
 								(newRule) => {
 									const isRulingChanged = newRule
 										? this.plugin.ruleManager?.saveRule(
-												'file',
+												page,
 												newRule,
 											)
 										: this.plugin.ruleManager?.deleteRule(
-												'file',
+												page,
 												rule.id,
 											);
 									if (isRulingChanged) {
-										this.plugin.refreshManagers('file');
+										this.plugin.refreshManagers(page);
 									}
 								},
 							),

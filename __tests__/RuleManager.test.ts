@@ -169,3 +169,29 @@ describe('RuleManager.evaluateOperator unknown operator', () => {
 		).toBe(false);
 	});
 });
+
+describe('RuleManager.rulePageForCategory', () => {
+	it('maps file and folder categories to their own rule page', () => {
+		// A folder bookmark's rule must resolve to 'folder', not 'file', so it
+		// is saved, deleted, and refreshed against the folder collection.
+		expect(RuleManager.rulePageForCategory('file')).toBe('file');
+		expect(RuleManager.rulePageForCategory('folder')).toBe('folder');
+	});
+
+	it('returns null for categories that carry no rules', () => {
+		for (const category of [
+			'app',
+			'tab',
+			'group',
+			'search',
+			'graph',
+			'url',
+			'tag',
+			'property',
+			'ribbon',
+			'rule',
+		] as const) {
+			expect(RuleManager.rulePageForCategory(category)).toBeNull();
+		}
+	});
+});
