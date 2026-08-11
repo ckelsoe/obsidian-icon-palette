@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Editing the rule on a bookmarked folder no longer corrupts it. The rule was saved, deleted, and refreshed as if it were a file rule, so a folder bookmark's rule changes were written to the wrong place. Folder bookmark rules now edit correctly.
+- The "Show quick switcher icons" and "Show 'Move file' icons" settings are now independent. Turning one off still showed icons in that dialog as long as the other was on. Each setting now controls only its own dialog.
+
 ## 0.4.1 - 2026-08-10
 
 ### Fixed

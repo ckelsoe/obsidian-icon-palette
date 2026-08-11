@@ -73,7 +73,7 @@ export default class SuggestionDialogIconManager extends IconManager {
 				}
 
 				const modalType = this.getModalType(modal);
-				if (!modalType) {
+				if (!modalType || !this.isModalTypeEnabled(modalType)) {
 					return Reflect.apply(onOpen, modal, args);
 				}
 
@@ -88,6 +88,14 @@ export default class SuggestionDialogIconManager extends IconManager {
 					) => {
 						// Call base method first to pre-populate elements
 						renderSuggestion(...renderArgs);
+
+						// Honor the setting at render time, not only when this
+						// proxy was installed: a modal instance can be reused
+						// across opens, so it keeps this proxy after its setting
+						// is turned off. Mirrors the Another Quick Switcher path.
+						if (!this.isModalTypeEnabled(modalType)) {
+							return;
+						}
 
 						switch (modalType) {
 							case QUICK_SWITCHER: {
@@ -125,7 +133,10 @@ export default class SuggestionDialogIconManager extends IconManager {
 				}
 
 				const modalType = this.getModalType(modal);
-				if (modalType !== ANOTHER_QUICK_SWITCHER) {
+				if (
+					modalType !== ANOTHER_QUICK_SWITCHER ||
+					!this.isModalTypeEnabled(modalType)
+				) {
 					return Reflect.apply(setInstructions, modal, args);
 				}
 
@@ -138,7 +149,7 @@ export default class SuggestionDialogIconManager extends IconManager {
 						_renderModal,
 						renderArgs: [unknown, HTMLElement],
 					) => {
-						if (this.isDisabled()) {
+						if (!this.isModalTypeEnabled(ANOTHER_QUICK_SWITCHER)) {
 							renderSuggestion(...renderArgs);
 							return;
 						}
@@ -379,13 +390,43 @@ export default class SuggestionDialogIconManager extends IconManager {
 	}
 
 	/**
-	 * Check whether user has disabled all suggestion dialog icons.
+	 * Check whether user has disabled all suggestion dialog icons. Used as a
+	 * fast early-out; the per-modal setting is enforced by isModalTypeEnabled.
 	 */
 	private isDisabled(): boolean {
 		return (
 			!this.plugin.settings.showQuickSwitcherIcons &&
 			!this.plugin.settings.showMoveFileIcons
 		);
+	}
+
+	/**
+	 * Whether icons are enabled for the active modal. Delegates to the pure
+	 * static so the decision is unit-testable without constructing a manager.
+	 */
+	private isModalTypeEnabled(modalType: string): boolean {
+		return SuggestionDialogIconManager.isModalTypeEnabled(
+			modalType,
+			this.plugin.settings,
+		);
+	}
+
+	/**
+	 * The quick-switcher family (core, Quick Switcher++, Another Quick Switcher)
+	 * follows showQuickSwitcherIcons; the "Move file" dialog follows
+	 * showMoveFileIcons. Each modal must consult its own setting: a single
+	 * global gate would let either toggle light up both dialog families.
+	 */
+	static isModalTypeEnabled(
+		modalType: string,
+		settings: {
+			showQuickSwitcherIcons: boolean;
+			showMoveFileIcons: boolean;
+		},
+	): boolean {
+		return modalType === MOVE_FILE_DIALOG
+			? settings.showMoveFileIcons
+			: settings.showQuickSwitcherIcons;
 	}
 
 	/**

@@ -334,6 +334,17 @@ export default class RuleManager {
 	}
 
 	/**
+	 * The rule page an item category maps to, or null when the category carries
+	 * no rules. Only file and folder items participate in rulings; every other
+	 * category (url, group, search, tag, ...) has no rule page. Use this instead
+	 * of assuming 'file' so a folder item's rule is checked, saved, deleted, and
+	 * refreshed against the folder collection, not the file one.
+	 */
+	static rulePageForCategory(category: Category): 'file' | 'folder' | null {
+		return category === 'file' || category === 'folder' ? category : null;
+	}
+
+	/**
 	 * Check the ruling for a given item.
 	 */
 	checkRuling(
