@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-08-11
+
 ### Fixed
 
 - Editing the rule on a bookmarked folder no longer corrupts it. The rule was saved, deleted, and refreshed as if it were a file rule, so a folder bookmark's rule changes were written to the wrong place. Folder bookmark rules now edit correctly.
