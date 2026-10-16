@@ -123,7 +123,10 @@ export default abstract class IconManager {
 			const { listener, options } = map.get(element)!;
 			element.removeEventListener(type, listener, options);
 		}
-		this.plugin.registerDomEvent(element, type, listener, options);
+		// Not registerDomEvent: the plugin would hold every element it was
+		// given until unload, even after it left the page. This manager's own
+		// map removes them on unload instead (stopEventListeners).
+		element.addEventListener(type, listener, options);
 		map.set(element, { listener: listener as EventListener, options });
 	}
 
@@ -140,6 +143,20 @@ export default abstract class IconManager {
 			const { listener, options } = listenerMap.get(element)!;
 			element.removeEventListener(type, listener, options);
 			listenerMap.delete(element);
+		}
+	}
+
+	/**
+	 * Stop the event listeners of elements no longer in the page, such as tags
+	 * in a closed view or a redrawn card, so those elements can be freed.
+	 */
+	protected stopDetachedEventListeners(): void {
+		for (const [type, listenerMap] of this.eventListeners) {
+			for (const [element, { listener, options }] of listenerMap) {
+				if (element.isConnected) continue;
+				element.removeEventListener(type, listener, options);
+				listenerMap.delete(element);
+			}
 		}
 	}
 

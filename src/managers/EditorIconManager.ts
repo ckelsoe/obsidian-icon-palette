@@ -1,4 +1,5 @@
 import { Editor, MarkdownView, Menu } from 'obsidian';
+import { EditorState, StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
@@ -8,6 +9,12 @@ import ColorUtils from 'src/ColorUtils.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleEditor from 'src/dialogs/RuleEditor.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
+import {
+	editorHashtagEls,
+	hashtagPillEl,
+	kanbanFooterTagEls,
+	kanbanFooterTagsIn,
+} from 'src/HashtagDom.js';
 
 interface MetadataEditorLike {
 	propertyListEl?: HTMLElement;
@@ -22,10 +29,18 @@ interface EditorWithCodeMirror extends Editor {
 	cm?: EditorView;
 }
 
+// Restyles the hashtags of a live preview editor, from inside an update.
+const repaintHashtags = StateEffect.define<null>();
+
 /**
  * Handles icons in the editor window of Markdown tabs.
  */
 export default class EditorIconManager extends IconManager {
+	// Open Kanban boards being watched for footer tags.
+	private readonly kanbanBoardEls = new Set<HTMLElement>();
+	// How each live preview tag element was last styled.
+	private paintedTags = new WeakMap<HTMLElement, string>();
+
 	constructor(plugin: IconPalettePlugin) {
 		super(plugin);
 
@@ -36,54 +51,43 @@ export default class EditorIconManager extends IconManager {
 			this.refreshReadingModeHashtags(tags, tagEls);
 		});
 
-		const getTagItem = (tagId: string) => this.plugin.getTagItem(tagId);
-		const handleTagContextMenu = (tagId: string) =>
-			this.onTagContextMenu(tagId, true);
-		const refreshTag = (
-			tagEl: HTMLElement,
-			tag: TagItem | null,
-			onContextMenu: (event: MouseEvent) => void,
-		) => {
-			this.refreshTag(tagEl, tag, onContextMenu);
+		// Style hashtags in live preview, inside each editor update. The DOM
+		// must be written there: CodeMirror discards what an update writes to
+		// its DOM, but strips anything written outside one and redraws, which
+		// would restyle it again without end. During an update the DOM still
+		// shows the document before it, so a change is styled against that
+		// document, and the lines it redraws get a follow-up update.
+		const paintHashtags = (
+			view: EditorView,
+			state: EditorState,
+			range: { from: number; to: number },
+		) => this.paintHashtags(view, state, range);
+		const pending = new WeakSet<EditorView>();
+		const repaintSoon = (view: EditorView) => {
+			if (pending.has(view)) return;
+			pending.add(view);
+			window.setTimeout(() => {
+				pending.delete(view);
+				if (view.dom.isConnected)
+					view.dispatch({ effects: repaintHashtags.of(null) });
+			});
 		};
 		plugin.registerEditorExtension(
 			ViewPlugin.fromClass(
 				class {
 					update(update: ViewUpdate): void {
-						let viewport = update.view.viewport;
-						let tree = syntaxTree(update.view.state);
-
-						tree.iterate({
-							from: viewport.from,
-							to: viewport.to,
-							enter: (nodeRef) => {
-								if (!nodeRef.name.includes('hashtag-begin'))
-									return;
-
-								// Get both tag elements
-								const beginEl = update.view.domAtPos(nodeRef.to)
-									.node.parentElement;
-								if (!beginEl?.instanceOf(HTMLElement)) return;
-								const endEl = beginEl?.nextElementSibling;
-								if (
-									!endEl?.instanceOf(HTMLElement) ||
-									!endEl.hasClass('cm-hashtag-end')
-								)
-									return;
-
-								// Get tag
-								const tagId = endEl.getText();
-								const tag = getTagItem(tagId);
-
-								// Refresh tag
-								const onContextMenu = () => {
-									if (tag) handleTagContextMenu(tag.id);
-								};
-								refreshTag(beginEl, tag, onContextMenu);
-								if (tag) tag.icon = null;
-								refreshTag(endEl, tag, onContextMenu);
-							},
-						});
+						const { view } = update;
+						if (!update.docChanged) {
+							paintHashtags(view, update.state, view.viewport);
+						} else {
+							const back = update.changes.invertedDesc;
+							paintHashtags(view, update.startState, {
+								from: back.mapPos(view.viewport.from),
+								to: back.mapPos(view.viewport.to),
+							});
+						}
+						if (update.docChanged || update.viewportChanged)
+							repaintSoon(view);
 					}
 				},
 			),
@@ -106,6 +110,14 @@ export default class EditorIconManager extends IconManager {
 				this.refreshViewIcons(leaf.view);
 			}
 		}
+
+		// Kanban boards, which draw tags moved to a card's footer themselves
+		this.plugin.registerEvent(
+			this.app.workspace.on('layout-change', () =>
+				this.observeKanbanBoards(),
+			),
+		);
+		this.app.workspace.onLayoutReady(() => this.observeKanbanBoards());
 
 		// If we add a new property to a file, refresh property icons
 		this.plugin.registerEvent(
@@ -271,6 +283,61 @@ export default class EditorIconManager extends IconManager {
 	}
 
 	/**
+	 * Watch each open Kanban board for the tags it draws in card footers, which
+	 * never pass through Obsidian's renderer or the post processor.
+	 */
+	private observeKanbanBoards(): void {
+		this.stopDetachedEventListeners();
+		for (const boardEl of this.kanbanBoardEls) {
+			if (boardEl.isConnected) continue;
+			this.stopMutationObserver(boardEl);
+			this.kanbanBoardEls.delete(boardEl);
+		}
+		for (const leaf of this.app.workspace.getLeavesOfType('kanban')) {
+			const boardEl = leaf.view.containerEl;
+			if (this.kanbanBoardEls.has(boardEl)) continue;
+			this.kanbanBoardEls.add(boardEl);
+			this.refreshKanbanTags(boardEl, kanbanFooterTagEls(boardEl));
+		}
+	}
+
+	/**
+	 * Style the given footer tags of a Kanban board, then watch it for more.
+	 * The board is not watched while its tags are styled, so the observer does
+	 * not see its own changes.
+	 */
+	private refreshKanbanTags(
+		boardEl: HTMLElement,
+		tagEls: Element[],
+		unloading?: boolean,
+	): void {
+		this.stopMutationObserver(boardEl);
+		const htmlTagEls = tagEls.filter((el): el is HTMLElement =>
+			el.instanceOf(HTMLElement),
+		);
+		if (htmlTagEls.length > 0) {
+			this.refreshReadingModeHashtags(
+				this.plugin.getTagItems(unloading),
+				htmlTagEls,
+				unloading,
+			);
+		}
+		if (unloading) return;
+		this.setMutationsObserver(
+			boardEl,
+			{ childList: true, subtree: true },
+			(mutations) => {
+				// Removed and redrawn cards leave their old tags behind.
+				if (mutations.some((m) => m.removedNodes.length > 0))
+					this.stopDetachedEventListeners();
+				const changed = kanbanFooterTagsIn(mutations);
+				if (changed.length > 0)
+					this.refreshKanbanTags(boardEl, changed);
+			},
+		);
+	}
+
+	/**
 	 * @override
 	 * Refresh all icons in all MarkdownViews.
 	 */
@@ -279,6 +346,13 @@ export default class EditorIconManager extends IconManager {
 			if (leaf.view instanceof MarkdownView) {
 				this.refreshViewIcons(leaf.view, unloading);
 			}
+		}
+		for (const boardEl of this.kanbanBoardEls) {
+			this.refreshKanbanTags(
+				boardEl,
+				kanbanFooterTagEls(boardEl),
+				unloading,
+			);
 		}
 	}
 
@@ -304,7 +378,7 @@ export default class EditorIconManager extends IconManager {
 		// Refresh hashtags
 		const tagEls = view.containerEl.findAll('a.tag');
 		this.refreshReadingModeHashtags(tags, tagEls, unloading);
-		this.refreshLivePreviewMode(view.editor);
+		this.refreshLivePreviewMode(view.editor, unloading);
 	}
 
 	/**
@@ -540,11 +614,85 @@ export default class EditorIconManager extends IconManager {
 	}
 
 	/**
-	 * Refresh the entire live preview editor.
+	 * Style every hashtag in a live preview editor's visible range.
 	 */
-	private refreshLivePreviewMode(editor: Editor): void {
+	private paintHashtags(
+		view: EditorView,
+		state: EditorState,
+		range: { from: number; to: number },
+	): void {
+		// A redraw replaces tag elements; free the listeners of the old ones.
+		this.stopDetachedEventListeners();
+		const { settings } = this.plugin;
+		syntaxTree(state).iterate({
+			from: range.from,
+			to: range.to,
+			enter: (nodeRef) => {
+				if (!nodeRef.name.includes('hashtag-begin')) return;
+
+				// Get both tag elements
+				const els = editorHashtagEls(view, nodeRef.from);
+				const beginEl = els && hashtagPillEl(els.beginEl);
+				const endEl = els && hashtagPillEl(els.endEl);
+				if (
+					!beginEl?.instanceOf(HTMLElement) ||
+					!endEl?.instanceOf(HTMLElement)
+				)
+					return;
+
+				// Get tag
+				const tag = this.plugin.getTagItem(endEl.getText());
+
+				// Leave a tag that already looks right alone. Restyling it
+				// would change the editor's DOM, and the redraw that follows
+				// would restyle it again, without end.
+				const look = JSON.stringify([
+					tag?.id,
+					tag?.icon,
+					tag?.color,
+					settings.showTagPillIcons,
+					settings.showMenuActions,
+					settings.clickableIcons,
+				]);
+				const hasIcon = !!beginEl.find(':scope > .icon-palette-icon');
+				const wantsIcon = settings.showTagPillIcons && !!tag?.icon;
+				if (
+					this.paintedTags.get(beginEl) === look &&
+					this.paintedTags.get(endEl) === look &&
+					hasIcon === wantsIcon
+				)
+					return;
+
+				// Refresh tag
+				const onContextMenu = () => {
+					if (tag) this.onTagContextMenu(tag.id, true);
+				};
+				this.refreshTag(beginEl, tag, onContextMenu);
+				if (tag) tag.icon = null;
+				this.refreshTag(endEl, tag, onContextMenu);
+				this.paintedTags.set(beginEl, look);
+				this.paintedTags.set(endEl, look);
+			},
+		});
+	}
+
+	/**
+	 * Refresh the entire live preview editor, restyling every hashtag. An
+	 * empty dispatch reaches no plugin, so this one carries an effect.
+	 */
+	private refreshLivePreviewMode(editor: Editor, unloading?: boolean): void {
 		const cm = (editor as EditorWithCodeMirror).cm;
-		if (cm instanceof EditorView) cm.dispatch();
+		if (!(cm instanceof EditorView)) return;
+		this.paintedTags = new WeakMap();
+		if (!unloading) {
+			cm.dispatch({ effects: repaintHashtags.of(null) });
+			return;
+		}
+		// Obsidian removes the editor extension before the plugin unloads, so
+		// no update would reach it: take the styling off directly.
+		for (const tagEl of cm.contentDOM.findAll('.cm-hashtag')) {
+			this.refreshTag(tagEl, null, () => {}, true);
+		}
 	}
 
 	/**
