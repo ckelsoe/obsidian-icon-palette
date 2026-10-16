@@ -642,6 +642,12 @@ export default class EditorIconManager extends IconManager {
 
 				// Get tag
 				const tag = this.plugin.getTagItem(endEl.getText());
+				// The tag being edited (the cursor in it or at either end of
+				// it) shows no icon, so the icon does not get in the way.
+				const tagEnd = nodeRef.from + 1 + endEl.getText().length;
+				const editing = state.selection.ranges.some(
+					({ from, to }) => from <= tagEnd && to >= nodeRef.from,
+				);
 
 				// Leave a tag that already looks right alone. Restyling it
 				// would change the editor's DOM, and the redraw that follows
@@ -655,7 +661,8 @@ export default class EditorIconManager extends IconManager {
 					settings.clickableIcons,
 				]);
 				const hasIcon = !!beginEl.find(':scope > .icon-palette-icon');
-				const wantsIcon = settings.showTagPillIcons && !!tag?.icon;
+				const wantsIcon =
+					settings.showTagPillIcons && !!tag?.icon && !editing;
 				if (
 					this.paintedTags.get(beginEl) === look &&
 					this.paintedTags.get(endEl) === look &&
@@ -667,7 +674,11 @@ export default class EditorIconManager extends IconManager {
 				const onContextMenu = () => {
 					if (tag) this.onTagContextMenu(tag.id, true);
 				};
-				this.refreshTag(beginEl, tag, onContextMenu);
+				this.refreshTag(
+					beginEl,
+					editing && tag ? { ...tag, icon: null } : tag,
+					onContextMenu,
+				);
 				if (tag) tag.icon = null;
 				this.refreshTag(endEl, tag, onContextMenu);
 				this.paintedTags.set(beginEl, look);
