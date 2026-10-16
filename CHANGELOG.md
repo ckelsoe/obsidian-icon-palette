@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- Tag icons on Kanban boards with "Move tags to card footer" turned on. The Kanban plugin draws those footer tags itself, so they never had icons or colors. They now get both, and keep them as cards are added, edited, and moved. Tags left in the card text already had icons.
+
+### Fixed
+
+- Tag icons and colors now show in the editor (Live Preview), not only in reading view. With "Show tag pill icons" on, the editor never drew them. They now also sit inside the tag's pill when another plugin, such as Pretty Properties, restyles tags.
+- Icon Palette no longer holds on to tags, properties, and other elements after they leave the page. Their click and right-click handlers kept them in memory until the plugin was turned off, which added up in long sessions.
+
 ## [0.4.2] - 2026-08-11
 
 ### Fixed
