@@ -157,7 +157,7 @@ export default class MenuManager {
 	 * Close menu and flush any queued actions.
 	 */
 	closeAndFlush(): void {
-		this.menu?.close();
+		this.menu?.hide();
 		this.menu = null;
 		this.flush();
 	}
