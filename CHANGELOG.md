@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-04
+
+### Changed
+
+- The plugin no longer calls `Menu.close()`, which Obsidian 1.14 deprecated. It calls `Menu.hide()`, which does the same thing. No change in behavior.
+
 ## [0.5.0] - 2026-10-16
 
 ### Added
