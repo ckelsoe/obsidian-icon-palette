@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import FavoritesStore from '../src/FavoritesStore.js';
 import type { FavoritesState, IconColorCombo } from '../src/types.js';
 
