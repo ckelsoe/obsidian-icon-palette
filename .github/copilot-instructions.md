@@ -105,7 +105,7 @@ Always run `npm run lint`, `npm run typecheck`, and `npm run build` before submi
 ## TypeScript conventions
 
 - **Strict mode**: `noImplicitAny`, `strictNullChecks`, `noUncheckedIndexedAccess`, `noImplicitReturns` are all enabled. Avoid non-null assertions (`!`) unless the value is provably non-null at that point.
-- **Module resolution**: `node16`. Import paths for local `.ts` files must use the `.js` extension (e.g., `import Foo from 'src/Foo.js'`). The `paths` alias maps bare `src/` paths to the repo root.
+- **Module resolution**: `bundler`. Import paths for local `.ts` files keep the `.js` extension (e.g., `import Foo from 'src/Foo.js'`). The `paths` alias maps bare `src/` paths to the repo root.
 - **Target**: `es2021`.
 - All public and protected class members should have JSDoc comments where the meaning is not obvious from the name.
 
