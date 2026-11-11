@@ -5,6 +5,7 @@ import {
 	prepareFuzzySearch,
 } from 'obsidian';
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
+import type RuleManager from 'src/managers/RuleManager.js';
 import type { Category } from 'src/types.js';
 
 interface RuleNameSuggestion {
@@ -18,17 +19,18 @@ interface RuleNameSuggestion {
  * Popover that suggests names for a rule.
  */
 export default class RuleNameSuggest extends AbstractInputSuggest<RuleNameSuggestion> {
-	private readonly plugin: IconPalettePlugin;
+	private readonly ruleManager: RuleManager;
 	private readonly page: Category;
 	private readonly inputComponent: TextComponent;
 
 	constructor(
 		plugin: IconPalettePlugin,
+		ruleManager: RuleManager,
 		page: Category,
 		inputComponent: TextComponent,
 	) {
 		super(plugin.app, inputComponent.inputEl);
-		this.plugin = plugin;
+		this.ruleManager = ruleManager;
 		this.page = page;
 		this.inputComponent = inputComponent;
 	}
@@ -42,7 +44,7 @@ export default class RuleNameSuggest extends AbstractInputSuggest<RuleNameSugges
 		const currentName = this.inputComponent.getValue();
 		const suggestions: RuleNameSuggestion[] = [];
 		const fuzzySearch = prepareFuzzySearch(query);
-		const rules = this.plugin.ruleManager!.getRules(this.page);
+		const rules = this.ruleManager.getRules(this.page);
 		const names = new Set(rules.map((rule) => rule.name));
 
 		for (const name of names) {

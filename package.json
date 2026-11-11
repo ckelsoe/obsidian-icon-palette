@@ -19,7 +19,7 @@
 		"version:check": "node scripts/check-version.mjs",
 		"size:check": "node scripts/check-bundle-size.mjs",
 		"release:notes": "node scripts/extract-release-notes.mjs",
-		"prepare": "husky"
+		"prepare": "node .husky/install.mjs"
 	},
 	"typeCoverage": {
 		"atLeast": 99

@@ -8,7 +8,10 @@ import {
 import IconPalettePlugin from 'src/IconPalettePlugin.js';
 import type { Category, Icon, Item, FileItem } from 'src/types.js';
 import { STRINGS } from 'src/registry.js';
-import { RuleItem, ConditionItem } from 'src/managers/RuleManager.js';
+import RuleManager, {
+	RuleItem,
+	ConditionItem,
+} from 'src/managers/RuleManager.js';
 import IconManager from 'src/managers/IconManager.js';
 import RuleChecker from 'src/dialogs/RuleChecker.js';
 import IconPicker from 'src/dialogs/IconPicker.js';
@@ -462,6 +465,7 @@ class RuleEditorManager extends IconManager {
  */
 export default class RuleEditor extends Modal {
 	private readonly plugin: IconPalettePlugin;
+	private readonly ruleManager: RuleManager;
 	private readonly iconManager: RuleEditorManager;
 
 	// Rule
@@ -477,12 +481,14 @@ export default class RuleEditor extends Modal {
 
 	private constructor(
 		plugin: IconPalettePlugin,
+		ruleManager: RuleManager,
 		page: Category,
 		rule: RuleItem,
 		callback: RuleEditorCallback | null,
 	) {
 		super(plugin.app);
 		this.plugin = plugin;
+		this.ruleManager = ruleManager;
 		this.iconManager = new RuleEditorManager(plugin);
 		this.page = page;
 		this.rule = window.structuredClone(rule);
@@ -502,8 +508,9 @@ export default class RuleEditor extends Modal {
 		callback: RuleEditorCallback,
 	): void {
 		// Silently no-op if rulebook hasn't finished loading
-		if (plugin.ruleManager)
-			new RuleEditor(plugin, page, rule, callback).open();
+		const { ruleManager } = plugin;
+		if (ruleManager)
+			new RuleEditor(plugin, ruleManager, page, rule, callback).open();
 	}
 
 	/**
@@ -531,8 +538,7 @@ export default class RuleEditor extends Modal {
 		nameSetting.addExtraButton((button) => {
 			button
 				.setIcon(
-					this.rule.icon ??
-						this.plugin.ruleManager!.getPageIcon(this.page),
+					this.rule.icon ?? this.ruleManager.getPageIcon(this.page),
 				)
 				.setTooltip(STRINGS.iconPicker.changeIcon)
 				.onClick(() =>
@@ -544,9 +550,7 @@ export default class RuleEditor extends Modal {
 								{
 									icon:
 										newIcon ??
-										this.plugin.ruleManager!.getPageIcon(
-											this.page,
-										),
+										this.ruleManager.getPageIcon(this.page),
 									color: newColor,
 								},
 								button.extraSettingsEl,
@@ -560,7 +564,7 @@ export default class RuleEditor extends Modal {
 				{
 					icon:
 						this.rule.icon ??
-						this.plugin.ruleManager!.getPageIcon(this.page),
+						this.ruleManager.getPageIcon(this.page),
 					color: this.rule.color,
 				},
 				button.extraSettingsEl,
@@ -579,7 +583,7 @@ export default class RuleEditor extends Modal {
 					if (event.key === 'Enter') this.closeAndSave(this.rule);
 				},
 			);
-			new RuleNameSuggest(this.plugin, this.page, text);
+			new RuleNameSuggest(this.plugin, this.ruleManager, this.page, text);
 			this.nameField = text;
 		});
 
@@ -1210,14 +1214,14 @@ export default class RuleEditor extends Modal {
 		// Update matches
 		switch (this.page) {
 			case 'file':
-				this.matches = this.plugin.ruleManager!.judgeFiles(
+				this.matches = this.ruleManager.judgeFiles(
 					this.rule,
 					new Date(),
 					true,
 				);
 				break;
 			case 'folder':
-				this.matches = this.plugin.ruleManager!.judgeFolders(
+				this.matches = this.ruleManager.judgeFolders(
 					this.rule,
 					new Date(),
 					true,

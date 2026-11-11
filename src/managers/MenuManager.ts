@@ -90,13 +90,14 @@ export default class MenuManager {
 		preSections: string | string[],
 		callback: (item: MenuItem) => void,
 	): this {
-		if (this.menu) {
+		const menu = this.menu;
+		if (menu) {
 			if (typeof preSections === 'string') preSections = [preSections];
 
-			this.menu.addItem((item: MenuItemWithSection) => {
+			menu.addItem((item: MenuItemWithSection) => {
 				callback(item);
 				const section = item.section ?? '';
-				const sections = getMenuSections(this.menu!);
+				const sections = getMenuSections(menu);
 
 				let index = 0;
 				for (const preSection of preSections) {
