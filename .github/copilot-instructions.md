@@ -94,7 +94,7 @@ npm run build           # full production build: generate icons â†’ typecheck â†
 npm run generate:icons  # regenerate src/generated/IconLibraryData.ts from npm packages
 npm run typecheck       # tsc --noEmit --skipLibCheck
 npm run lint            # eslint (obsidianmd rules) + submission pre-filter script
-npm test                # jest (--passWithNoTests; currently no test files exist)
+npm test                # vitest run
 npm run version         # bump version in manifest.json and versions.json, git-adds both
 ```
 
@@ -115,7 +115,7 @@ Always run `npm run lint`, `npm run typecheck`, and `npm run build` before submi
 
 - Uses `eslint-plugin-obsidianmd` recommended rules (`eslint.config.mts`).
 - `--max-warnings 0` everywhere **except** `IconPaletteSettingTab.ts` which gets `--max-warnings 1`.
-- The `scripts/` directory, config files (`esbuild.config.mjs`, `jest.config.cjs`, etc.), and `main.js` are ignored by ESLint.
+- The `scripts/` directory, config files (`esbuild.config.mjs`, `vitest.config.mts`, etc.), and `main.js` are ignored by ESLint.
 
 ---
 

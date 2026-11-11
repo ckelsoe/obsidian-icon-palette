@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import SuggestionDialogIconManager from '../src/managers/SuggestionDialogIconManager.js';
 
 // isModalTypeEnabled is a pure static; unit-test it through a narrow typed

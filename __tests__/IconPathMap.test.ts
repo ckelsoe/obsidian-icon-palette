@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import IconPathMap from '../src/IconPathMap.js';
 
 type Icon = { icon?: string | null; color?: string | null };

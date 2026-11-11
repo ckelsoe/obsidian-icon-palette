@@ -14,7 +14,7 @@ npm run build
 ```bash
 npm run lint      # eslint (obsidianmd ruleset) + submission pre-filter
 npm run typecheck # tsc --noEmit
-npm test          # jest
+npm test          # vitest
 npm run build     # generates the icon library, bundles, checks size
 ```
 

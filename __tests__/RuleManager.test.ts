@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import RuleManager from '../src/managers/RuleManager.js';
 
 // evaluateOperator is a private static. Unit-testing it needs a narrow typed
