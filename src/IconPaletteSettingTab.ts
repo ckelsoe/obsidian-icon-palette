@@ -93,7 +93,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 		const el = host.querySelector(
 			'.icon-palette-add-color input[type="color"]',
 		);
-		if (el instanceof HTMLElement) el.focus();
+		if (el?.instanceOf(HTMLElement)) el.focus();
 	}
 
 	// The four-way visibility dropdowns (on/desktop/mobile/off) share one option
@@ -132,8 +132,9 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 	/**
 	 * Declarative settings for Obsidian 1.13+. Returning object literals keeps the
 	 * 1.13 types out of the runtime bundle; buttons and the saved-colors grid have
-	 * no declarative control equivalent, so they render imperatively and are not
-	 * search-indexable. Mirrors display() setting-for-setting.
+	 * no declarative control equivalent, so they render imperatively. Each still
+	 * carries a name, description and aliases so settings search finds it; only
+	 * the footer stays out of search. Mirrors display() setting-for-setting.
 	 */
 	getSettingDefinitions(): SettingDefinitionItem[] {
 		const S = STRINGS.settings;
@@ -142,7 +143,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 			{
 				name: S.rulebook.name,
 				desc: S.rulebook.desc,
-				searchable: false,
+				aliases: S.rulebook.aliases,
 				render: (setting: Setting) => this.renderRulesButton(setting),
 			},
 			{
@@ -303,8 +304,9 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 				heading: S.headingSavedColors,
 				items: [
 					{
-						name: '',
-						searchable: false,
+						name: S.headingSavedColors,
+						desc: S.savedColors.desc,
+						aliases: S.savedColors.aliases,
 						render: (setting: Setting) =>
 							this.renderSavedColors(setting),
 					},
@@ -337,7 +339,7 @@ export default class IconPaletteSettingTab extends PluginSettingTab {
 					{
 						name: S.viewUnusedIcons.name,
 						desc: S.viewUnusedIcons.desc,
-						searchable: false,
+						aliases: S.viewUnusedIcons.aliases,
 						render: (setting: Setting) =>
 							this.renderViewUnusedIcons(setting),
 					},

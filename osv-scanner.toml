@@ -2,22 +2,19 @@
 # accepted and what would let us drop it. Revisit whenever the dependency tree
 # changes (a new lockfile may remove the transitive path entirely).
 #
-# One active suppression, below. The deepmerge and sprintf-js advisories left
-# with Jest (2026-11-11): both came only through jest and ts-jest. The
-# minimatch 9.x and 10.x copies are fixed through version-keyed `overrides`
-# (`minimatch@9`, `minimatch@10` to 11, plus a nested one for
-# type-coverage-core, whose range npm 10 skips), which leave eslint's own 3.x
-# copies alone (2026-11-11); only the 8.x copy below remains. The glob advisory is
-# fixed through `overrides` (2026-11-04). The braces entry was dropped
-# 2026-11-04: GitHub withdrew GHSA-vfj7-8cjw-p6xm on 2026-10-23. Every other
-# dev-only transitive advisory is FIXED rather than ignored: the package.json
-# `overrides` block pins brace-expansion, js-yaml, fast-uri, handlebars,
-# moment and smol-toml to patched versions.
+# No active suppressions. The minimatch 8.x entry left with the
+# eslint-plugin-obsidianmd 0.5.1 bump, which no longer pulls that copy in
+# (2026-11-11). The deepmerge and sprintf-js advisories left with Jest
+# (2026-11-11): both came only through jest and ts-jest. The minimatch 9.x and
+# 10.x copies are fixed through version-keyed `overrides` (`minimatch@9`,
+# `minimatch@10` to 11, plus a nested one for type-coverage-core, whose range
+# npm 10 skips), which leave eslint's own 3.x copies alone (2026-11-11). The
+# glob advisory is fixed through `overrides` (2026-11-04). The braces entry was
+# dropped 2026-11-04: GitHub withdrew GHSA-vfj7-8cjw-p6xm on 2026-10-23. Every
+# other dev-only transitive advisory is FIXED rather than ignored: the
+# package.json `overrides` block pins brace-expansion, js-yaml, fast-uri,
+# handlebars, moment and smol-toml to patched versions.
 #
 # Add an [[IgnoredVulns]] entry here only for an advisory with no non-breaking
 # fix, and document why and what would let us drop it.
 
-[[IgnoredVulns]]
-id = "GHSA-g3hv-75wg-m249"
-ignoreUntil = 2026-12-31
-reason = "minimatch: denial of service when a crafted glob pattern is compiled with optimizationLevel 2 or higher. Affects 7.0.0 up to 11.0.1. The 9.x and 10.x copies are overridden to 11. The one copy left is minimatch 8.0.7, reached through eslint-plugin-obsidianmd 0.4.x > eslint-plugin-json-schema-validator, which requires ^8.0.0, so an override to 11 would break its range. Dev-only: it matches this repo's own lint config patterns against its own source; nothing ships in main.js. The eslint-plugin-obsidianmd 0.5.x bump, which drops eslint-plugin-json-schema-validator, lands in this plugin's next reviewed PR: 0.5.1 reports two no-static-styles-assignment errors and one prefer-instanceof warning in src/ whose fixes change main.js, so it cannot ride in the test-runner migration. Drop this entry with that bump."

@@ -332,6 +332,7 @@ export default class Strings {
 		rulebook: {
 			name: 'Rulebook',
 			desc: 'Set up automated rules for file and folder icons.',
+			aliases: ['rules', 'conditions', 'automatic icons'],
 		},
 		biggerIcons: {
 			name: 'Bigger icons',
@@ -419,6 +420,7 @@ export default class Strings {
 			addAria: 'Add color',
 			nameLabel: 'Name for {color}',
 			remove: 'Remove saved color',
+			aliases: ['custom colors', 'color palette', 'swatches'],
 		},
 		footer: {
 			version: 'Version {#}',
@@ -446,6 +448,7 @@ export default class Strings {
 		viewUnusedIcons: {
 			name: 'View unused icons',
 			desc: 'Clean up icons assigned to files or folders that are no longer in your vault.',
+			aliases: ['unused', 'orphaned', 'clean up', 'deleted files'],
 		},
 		maxBackups: {
 			name: 'Maximum automatic backups',
@@ -526,12 +529,16 @@ export default class Strings {
 	/**
 	 * Replace default strings with localized strings.
 	 * Strings and their keys are always type-safe, even if the localized JSON is incomplete or broken.
+	 * Only keys the defaults already own are copied, so a key such as `__proto__`
+	 * in a translation file cannot reach Object.prototype.
 	 */
 	private static localizeDefaultStrings(
 		defaultStrings: Record<string, unknown>,
 		localizedStrings: Record<string, unknown>,
 	): void {
 		for (const [key, value] of Object.entries(localizedStrings)) {
+			if (!Object.prototype.hasOwnProperty.call(defaultStrings, key))
+				continue;
 			const defaultValue = defaultStrings[key];
 			if (defaultValue && typeof defaultValue === 'object') {
 				if (value && typeof value === 'object') {

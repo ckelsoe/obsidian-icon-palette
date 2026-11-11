@@ -525,6 +525,11 @@ a.tag {
 .icon-palette-rule-editor .icon-palette-condition.drag-ghost-hidden + .setting-item {
 	border-top-color: transparent;
 }
+/* Hides the dragged row for one frame so the browser's native drag image is blank. */
+.icon-palette-rule.icon-palette-drag-source,
+.icon-palette-condition.icon-palette-drag-source {
+	opacity: 0;
+}
 
 /* Rule editor */
 .is-mobile .mod-confirmation > .modal.icon-palette-rule-editor {
