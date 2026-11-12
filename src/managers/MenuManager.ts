@@ -14,7 +14,8 @@ function getMenuItems(menu: Menu): MenuItemWithSection[] {
 	const items: unknown = Reflect.get(menu, 'items');
 	return Array.isArray(items)
 		? items.filter(
-				(item): item is MenuItemWithSection => item instanceof MenuItem,
+				(item: unknown): item is MenuItemWithSection =>
+					item instanceof MenuItem,
 			)
 		: [];
 }

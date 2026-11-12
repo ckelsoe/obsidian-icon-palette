@@ -83,7 +83,7 @@ export default class SuggestionIconManager extends IconManager {
 							{
 								apply: (
 									renderSuggestion,
-									_popover,
+									_popover: unknown,
 									args: [unknown, HTMLElement],
 								) => {
 									// Call base method first to pre-populate elements
@@ -157,7 +157,7 @@ export default class SuggestionIconManager extends IconManager {
 							{
 								apply: (
 									renderSuggestion,
-									_popover,
+									_popover: unknown,
 									args: [unknown, HTMLElement],
 								) => {
 									// Call base method first to pre-populate elements

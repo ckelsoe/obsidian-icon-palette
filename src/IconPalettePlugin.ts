@@ -1060,7 +1060,7 @@ export default class IconPalettePlugin extends Plugin {
 	 */
 	getAppItem(appItemId: AppItemId, unloading?: boolean): AppItem {
 		const appIcon = this.settings.appIcons[appItemId] ?? {};
-		let name, iconDefault;
+		let name: string | undefined, iconDefault: string | undefined;
 		switch (appItemId) {
 			case 'help': {
 				name = STRINGS.appItems.help;
@@ -1200,7 +1200,7 @@ export default class IconPalettePlugin extends Plugin {
 			};
 		} else {
 			const tabIcon = this.settings.tabIcons[tabType] ?? {};
-			let iconDefault;
+			let iconDefault: string | null;
 			switch (tabType) {
 				case 'empty':
 					iconDefault =
@@ -1264,7 +1264,7 @@ export default class IconPalettePlugin extends Plugin {
 	): FileItem {
 		const { filename, basename, extension } = this.splitFilePath(fileId);
 		const fileIcon = this.settings.fileIcons[fileId] ?? {};
-		let iconDefault = null;
+		let iconDefault: string | null = null;
 
 		if (
 			tFile instanceof TFile &&

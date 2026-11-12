@@ -217,7 +217,7 @@ export default class RulePicker extends Modal {
 			})
 			.onEditClick(() => {
 				RuleEditor.open(this.plugin, page, rule, (newRule) => {
-					let isRulingChanged;
+					let isRulingChanged: boolean;
 					if (newRule) {
 						rule = newRule;
 						ruleSetting.setName(newRule.name);

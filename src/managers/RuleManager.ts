@@ -834,8 +834,9 @@ export default class RuleManager {
 					break;
 				case 'tags': {
 					source = [];
-					const frontmatterTags: unknown =
-						metadata?.frontmatter?.tags;
+					const frontmatter: Record<string, unknown> | undefined =
+						metadata?.frontmatter;
+					const frontmatterTags = frontmatter?.tags;
 					const propTags = RuleManager.toStringArray(frontmatterTags);
 					const inlineTags =
 						metadata?.tags?.map((tag) =>
@@ -1788,7 +1789,7 @@ export default class RuleManager {
 		)
 			return value;
 		if (Array.isArray(value))
-			return value.map((item) =>
+			return value.map((item: unknown) =>
 				item === null ? null : RuleManager.stringifyScalar(item),
 			);
 		return RuleManager.stringifyScalar(value);
@@ -1821,7 +1822,8 @@ export default class RuleManager {
 	}
 
 	private static toStringArray(value: unknown): string[] {
-		if (Array.isArray(value)) return value.map((item) => String(item));
+		if (Array.isArray(value))
+			return value.map((item: unknown) => String(item));
 		if (typeof value === 'string') return [value];
 		return [];
 	}

@@ -83,7 +83,7 @@ export default class SuggestionDialogIconManager extends IconManager {
 				modal.renderSuggestion = new Proxy(renderSuggestionOriginal, {
 					apply: (
 						renderSuggestion,
-						_renderModal,
+						_renderModal: unknown,
 						renderArgs: [unknown, HTMLElement],
 					) => {
 						// Call base method first to pre-populate elements
@@ -146,7 +146,7 @@ export default class SuggestionDialogIconManager extends IconManager {
 				modal.renderSuggestion = new Proxy(renderSuggestionOriginal, {
 					apply: (
 						renderSuggestion,
-						_renderModal,
+						_renderModal: unknown,
 						renderArgs: [unknown, HTMLElement],
 					) => {
 						if (!this.isModalTypeEnabled(ANOTHER_QUICK_SWITCHER)) {
