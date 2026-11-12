@@ -115,13 +115,18 @@ export default abstract class IconManager {
 		listener: (this: HTMLElement, event: HTMLElementEventMap[K]) => void,
 		options?: boolean | AddEventListenerOptions,
 	): void {
-		if (!this.eventListeners.has(type)) {
-			this.eventListeners.set(type, new Map());
+		let map = this.eventListeners.get(type);
+		if (!map) {
+			map = new Map();
+			this.eventListeners.set(type, map);
 		}
-		const map = this.eventListeners.get(type)!;
-		if (map.has(element)) {
-			const { listener, options } = map.get(element)!;
-			element.removeEventListener(type, listener, options);
+		const previous = map.get(element);
+		if (previous) {
+			element.removeEventListener(
+				type,
+				previous.listener,
+				previous.options,
+			);
 		}
 		// Not registerDomEvent: the plugin would hold every element it was
 		// given until unload, even after it left the page. This manager's own
@@ -139,9 +144,13 @@ export default abstract class IconManager {
 	): void {
 		if (!element) return;
 		const listenerMap = this.eventListeners.get(type);
-		if (listenerMap?.has(element)) {
-			const { listener, options } = listenerMap.get(element)!;
-			element.removeEventListener(type, listener, options);
+		const previous = listenerMap?.get(element);
+		if (listenerMap && previous) {
+			element.removeEventListener(
+				type,
+				previous.listener,
+				previous.options,
+			);
 			listenerMap.delete(element);
 		}
 	}

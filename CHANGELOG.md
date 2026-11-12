@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Settings search now finds the Rulebook, Saved colors and View unused icons rows. They were drawn by hand and hidden from search. Each has search terms too, so "rules", "swatches" or "orphaned" finds the right row.
+
+### Fixed
+
+- A translation file can no longer add keys the English strings do not have. A key such as `__proto__` in one could have changed every object in the app. The bundled translations never did this.
+
 ## [0.5.1] - 2026-11-04
 
 ### Changed
