@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-13
+
 ### Changed
 
 - Settings search now finds the Rulebook, Saved colors and View unused icons rows. They were drawn by hand and hidden from search. Each has search terms too, so "rules", "swatches" or "orphaned" finds the right row.
