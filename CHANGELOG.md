@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Drag-to-reorder ghosts and color parsing set their styles in a way the marketplace scan accepts. Nothing changes in use.
+
 ## [0.5.2] - 2026-11-13
 
 ### Changed

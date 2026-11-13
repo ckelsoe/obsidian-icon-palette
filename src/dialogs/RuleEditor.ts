@@ -1096,12 +1096,11 @@ export default class RuleEditor extends Modal {
 		setting.ghostEl = settingEl.doc.body.createDiv({
 			cls: ['drag-reorder-ghost', 'icon-palette-condition-dragger'],
 		});
-		setting.ghostEl.setCssStyles({
-			width: settingRect.width + 'px',
-			height: settingRect.height + 'px',
-			left: x - (gripRect.x - settingRect.x) - gripRect.width / 2 + 'px',
-			top: y - settingRect.height / 2 + 'px',
-		});
+		const ghost = setting.ghostEl;
+		ghost.style.width = `${settingRect.width}px`;
+		ghost.style.height = `${settingRect.height}px`;
+		ghost.style.left = `${x - (gripRect.x - settingRect.x) - gripRect.width / 2}px`;
+		ghost.style.top = `${y - settingRect.height / 2}px`;
 		setting.ghostEl.appendChild(settingEl.cloneNode(true));
 
 		// Show correct values in ghost dropdowns
@@ -1132,10 +1131,10 @@ export default class RuleEditor extends Modal {
 		const gripRect = gripEl.getBoundingClientRect();
 
 		// Update ghost position
-		setting.ghostEl?.setCssStyles({
-			left: x - (gripRect.x - settingRect.x) - gripRect.width / 2 + 'px',
-			top: y - settingRect.height / 2 + 'px',
-		});
+		if (setting.ghostEl) {
+			setting.ghostEl.style.left = `${x - (gripRect.x - settingRect.x) - gripRect.width / 2}px`;
+			setting.ghostEl.style.top = `${y - settingRect.height / 2}px`;
+		}
 
 		// Get position in list
 		const index = this.scrollerEl.indexOf(settingEl);

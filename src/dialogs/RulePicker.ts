@@ -298,16 +298,11 @@ export default class RulePicker extends Modal {
 				ruleSetting.ghostRuleEl = this.modalEl.doc.body.createDiv({
 					cls: ['drag-reorder-ghost', 'icon-palette-rule-dragger'],
 				});
-				ruleSetting.ghostRuleEl.setCssStyles({
-					width: settingRect.width + 'px',
-					height: settingRect.height + 'px',
-					left:
-						x -
-						(gripRect.x - settingRect.x) -
-						gripRect.width / 2 +
-						'px',
-					top: y - settingRect.height / 2 + 'px',
-				});
+				const ghost = ruleSetting.ghostRuleEl;
+				ghost.style.width = `${settingRect.width}px`;
+				ghost.style.height = `${settingRect.height}px`;
+				ghost.style.left = `${x - (gripRect.x - settingRect.x) - gripRect.width / 2}px`;
+				ghost.style.top = `${y - settingRect.height / 2}px`;
 				ruleSetting.ghostRuleEl.appendChild(settingEl.cloneNode(true));
 				// Display drop zone effect
 				settingEl.addClass('drag-ghost-hidden');
@@ -324,14 +319,10 @@ export default class RulePicker extends Modal {
 				const settingRect = settingEl.getBoundingClientRect();
 				const gripRect = gripEl.getBoundingClientRect();
 				// Update ghost position
-				ruleSetting.ghostRuleEl?.setCssStyles({
-					left:
-						x -
-						(gripRect.x - settingRect.x) -
-						gripRect.width / 2 +
-						'px',
-					top: y - settingRect.height / 2 + 'px',
-				});
+				if (ruleSetting.ghostRuleEl) {
+					ruleSetting.ghostRuleEl.style.left = `${x - (gripRect.x - settingRect.x) - gripRect.width / 2}px`;
+					ruleSetting.ghostRuleEl.style.top = `${y - settingRect.height / 2}px`;
+				}
 				// Get position in list
 				const index = this.scrollerEl.indexOf(settingEl);
 				// If ghost is dragged into rule above, swap the rules
