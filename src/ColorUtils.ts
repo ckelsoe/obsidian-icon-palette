@@ -207,7 +207,7 @@ export default class ColorUtils {
 		}
 
 		// Color properties are converted into rgb/rgba()
-		this.convertEl.setCssStyles({ color: cssColor });
+		this.convertEl.style.color = cssColor;
 		const rgbValue = this.convertEl.style.color;
 
 		// Value might still be wrapped in color-mix()

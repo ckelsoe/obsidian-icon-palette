@@ -8,6 +8,8 @@
 		"dev": "node esbuild.config.mjs",
 		"generate:icons": "node scripts/generate-icon-library-data.mjs",
 		"build": "npm run generate:icons && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && node scripts/check-bundle-size.mjs",
+		"ci": "node scripts/ci-local.mjs",
+		"scan-rules": "node scripts/check-scan-rules.mjs",
 		"lint": "eslint . --max-warnings 0 && prettier --check \"**/*.ts\" && node scripts/check-submission.mjs && npm run typecheck:marketplace",
 		"test": "vitest run",
 		"typecheck": "tsc -noEmit -skipLibCheck",
